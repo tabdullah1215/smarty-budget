@@ -1,0 +1,15 @@
+{
+  "dev": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-smartybudget-dev-29576-authRole",
+      "UnauthRoleArn": "arn:aws:iam::718322707229:role/amplify-smartybudget-dev-29576-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::718322707229:role/amplify-smartybudget-dev-29576-authRole",
+      "Region": "us-east-1",
+      "DeploymentBucketName": "amplify-smartybudget-dev-29576-deployment",
+      "UnauthRoleName": "amplify-smartybudget-dev-29576-unauthRole",
+      "StackName": "amplify-smartybudget-dev-29576",
+      "StackId": "arn:aws:cloudformation:us-east-1:718322707229:stack/amplify-smartybudget-dev-29576/c220de80-a306-11ef-88c2-0affcfb721f9",
+      "AmplifyAppId": "dsfv5h0vo0845"
+    }
+  }
+}
