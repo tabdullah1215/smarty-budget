@@ -7,37 +7,38 @@ import { BudgetItemRow } from './BudgetItemRow';
 const PrintableContent = React.forwardRef((props, ref) => {
     const { budget } = props;
     return (
-        <div ref={ref} className="p-8">
-            <h2 className="text-2xl font-bold mb-4">{budget.name}</h2>
-            <div className="mb-4">
-                <p>Type: {budget.type}</p>
-                <p>Total Budget: ${budget.totalBudget.toLocaleString()}</p>
-                <p>Created: {new Date(budget.createdAt).toLocaleDateString()}</p>
-            </div>
-            <table className="min-w-full divide-y divide-gray-200">
-                <thead>
-                <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                {budget.items.map(item => (
-                    <tr key={item.id}>
-                        <td className="px-6 py-4 whitespace-nowrap">{item.category}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">{item.description}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">{item.date}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right">${item.amount.toLocaleString()}</td>
+        <div ref={ref} className="print-content">
+            <div className="p-8">
+                <h2 className="text-2xl font-bold mb-4">{budget.name}</h2>
+                <div className="mb-4">
+                    <p>Type: {budget.type}</p>
+                    <p>Total Budget: ${budget.totalBudget.toLocaleString()}</p>
+                    <p>Created: {new Date(budget.createdAt).toLocaleDateString()}</p>
+                </div>
+                <table className="min-w-full divide-y divide-gray-200">
+                    <thead>
+                    <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
                     </tr>
-                ))}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                    {budget.items.map(item => (
+                        <tr key={item.id}>
+                            <td className="px-6 py-4 whitespace-nowrap">{item.category}</td>
+                            <td className="px-6 py-4 whitespace-nowrap">{item.description}</td>
+                            <td className="px-6 py-4 whitespace-nowrap">{item.date}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-right">${item.amount.toLocaleString()}</td>
+                        </tr>
+                    ))}
+                    </tbody>
+                </table>
+            </div>
         </div>
     );
 });
-
 PrintableContent.displayName = 'PrintableContent';
 
 export const BudgetDetails = ({ budget, onClose, onUpdate }) => {
@@ -46,7 +47,10 @@ export const BudgetDetails = ({ budget, onClose, onUpdate }) => {
     const [isAddingItem, setIsAddingItem] = useState(false);
     const [isClosing, setIsClosing] = useState(false);
     const [localBudget, setLocalBudget] = useState(budget);
-    const printRef = useRef(null);
+    const componentRef = useRef(null);
+    const [isPrinting, setIsPrinting] = useState(false);
+    const [isSharing, setIsSharing] = useState(false);
+
 
     // Update local budget when prop changes
     useEffect(() => {
@@ -54,11 +58,31 @@ export const BudgetDetails = ({ budget, onClose, onUpdate }) => {
     }, [budget]);
 
     const handlePrint = useReactToPrint({
-        content: () => printRef.current,
+        contentRef: componentRef,
+        documentTitle: `${budget.name} - Budget Details`,
+        onBeforePrint: async () => {
+            setIsPrinting(true);
+            await new Promise((resolve) => setTimeout(resolve, 500));
+        },
+        onAfterPrint: async () => {
+            await new Promise((resolve) => {
+                setIsPrinting(false);
+                resolve();
+            });
+        },
     });
 
+    const handlePrintClick = (e) => {
+        e.preventDefault();
+        if (componentRef.current && !isPrinting) {
+            handlePrint();
+        }
+    };
+
     const handleShare = async () => {
+        setIsSharing(true);
         try {
+            await new Promise(resolve => setTimeout(resolve, 500));
             const shareData = {
                 title: localBudget.name,
                 text: `Budget: ${localBudget.name}\nTotal: $${localBudget.totalBudget}\nType: ${localBudget.type}`,
@@ -67,6 +91,8 @@ export const BudgetDetails = ({ budget, onClose, onUpdate }) => {
             await navigator.share(shareData);
         } catch (err) {
             console.error('Error sharing:', err);
+        } finally {
+            setIsSharing(false);
         }
     };
 
@@ -129,32 +155,53 @@ export const BudgetDetails = ({ budget, onClose, onUpdate }) => {
             <div className="relative top-20 mx-auto p-5 border w-full max-w-4xl shadow-lg rounded-md bg-white">
                 <div className="flex justify-between items-center mb-6">
                     <h2 className="text-2xl font-bold text-gray-900">{localBudget.name}</h2>
-                    {/* Rest of your JSX using localBudget instead of budget */}
                     <div className="flex space-x-2">
                         <button
-                            onClick={handlePrint}
-                            className="inline-flex items-center p-2 border border-transparent rounded-md text-gray-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                            onClick={handlePrintClick}
+                            disabled={isPrinting}
+                            className="inline-flex items-center p-2 border border-transparent
+                             rounded-md text-gray-600 hover:bg-gray-100
+                             focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500
+                             transition-all duration-200
+                             disabled:opacity-50 disabled:cursor-not-allowed"
                             title="Print budget"
                         >
-                            <Printer className="h-5 w-5"/>
+                            {isPrinting ? (
+                                <Loader2 className="h-7 w-7 animate-spin"/>
+                            ) : (
+                                <Printer className="h-7 w-7"/>
+                            )}
                         </button>
                         <button
                             onClick={handleShare}
-                            className="inline-flex items-center p-2 border border-transparent rounded-md text-gray-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                            disabled={isSharing}
+                            className="inline-flex items-center p-2 border border-transparent
+                                 rounded-md text-gray-600 hover:bg-gray-100
+                                 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500
+                                 transition-all duration-200
+                                 disabled:opacity-50 disabled:cursor-not-allowed"
                             title="Share budget"
                         >
-                            <Share2 className="h-5 w-5"/>
+                            {isSharing ? (
+                                <Loader2 className="h-7 w-7 animate-spin"/>
+                            ) : (
+                                <Share2 className="h-7 w-7"/>
+                            )}
                         </button>
                         <button
                             onClick={handleClose}
                             disabled={isClosing}
-                            className="inline-flex items-center p-2 border border-transparent rounded-md text-gray-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                            className="inline-flex items-center p-2 border border-transparent
+                                 rounded-md text-gray-600 hover:bg-gray-100
+                                 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500
+                                 transition-all duration-200
+                                 disabled:opacity-50 disabled:cursor-not-allowed"
                             title="Close budget"
                         >
                             {isClosing ? (
-                                <Loader2 className="h-5 w-5 animate-spin"/>
+                                <Loader2 className="h-7 w-7 animate-spin"/>
                             ) : (
-                                <X className="h-5 w-5"/>
+                                <X className="h-7 w-7"/>
                             )}
                         </button>
                     </div>
@@ -163,11 +210,15 @@ export const BudgetDetails = ({ budget, onClose, onUpdate }) => {
                 <div className="grid grid-cols-2 gap-4 mb-6">
                     <div className="bg-gray-50 p-4 rounded-lg">
                         <p className="text-sm text-gray-600">Total Budget</p>
-                        <p className="text-2xl font-bold text-gray-900">${localBudget.totalBudget.toLocaleString()}</p>
+                        <p className="text-2xl font-bold text-gray-900">
+                            ${localBudget.totalBudget.toLocaleString()}
+                        </p>
                     </div>
                     <div className="bg-gray-50 p-4 rounded-lg">
                         <p className="text-sm text-gray-600">Total Spent</p>
-                        <p className="text-2xl font-bold text-gray-900">${totalSpent.toLocaleString()}</p>
+                        <p className="text-2xl font-bold text-gray-900">
+                            ${totalSpent.toLocaleString()}
+                        </p>
                     </div>
                 </div>
 
@@ -176,7 +227,12 @@ export const BudgetDetails = ({ budget, onClose, onUpdate }) => {
                     <button
                         onClick={handleAddItemClick}
                         disabled={isAddingItem}
-                        className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="inline-flex items-center px-3 py-2 border border-transparent
+                             text-sm leading-4 font-medium rounded-md text-white
+                             bg-indigo-600 hover:bg-indigo-700
+                             focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500
+                             transition-all duration-200
+                             disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         {isAddingItem ? (
                             <Loader2 className="h-4 w-4 mr-2 animate-spin"/>
@@ -258,14 +314,24 @@ export const BudgetDetails = ({ budget, onClose, onUpdate }) => {
                     />
                 )}
 
-                <div className="hidden">
-                    <PrintableContent ref={printRef} budget={localBudget}/>
+                {/* Move this above the Close Budget button */}
+                <div style={{position: 'fixed', top: '-9999px', left: '-9999px'}}>  {/* Changed from display: none */}
+                    <PrintableContent
+                        ref={componentRef}
+                        budget={localBudget}
+                    />
                 </div>
+
                 <div className="mt-6 flex justify-end">
                     <button
                         onClick={handleClose}
                         disabled={isClosing}
-                        className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="inline-flex items-center px-4 py-2 border border-gray-300
+                             shadow-sm text-sm font-medium rounded-md text-gray-700
+                             bg-white hover:bg-gray-50
+                             focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500
+                             transition-all duration-200
+                             disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         {isClosing ? (
                             <Loader2 className="h-4 w-4 mr-2 animate-spin"/>
