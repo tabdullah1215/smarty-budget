@@ -7,6 +7,7 @@ import DashboardHeader from './DashboardHeader';
 export function AppRegistration() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
     const [orderNumber, setOrderNumber] = useState('');
     const { appId, linkType, token } = useParams();
     const navigate = useNavigate();
@@ -15,6 +16,15 @@ export function AppRegistration() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setPermanentMessage({ type: '', content: '' });
+
+        if (password !== confirmPassword) {
+            setPermanentMessage({
+                type: 'error',
+                content: 'Passwords do not match'
+            });
+            return;
+        }
+
         try {
             const payload = {
                 email,
@@ -105,9 +115,22 @@ export function AppRegistration() {
                                 required
                             />
                         </div>
+                        <div>
+                            <label htmlFor="confirmPassword" className="block mb-1 text-sm font-medium">Confirm
+                                Password</label>
+                            <input
+                                id="confirmPassword"
+                                type="password"
+                                value={confirmPassword}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                className="w-full p-2 border rounded"
+                                required
+                            />
+                        </div>
                         {linkType === 'generic' && (
                             <div>
-                                <label htmlFor="orderNumber" className="block mb-1 text-sm font-medium">Order Number</label>
+                                <label htmlFor="orderNumber" className="block mb-1 text-sm font-medium">Order
+                                    Number</label>
                                 <input
                                     id="orderNumber"
                                     type="text"
