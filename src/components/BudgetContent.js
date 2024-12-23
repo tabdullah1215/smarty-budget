@@ -49,7 +49,7 @@ export const BudgetContent = () => {
                         <div className="flex items-center gap-4">
                             <h1 className="text-3xl font-bold text-gray-900">Smarty Budget Tracker</h1>
                             <span className="text-sm text-gray-600">
-                                {userInfo?.email}
+                                {userInfo?.sub}
                             </span>
                         </div>
                         <div className="flex items-center gap-4">
