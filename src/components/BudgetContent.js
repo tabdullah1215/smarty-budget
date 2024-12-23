@@ -89,6 +89,7 @@ export const BudgetContent = () => {
 
                     {showNewBudgetForm && (
                         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+                            <div className="absolute inset-0 bg-gray-600 bg-opacity-50 pointer-events-none"></div>
                             <div
                                 className="relative top-20 mx-auto p-5 border w-full max-w-xl shadow-lg rounded-md bg-white">
                                 <div className="flex justify-between items-center mb-4">
@@ -127,8 +128,8 @@ export const BudgetContent = () => {
                         </div>
                     )}
 
-                    {selectedBudget ? (
-                        <BudgetDetails
+                {selectedBudget ? (
+                    <BudgetDetails
                             budget={selectedBudget}
                             onClose={() => setSelectedBudget(null)}
                             onUpdate={updateBudget}
