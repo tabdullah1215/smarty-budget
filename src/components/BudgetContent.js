@@ -36,7 +36,7 @@ export const BudgetContent = () => {
     // Add logout handler
     const onLogout = async () => {
         setIsLoggingOut(true);
-        await handleLogout();
+        handleLogout();
         setIsLoggingOut(false);
     }
 

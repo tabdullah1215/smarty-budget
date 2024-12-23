@@ -25,8 +25,15 @@ export const useLogin = (setPermanentMessage) => {
         }
     };
 
+    // Change to non-async since we don't need to await anything
+    const handleLogout = () => {
+        authService.removeToken();
+        navigate('/login');
+    };
+
     return {
         isLoading,
-        handleLogin
+        handleLogin,
+        handleLogout
     };
 };
