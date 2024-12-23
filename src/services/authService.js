@@ -48,6 +48,16 @@ const authService = {
         }
     },
 
+    getUserInfo() {
+        try {
+            const token = this.getToken();
+            if (!token) return null;
+            return jwtDecode(token);
+        } catch {
+            return null;
+        }
+    },
+
     initializeAuth() {
         const token = this.getToken();
         if (token) {
