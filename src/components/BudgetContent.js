@@ -44,19 +44,20 @@ export const BudgetContent = () => {
         <div className="min-h-screen bg-gray-200 py-6 px-4 sm:px-6 lg:px-8">
             <div className="max-w-7xl mx-auto">
                 {/* Header Card */}
+                {/* Header Card */}
                 <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
-                    <div className="flex justify-between items-center">
-                        <div className="flex items-center gap-4">
+                    <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+                        <div className="flex flex-col md:flex-row md:items-center gap-4">
                             <h1 className="text-3xl font-bold text-gray-900">Smarty Budget Tracker</h1>
                             <span className="text-sm text-gray-600">
-                                {userInfo?.sub}
-                            </span>
+                {userInfo?.sub}
+            </span>
                         </div>
-                        <div className="flex items-center gap-4">
+                        <div className="flex flex-col md:flex-row gap-4">
                             <button
                                 onClick={onLogout}
                                 disabled={isLoggingOut}
-                                className="inline-flex items-center px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-blue-300"
+                                className="inline-flex items-center justify-center px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-blue-300"
                             >
                                 {isLoggingOut && <Loader2 size={16} className="mr-2 animate-spin"/>}
                                 {isLoggingOut ? 'Logging out...' : 'Logout'}
@@ -64,12 +65,12 @@ export const BudgetContent = () => {
                             <button
                                 onClick={handleCreateClick}
                                 disabled={isCreating}
-                                className="inline-flex items-center px-4 py-2 border border-transparent
-                                text-sm font-medium rounded-md shadow-sm text-white
-                                bg-indigo-600 hover:bg-indigo-700
-                                focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500
-                                transition-all duration-200
-                                disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="inline-flex items-center justify-center px-4 py-2 border border-transparent
+                    text-sm font-medium rounded-md shadow-sm text-white
+                    bg-indigo-600 hover:bg-indigo-700
+                    focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500
+                    transition-all duration-200
+                    disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {isCreating ? (
                                     <>
@@ -86,7 +87,6 @@ export const BudgetContent = () => {
                         </div>
                     </div>
                 </div>
-
                     {showNewBudgetForm && (
                         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
                             <div className="absolute inset-0 bg-gray-600 bg-opacity-50 pointer-events-none"></div>
