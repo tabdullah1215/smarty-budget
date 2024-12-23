@@ -85,6 +85,7 @@ export const BudgetContent = () => {
                             </button>
                         </div>
                     </div>
+                </div>
 
                     {showNewBudgetForm && (
                         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
@@ -143,6 +144,5 @@ export const BudgetContent = () => {
                     )}
                 </div>
             </div>
-        </div>
     );
 }
