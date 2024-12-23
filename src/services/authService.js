@@ -48,6 +48,13 @@ const authService = {
         }
     },
 
+    initializeAuth() {
+        const token = this.getToken();
+        if (token) {
+            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        }
+    },
+
     async login(email, password) {
         try {
             const response = await axios.post(
