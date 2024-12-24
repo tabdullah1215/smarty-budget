@@ -105,7 +105,6 @@ export const BudgetContent = () => {
                         <div className="relative top-20 mx-4 md:mx-auto p-5 border md:w-full max-w-[90%] md:max-w-xl shadow-lg rounded-md bg-white">
                             <div className="flex justify-between items-center mb-4">
                                 <h2 className="text-xl font-semibold text-gray-900">Create New Budget</h2>
-                                {/* X button with animation */}
                                 <button
                                     onClick={handleCancelClick}
                                     disabled={isCancelling}
@@ -115,13 +114,9 @@ export const BudgetContent = () => {
                         disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     {isCancelling ? (
-                                        <>
-                                            <Loader2 className="h-4 w-4 animate-spin"/>
-                                        </>
+                                        <Loader2 className="h-6 w-6 animate-spin"/>
                                     ) : (
-                                        <>
-                                            <X className="h-4 w-4"/>
-                                        </>
+                                        <X className="h-6 w-6"/>
                                     )}
                                 </button>
                             </div>
@@ -142,32 +137,10 @@ export const BudgetContent = () => {
                                 </div>
                                 <BudgetForm
                                     onSave={handleCreateBudget}
-                                    onClose={() => setShowNewBudgetForm(false)}
+                                    onClose={handleCancelClick} 
                                     budgetType={selectedBudgetType}
                                     isNewBudget={true}
                                 />
-                            </div>
-                            <div className="flex justify-end gap-4">
-                                {/* Cancel button with animation */}
-                                <button
-                                    onClick={handleCancelClick}
-                                    disabled={isCancelling}
-                                    className="inline-flex items-center justify-center px-4 py-2
-                        text-sm font-medium rounded-md
-                        bg-gray-100 text-gray-700 hover:bg-gray-200
-                        focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500
-                        transition-all duration-200
-                        disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                    {isCancelling ? (
-                                        <>
-                                            <Loader2 className="h-4 w-4 mr-2 animate-spin"/>
-                                            Cancelling...
-                                        </>
-                                    ) : (
-                                        'Cancel'
-                                    )}
-                                </button>
                             </div>
                         </div>
                     </div>
