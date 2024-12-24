@@ -163,13 +163,17 @@ export const BudgetForm = ({
                         {initialItem ? 'Edit Budget Item' : 'Add Budget Item'}
                     </h2>
                     <button
-                        onClick={handleCancel}
-                        disabled={isSaving}
+                        onClick={handleCancel} // Use the handleCancel function
+                        disabled={isSaving || isCancelling}
                         className="text-gray-400 hover:text-gray-500 transition-colors duration-200"
                     >
-                        <X className="h-6 w-6" />
+                        {isCancelling ? (
+                            <Loader2 className="h-4 w-4 animate-spin" /> // Show spinner if cancelling
+                        ) : (
+                            <X className="h-6 w-6" />
+                        )}
                     </button>
-                </div>
+
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
@@ -264,6 +268,7 @@ export const BudgetForm = ({
                     </div>
                 </form>
             </div>
+        </div>
         </div>
     );
 };
