@@ -1,3 +1,4 @@
+// src/components/BudgetForm.js
 import React, { useState, useEffect } from 'react';
 import { X, Loader2 } from 'lucide-react';
 import { budgetTemplates } from '../data/budgetTemplates';
@@ -25,39 +26,37 @@ export const BudgetForm = ({ onSave, onClose, budgetType, isNewBudget = false, i
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsSubmitting(true);
-        await new Promise(resolve => setTimeout(resolve, 500));
-
-        if (isNewBudget) {
-            onSave({
-                name,
-                type: budgetType,
-                totalBudget: Number(totalBudget),
-                items: []
-            });
-        } else {
-            onSave({
-                items: [{
-                    id: initialItem?.id || crypto.randomUUID(),
-                    category,
-                    description,
-                    amount: Number(amount),
-                    date,
-                    isCommitted: true
-                }]
-            });
-        }
+        await withMinimumDelay(async () => {
+            if (isNewBudget) {
+                onSave({
+                    name,
+                    type: budgetType,
+                    totalBudget: Number(totalBudget),
+                    items: []
+                });
+            } else {
+                onSave({
+                    items: [{
+                        id: initialItem?.id || crypto.randomUUID(),
+                        category,
+                        description,
+                        amount: Number(amount),
+                        date,
+                        isCommitted: true
+                    }]
+                });
+            }
+        });
         setIsSubmitting(false);
     };
 
     const handleCancel = async () => {
         setIsCancelling(true);
         await withMinimumDelay(async () => {
-            onClose?.();
+            onClose();
         });
         setIsCancelling(false);
     };
-
-    const categories = budgetTemplates[budgetType]?.categories || [];
 
     if (isNewBudget) {
         return (
@@ -92,10 +91,10 @@ export const BudgetForm = ({ onSave, onClose, budgetType, isNewBudget = false, i
                         onClick={handleCancel}
                         disabled={isCancelling}
                         className="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700
-        border border-gray-300 rounded-md hover:bg-gray-200
-        focus:outline-none focus:ring-2 focus:ring-gray-500
-        transition-all duration-200
-        disabled:opacity-50 disabled:cursor-not-allowed"
+                            border border-gray-300 rounded-md hover:bg-gray-200
+                            focus:outline-none focus:ring-2 focus:ring-gray-500
+                            transition-all duration-200
+                            disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         {isCancelling ? (
                             <>
@@ -109,18 +108,26 @@ export const BudgetForm = ({ onSave, onClose, budgetType, isNewBudget = false, i
                     <button
                         type="submit"
                         disabled={isSubmitting}
-                        className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="inline-flex items-center px-4 py-2 border border-transparent
+                            rounded-md shadow-sm text-sm font-medium text-white
+                            bg-indigo-600 hover:bg-indigo-700
+                            focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500
+                            transition-all duration-200
+                            disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         {isSubmitting ? (
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin"/>
-                        ) : null}
-                        Save Budget
+                            <>
+                                <Loader2 className="h-4 w-4 mr-2 animate-spin"/>
+                                Saving...
+                            </>
+                        ) : (
+                            'Save Budget'
+                        )}
                     </button>
                 </div>
             </form>
         );
     }
-
     return (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
             <div className="relative top-20 mx-auto p-5 border w-full max-w-xl shadow-lg rounded-md bg-white">

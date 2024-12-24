@@ -1,5 +1,5 @@
 // src/utils/withDelay.js
-export const withMinimumDelay = async (operation, minimumDelay = 1000) => {
+export const withMinimumDelay = async (operation, minimumDelay = 2000) => {
     const startTime = Date.now();
     const result = await operation();
     const elapsedTime = Date.now() - startTime;

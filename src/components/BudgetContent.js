@@ -17,39 +17,32 @@ export const BudgetContent = () => {
     const [selectedBudgetType, setSelectedBudgetType] = useState('monthly');
     const [isCreating, setIsCreating] = useState(false);
     const [isLoggingOut, setIsLoggingOut] = useState(false);
-    const [isCancelling, setIsCancelling] = useState(false);
     const {handleLogout} = useLogin();
     const userInfo = authService.getUserInfo();
 
     const handleCreateClick = async () => {
         setIsCreating(true);
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await withMinimumDelay(async () => {
+            setShowNewBudgetForm(true);
+        });
         setIsCreating(false);
-        setShowNewBudgetForm(true);
     };
 
     const handleCreateBudget = async (budgetData) => {
         setIsCreating(true);
-        await new Promise(resolve => setTimeout(resolve, 500));
-        createBudget(budgetData.name, budgetData.type, budgetData.totalBudget);
+        await withMinimumDelay(async () => {
+            createBudget(budgetData.name, budgetData.type, budgetData.totalBudget);
+            setShowNewBudgetForm(false);
+        });
         setIsCreating(false);
-        setShowNewBudgetForm(false);
     };
-    // Add logout handler
+
     const onLogout = async () => {
         setIsLoggingOut(true);
         await withMinimumDelay(async () => {
             handleLogout();
         });
         setIsLoggingOut(false);
-    }
-
-    const handleCancelClick = async () => {
-        setIsCancelling(true);
-        await withMinimumDelay(async () => {
-            setShowNewBudgetForm(false);
-        });
-        setIsCancelling(false);
     };
 
     return (
@@ -61,8 +54,8 @@ export const BudgetContent = () => {
                         <div className="flex flex-col md:flex-row md:items-center gap-4">
                             <h1 className="text-3xl font-bold text-gray-900">Smarty Budget Tracker</h1>
                             <span className="text-sm text-gray-600">
-                {userInfo?.sub}
-            </span>
+                                {userInfo?.sub}
+                            </span>
                         </div>
                         <div className="flex flex-col md:flex-row gap-4">
                             <button
@@ -77,11 +70,11 @@ export const BudgetContent = () => {
                                 onClick={handleCreateClick}
                                 disabled={isCreating}
                                 className="inline-flex items-center justify-center px-4 py-2 border border-transparent
-                    text-sm font-medium rounded-md shadow-sm text-white
-                    bg-indigo-600 hover:bg-indigo-700
-                    focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500
-                    transition-all duration-200
-                    disabled:opacity-50 disabled:cursor-not-allowed"
+                                    text-sm font-medium rounded-md shadow-sm text-white
+                                    bg-indigo-600 hover:bg-indigo-700
+                                    focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500
+                                    transition-all duration-200
+                                    disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {isCreating ? (
                                     <>
@@ -106,17 +99,10 @@ export const BudgetContent = () => {
                             <div className="flex justify-between items-center mb-4">
                                 <h2 className="text-xl font-semibold text-gray-900">Create New Budget</h2>
                                 <button
-                                    onClick={handleCancelClick}
-                                    disabled={isCancelling}
-                                    className="inline-flex items-center justify-center p-2 rounded-md
-                                        text-gray-400 hover:text-gray-500 focus:outline-none
-                                        transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    onClick={() => setShowNewBudgetForm(false)}
+                                    className="text-gray-400 hover:text-gray-500 focus:outline-none"
                                 >
-                                    {isCancelling ? (
-                                        <Loader2 className="h-6 w-6 animate-spin"/>
-                                    ) : (
-                                        <X className="h-6 w-6"/>
-                                    )}
+                                    <X className="h-6 w-6"/>
                                 </button>
                             </div>
                             <div className="mb-4">
@@ -136,7 +122,7 @@ export const BudgetContent = () => {
                                 </div>
                                 <BudgetForm
                                     onSave={handleCreateBudget}
-                                    onClose={handleCancelClick}
+                                    onClose={() => setShowNewBudgetForm(false)}
                                     budgetType={selectedBudgetType}
                                     isNewBudget={true}
                                 />
@@ -147,20 +133,20 @@ export const BudgetContent = () => {
 
                 {selectedBudget ? (
                     <BudgetDetails
-                            budget={selectedBudget}
-                            onClose={() => setSelectedBudget(null)}
-                            onUpdate={updateBudget}
+                        budget={selectedBudget}
+                        onClose={() => setSelectedBudget(null)}
+                        onUpdate={updateBudget}
+                    />
+                ) : (
+                    <div className="bg-gray-200">
+                        <BudgetList
+                            budgets={budgets}
+                            onSelect={setSelectedBudget}
+                            onDelete={deleteBudget}
                         />
-                    ) : (
-                        <div className="bg-gray-200">
-                            <BudgetList
-                                budgets={budgets}
-                                onSelect={setSelectedBudget}
-                                onDelete={deleteBudget}
-                            />
-                        </div>
-                    )}
-                </div>
+                    </div>
+                )}
             </div>
+        </div>
     );
-}
+};
