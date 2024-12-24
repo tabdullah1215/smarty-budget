@@ -132,7 +132,8 @@ export const BudgetContent = () => {
                 {showNewBudgetForm && (
                     <div className="fixed inset-0 overflow-y-auto h-full w-full z-50">
                         <div className="absolute inset-0 bg-gray-600 bg-opacity-50"></div>
-                        <div className="relative top-20 mx-auto p-5 border w-full max-w-xl shadow-lg rounded-md bg-white">
+                        <div
+                            className="relative top-20 mx-auto p-5 border w-full max-w-xl shadow-lg rounded-md bg-white">
                             <div className="flex justify-between items-center mb-4">
                                 <h2 className="text-xl font-semibold text-gray-900">Create New Budget</h2>
                                 <button
@@ -151,22 +152,30 @@ export const BudgetContent = () => {
                         </div>
                     </div>
                 )}
-
-                {selectedBudget ? (
-                    <BudgetDetails
-                        budget={selectedBudget}
-                        onClose={() => setSelectedBudget(null)}
-                        onUpdate={updateBudget}
-                    />
-                ) : (
-                    <div className="bg-gray-200">
+                <div className="relative min-h-screen">
+                    {/* Budget List */}
+                    <div
+                        className={`relative transition-opacity duration-300 ${selectedBudget ? 'pointer-events-none opacity-50' : 'opacity-100'}`}
+                    >
                         <BudgetList
                             budgets={budgets}
                             onSelect={setSelectedBudget}
                             onDelete={deleteBudget}
                         />
                     </div>
-                )}
+
+                    {/* Budget Details Overlay */}
+                    {selectedBudget && (
+                        <div
+                            className="absolute inset-0 bg-gray-600 bg-opacity-50 z-50 flex justify-center items-center">
+                            <BudgetDetails
+                                budget={selectedBudget}
+                                onClose={() => setSelectedBudget(null)}
+                                onUpdate={updateBudget}
+                            />
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );
