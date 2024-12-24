@@ -49,16 +49,27 @@ export const BudgetContent = () => {
         setIsCreating(false);
     };
 
+    // const onLogout = async () => {
+    //     setIsLoggingOut(true);
+    //
+    //     // Inline delay before invoking the logout handler
+    //     await new Promise((resolve) => setTimeout(resolve, 2000));
+    //
+    //     handleLogout(); // This still includes the navigation logic
+    //     setIsLoggingOut(false);
+    // };
+
     const onLogout = async () => {
         setIsLoggingOut(true);
 
-        // Inline delay before invoking the logout handler
-        await new Promise((resolve) => setTimeout(resolve, 2000));
+        try {
+            await withMinimumDelay(() => handleLogout(), 2000); // Ensure delay happens first
+        } catch (error) {
+            console.error('Logout failed:', error); // Optional: Handle errors gracefully
+        }
 
-        handleLogout(); // This still includes the navigation logic
         setIsLoggingOut(false);
     };
-
 
 
 
