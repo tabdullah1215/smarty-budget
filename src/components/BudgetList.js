@@ -8,6 +8,8 @@ export const BudgetList = ({ budgets, onSelect, onDelete }) => {
     const [isDeleting, setIsDeleting] = useState(false);
     const [confirmingDeleteId, setConfirmingDeleteId] = useState(null);
     const [openingBudgetId, setOpeningBudgetId] = useState(null);
+    const [isCancelling, setIsCancelling] = useState(false);
+
 
     const handleDelete = async (e, budgetId) => {
         e.stopPropagation();
@@ -18,8 +20,13 @@ export const BudgetList = ({ budgets, onSelect, onDelete }) => {
     };
 
     const handleCancelDelete = async () => {
-        await withMinimumDelay(() => setDeletingBudgetId(null), 2000); // Add delay
+        setIsCancelling(true); // Set loading state
+
+        await withMinimumDelay(() => setDeletingBudgetId(null), 2000); // Add delay with animation support
+
+        setIsCancelling(false); // Reset loading state
     };
+
 
     const confirmDelete = async () => {
         if (deletingBudgetId) {
@@ -204,11 +211,16 @@ export const BudgetList = ({ budgets, onSelect, onDelete }) => {
                                 {/* Cancel Button */}
                                 <button
                                     onClick={handleCancelDelete}
-                                    disabled={isDeleting}
-                                    className="px-4 py-2 bg-gray-100 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-200"
+                                    disabled={isCancelling || isDeleting}
+                                    className="px-4 py-2 bg-gray-100 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    Cancel
+                                    {isCancelling ? (
+                                        <Loader2 className="h-4 w-4 mr-2 animate-spin"/>
+                                    ) : (
+                                        'Cancel'
+                                    )}
                                 </button>
+
 
                                 {/* Delete Button */}
                                 <button
@@ -217,7 +229,7 @@ export const BudgetList = ({ budgets, onSelect, onDelete }) => {
                                     className="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
                                 >
                                     {isDeleting ? (
-                                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                        <Loader2 className="h-4 w-4 mr-2 animate-spin"/>
                                     ) : null}
                                     Delete
                                 </button>
