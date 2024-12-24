@@ -109,9 +109,8 @@ export const BudgetContent = () => {
                                     onClick={handleCancelClick}
                                     disabled={isCancelling}
                                     className="inline-flex items-center justify-center p-2 rounded-md
-                        text-gray-400 hover:text-gray-500 focus:outline-none
-                        transition-all duration-200
-                        disabled:opacity-50 disabled:cursor-not-allowed"
+                                        text-gray-400 hover:text-gray-500 focus:outline-none
+                                        transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     {isCancelling ? (
                                         <Loader2 className="h-6 w-6 animate-spin"/>
@@ -137,7 +136,7 @@ export const BudgetContent = () => {
                                 </div>
                                 <BudgetForm
                                     onSave={handleCreateBudget}
-                                    onClose={handleCancelClick} 
+                                    onClose={handleCancelClick}
                                     budgetType={selectedBudgetType}
                                     isNewBudget={true}
                                 />
