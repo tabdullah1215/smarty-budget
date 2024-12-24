@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import authService from '../services/authService';
-import { indexdbService } from '../services/indexdbService';
+import { indexdbService } from '../services/IndexDBService';
 
 export const useBudgets = () => {
     const [budgets, setBudgets] = useState([]);

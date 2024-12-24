@@ -6,7 +6,7 @@ import Login from './components/Login';
 import AppRegistration from './components/AppRegistration';
 import { BudgetContent } from "./components/BudgetContent";
 import authService from './services/authService';
-import { indexdbService } from './services/indexdbService';
+import { indexdbService } from './services/IndexDBService';
 
 // Error Boundary Component
 class ErrorBoundary extends React.Component {
