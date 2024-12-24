@@ -52,10 +52,11 @@ export const BudgetContent = () => {
     const onLogout = async () => {
         setIsLoggingOut(true);
         await withMinimumDelay(async () => {
-            handleLogout();
-        });
+            handleLogout(); // Perform the actual logout
+        }, 2000); // Add a delay of 2 seconds
         setIsLoggingOut(false);
     };
+
 
     if (isLoading) {
         return (
