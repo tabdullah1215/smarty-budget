@@ -98,51 +98,50 @@ export const BudgetContent = () => {
                         </div>
                     </div>
                 </div>
-                    {showNewBudgetForm && (
-                        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-                            <div className="absolute inset-0 bg-gray-600 bg-opacity-50 pointer-events-none"></div>
-                            <div className="relative top-20 mx-4 md:mx-auto p-5 border w-auto md:w-full md:max-w-xl shadow-lg rounded-md bg-white">
-                                <div className="flex justify-between items-center mb-4">
-                                    <h2 className="text-xl font-semibold text-gray-900">Create New Budget</h2>
-                                    <button
-                                        onClick={handleCancelClick}
-                                        disabled={isCancelling}
-                                        className="text-gray-400 hover:text-gray-500 focus:outline-none transition-all duration-200 disabled:opacity-50"
-                                    >
-                                        {isCancelling ? (
-                                            <Loader2 className="h-6 w-6 animate-spin"/>
-                                        ) : (
-                                            <X className="h-6 w-6"/>
-                                        )}
-                                    </button>
-                                </div>
+                {showNewBudgetForm && (
+                    <div className="fixed inset-0 overflow-y-auto h-full w-full z-50">
+                        <div className="absolute inset-0 bg-gray-600 bg-opacity-50 pointer-events-none"></div>
+                        <div className="relative top-20 mx-4 md:mx-auto p-5 border md:w-full max-w-[90%] md:max-w-xl shadow-lg rounded-md bg-white">
+                            <div className="flex justify-between items-center mb-4">
+                                <h2 className="text-xl font-semibold text-gray-900">Create New Budget</h2>
+                                <button
+                                    onClick={handleCancelClick}
+                                    disabled={isCancelling}
+                                    className="text-gray-400 hover:text-gray-500 focus:outline-none transition-all duration-200 disabled:opacity-50"
+                                >
+                                    {isCancelling ? (
+                                        <Loader2 className="h-6 w-6 animate-spin" />
+                                    ) : (
+                                        <X className="h-6 w-6"/>
+                                    )}
+                                </button>
+                            </div>
+                            <div className="mb-4">
                                 <div className="mb-4">
-                                    <div className="mb-4">
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">Budget
-                                            Type</label>
-                                        <select
-                                            value={selectedBudgetType}
-                                            onChange={(e) => setSelectedBudgetType(e.target.value)}
-                                            className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
-                                        >
-                                            {Object.keys(budgetTemplates).map(type => (
-                                                <option key={type} value={type}>
-                                                    {type.charAt(0).toUpperCase() + type.slice(1)}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                    <BudgetForm
-                                        onSave={handleCreateBudget}
-                                        onClose={() => setShowNewBudgetForm(false)}
-                                        budgetType={selectedBudgetType}
-                                        isNewBudget={true}
-                                    />
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Budget Type</label>
+                                    <select
+                                        value={selectedBudgetType}
+                                        onChange={(e) => setSelectedBudgetType(e.target.value)}
+                                        className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+                                    >
+                                        {Object.keys(budgetTemplates).map(type => (
+                                            <option key={type} value={type}>
+                                                {type.charAt(0).toUpperCase() + type.slice(1)}
+                                            </option>
+                                        ))}
+                                    </select>
                                 </div>
+                                <BudgetForm
+                                    onSave={handleCreateBudget}
+                                    onClose={handleCancelClick}
+                                    budgetType={selectedBudgetType}
+                                    isNewBudget={true}
+                                    isCancelling={isCancelling}
+                                />
                             </div>
                         </div>
-                    )}
-
+                    </div>
+                )}
                 {selectedBudget ? (
                     <BudgetDetails
                             budget={selectedBudget}
