@@ -8,6 +8,7 @@ import { budgetTemplates } from '../data/budgetTemplates';
 import { X, Plus, Loader2 } from 'lucide-react';
 import { useLogin } from '../hooks/useLogin';
 import authService from '../services/authService';
+import { withMinimumDelay } from '../utils/withDelay';
 
 export const BudgetContent = () => {
     const {budgets, createBudget, updateBudget, deleteBudget} = useBudgets();
@@ -16,6 +17,7 @@ export const BudgetContent = () => {
     const [selectedBudgetType, setSelectedBudgetType] = useState('monthly');
     const [isCreating, setIsCreating] = useState(false);
     const [isLoggingOut, setIsLoggingOut] = useState(false);
+    const [isCancelling, setIsCancelling] = useState(false);
     const {handleLogout} = useLogin();
     const userInfo = authService.getUserInfo();
 
@@ -36,14 +38,23 @@ export const BudgetContent = () => {
     // Add logout handler
     const onLogout = async () => {
         setIsLoggingOut(true);
-        handleLogout();
+        await withMinimumDelay(async () => {
+            handleLogout();
+        });
         setIsLoggingOut(false);
     }
+
+    const handleCancelClick = async () => {
+        setIsCancelling(true);
+        await withMinimumDelay(async () => {
+            setShowNewBudgetForm(false);
+        });
+        setIsCancelling(false);
+    };
 
     return (
         <div className="min-h-screen bg-gray-200 py-6 px-4 sm:px-6 lg:px-8">
             <div className="max-w-7xl mx-auto">
-                {/* Header Card */}
                 {/* Header Card */}
                 <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
                     <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
@@ -90,15 +101,19 @@ export const BudgetContent = () => {
                     {showNewBudgetForm && (
                         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
                             <div className="absolute inset-0 bg-gray-600 bg-opacity-50 pointer-events-none"></div>
-                            <div
-                                className="relative top-20 mx-auto p-5 border w-full max-w-xl shadow-lg rounded-md bg-white">
+                            <div className="relative top-20 mx-4 md:mx-auto p-5 border w-auto md:w-full md:max-w-xl shadow-lg rounded-md bg-white">
                                 <div className="flex justify-between items-center mb-4">
                                     <h2 className="text-xl font-semibold text-gray-900">Create New Budget</h2>
                                     <button
-                                        onClick={() => setShowNewBudgetForm(false)}
-                                        className="text-gray-400 hover:text-gray-500 focus:outline-none"
+                                        onClick={handleCancelClick}
+                                        disabled={isCancelling}
+                                        className="text-gray-400 hover:text-gray-500 focus:outline-none transition-all duration-200 disabled:opacity-50"
                                     >
-                                        <X className="h-6 w-6"/>
+                                        {isCancelling ? (
+                                            <Loader2 className="h-6 w-6 animate-spin"/>
+                                        ) : (
+                                            <X className="h-6 w-6"/>
+                                        )}
                                     </button>
                                 </div>
                                 <div className="mb-4">
