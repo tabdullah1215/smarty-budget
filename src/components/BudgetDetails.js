@@ -3,9 +3,9 @@ import { useReactToPrint } from 'react-to-print';
 import { Printer, Share2, X, PlusCircle, Loader2 } from 'lucide-react';
 import { BudgetForm } from './BudgetForm';
 import { BudgetItemRow } from './BudgetItemRow';
+import { withMinimumDelay } from '../utils/withDelay';
 
-const PrintableContent = React.forwardRef((props, ref) => {
-    const { budget } = props;
+const PrintableContent = React.forwardRef(({ budget }, ref) => {
     return (
         <div ref={ref} className="print-content">
             <div className="p-8">
@@ -47,12 +47,11 @@ export const BudgetDetails = ({ budget, onClose, onUpdate }) => {
     const [isAddingItem, setIsAddingItem] = useState(false);
     const [isClosing, setIsClosing] = useState(false);
     const [localBudget, setLocalBudget] = useState(budget);
+    const [isSaving, setIsSaving] = useState(false);
     const componentRef = useRef(null);
     const [isPrinting, setIsPrinting] = useState(false);
     const [isSharing, setIsSharing] = useState(false);
 
-
-    // Update local budget when prop changes
     useEffect(() => {
         setLocalBudget(budget);
     }, [budget]);
@@ -89,8 +88,8 @@ export const BudgetDetails = ({ budget, onClose, onUpdate }) => {
                 url: window.location.href,
             };
             await navigator.share(shareData);
-        } catch (err) {
-            console.error('Error sharing:', err);
+        } catch (error) {
+            console.error('Error sharing:', error);
         } finally {
             setIsSharing(false);
         }
@@ -98,47 +97,59 @@ export const BudgetDetails = ({ budget, onClose, onUpdate }) => {
 
     const handleAddItemClick = async () => {
         setIsAddingItem(true);
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await withMinimumDelay(async () => {});
         setIsAddingItem(false);
         setShowForm(true);
     };
 
     const handleClose = async () => {
         setIsClosing(true);
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await withMinimumDelay(async () => {});
         setIsClosing(false);
         onClose();
     };
 
-    const handleSaveItem = (updates) => {
-        if (updates.items && updates.items.length > 0) {
-            const updatedItems = editingItem
-                ? localBudget.items.map(item =>
-                    item.id === editingItem.id ? { ...item, ...updates.items[0] } : item
-                )
-                : [...localBudget.items, updates.items[0]];
+    const handleSaveItem = async (updates) => {
+        setIsSaving(true);
+        try {
+            if (updates.items && updates.items.length > 0) {
+                const updatedItems = editingItem
+                    ? localBudget.items.map(item =>
+                        item.id === editingItem.id ? { ...item, ...updates.items[0] } : item
+                    )
+                    : [...localBudget.items, updates.items[0]];
 
-            const updatedBudget = {
-                ...localBudget,
-                items: updatedItems,
-            };
+                const updatedBudget = {
+                    ...localBudget,
+                    items: updatedItems,
+                };
 
-            // Update local state immediately
-            setLocalBudget(updatedBudget);
-            // Update parent state
-            onUpdate(updatedBudget);
+                setLocalBudget(updatedBudget);
+                await onUpdate(updatedBudget);
+            }
+        } catch (error) {
+            console.error('Error saving item:', error);
+        } finally {
+            setIsSaving(false);
+            setShowForm(false);
+            setEditingItem(null);
         }
-        setShowForm(false);
-        setEditingItem(null);
     };
 
-    const handleRemoveItem = (itemId) => {
-        const updatedBudget = {
-            ...localBudget,
-            items: localBudget.items.filter(item => item.id !== itemId),
-        };
-        setLocalBudget(updatedBudget);
-        onUpdate(updatedBudget);
+    const handleRemoveItem = async (itemId) => {
+        setIsSaving(true);
+        try {
+            const updatedBudget = {
+                ...localBudget,
+                items: localBudget.items.filter(item => item.id !== itemId),
+            };
+            setLocalBudget(updatedBudget);
+            await onUpdate(updatedBudget);
+        } catch (error) {
+            console.error('Error removing item:', error);
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     const handleEditItem = (item) => {
@@ -158,7 +169,7 @@ export const BudgetDetails = ({ budget, onClose, onUpdate }) => {
                     <div className="flex space-x-2">
                         <button
                             onClick={handlePrintClick}
-                            disabled={isPrinting}
+                            disabled={isPrinting || isSaving}
                             className="inline-flex items-center p-2 border border-transparent
                              rounded-md text-gray-600 hover:bg-gray-100
                              focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500
@@ -174,7 +185,7 @@ export const BudgetDetails = ({ budget, onClose, onUpdate }) => {
                         </button>
                         <button
                             onClick={handleShare}
-                            disabled={isSharing}
+                            disabled={isSharing || isSaving}
                             className="inline-flex items-center p-2 border border-transparent
                                  rounded-md text-gray-600 hover:bg-gray-100
                                  focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500
@@ -190,7 +201,7 @@ export const BudgetDetails = ({ budget, onClose, onUpdate }) => {
                         </button>
                         <button
                             onClick={handleClose}
-                            disabled={isClosing}
+                            disabled={isClosing || isSaving}
                             className="inline-flex items-center p-2 border border-transparent
                                  rounded-md text-gray-600 hover:bg-gray-100
                                  focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500
@@ -226,7 +237,7 @@ export const BudgetDetails = ({ budget, onClose, onUpdate }) => {
                     <h3 className="text-lg font-medium text-gray-900">Budget Items</h3>
                     <button
                         onClick={handleAddItemClick}
-                        disabled={isAddingItem}
+                        disabled={isAddingItem || isSaving}
                         className="inline-flex items-center px-3 py-2 border border-transparent
                              text-sm leading-4 font-medium rounded-md text-white
                              bg-indigo-600 hover:bg-indigo-700
@@ -277,24 +288,25 @@ export const BudgetDetails = ({ budget, onClose, onUpdate }) => {
                                     item={item}
                                     budgetType={localBudget.type}
                                     isCommitted={!!item.isCommitted}
-                                    onUpdate={(updates) => {
+                                    onUpdate={async (updates) => {
                                         const updatedItems = localBudget.items.map(i =>
                                             i.id === item.id ? {...i, ...updates} : i
                                         );
                                         const updatedBudget = {...localBudget, items: updatedItems};
                                         setLocalBudget(updatedBudget);
-                                        onUpdate(updatedBudget);
+                                        await onUpdate(updatedBudget);
                                     }}
                                     onRemove={() => handleRemoveItem(item.id)}
-                                    onCommit={() => {
+                                    onCommit={async () => {
                                         const updatedItems = localBudget.items.map(i =>
                                             i.id === item.id ? {...i, isCommitted: true} : i
                                         );
                                         const updatedBudget = {...localBudget, items: updatedItems};
                                         setLocalBudget(updatedBudget);
-                                        onUpdate(updatedBudget);
+                                        await onUpdate(updatedBudget);
                                     }}
                                     onEdit={() => handleEditItem(item)}
+                                    isSaving={isSaving}
                                 />
                             ))}
                             </tbody>
@@ -311,11 +323,11 @@ export const BudgetDetails = ({ budget, onClose, onUpdate }) => {
                         }}
                         budgetType={localBudget.type}
                         initialItem={editingItem}
+                        isSaving={isSaving}
                     />
                 )}
 
-                {/* Move this above the Close Budget button */}
-                <div style={{position: 'fixed', top: '-9999px', left: '-9999px'}}>  {/* Changed from display: none */}
+                <div style={{position: 'fixed', top: '-9999px', left: '-9999px'}}>
                     <PrintableContent
                         ref={componentRef}
                         budget={localBudget}
@@ -325,7 +337,7 @@ export const BudgetDetails = ({ budget, onClose, onUpdate }) => {
                 <div className="mt-6 flex justify-end">
                     <button
                         onClick={handleClose}
-                        disabled={isClosing}
+                        disabled={isClosing || isSaving}
                         className="inline-flex items-center px-4 py-2 border border-gray-300
                              shadow-sm text-sm font-medium rounded-md text-gray-700
                              bg-white hover:bg-gray-50

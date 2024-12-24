@@ -1,17 +1,17 @@
-// src/components/BudgetContent.js
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { X, Plus, Loader2 } from 'lucide-react';
 import { BudgetList } from './BudgetList';
 import { BudgetDetails } from './BudgetDetails';
 import { BudgetForm } from './BudgetForm';
 import { useBudgets } from '../hooks/useBudget';
-import { budgetTemplates } from '../data/budgetTemplates';
-import { X, Plus, Loader2 } from 'lucide-react';
 import { useLogin } from '../hooks/useLogin';
 import authService from '../services/authService';
 import { withMinimumDelay } from '../utils/withDelay';
+import { budgetTemplates } from '../data/budgetTemplates';
 
 export const BudgetContent = () => {
-    const {budgets, createBudget, updateBudget, deleteBudget} = useBudgets();
+    const {budgets, createBudget, updateBudget, deleteBudget, isLoading} = useBudgets();
     const [selectedBudget, setSelectedBudget] = useState(null);
     const [showNewBudgetForm, setShowNewBudgetForm] = useState(false);
     const [selectedBudgetType, setSelectedBudgetType] = useState('monthly');
@@ -19,6 +19,13 @@ export const BudgetContent = () => {
     const [isLoggingOut, setIsLoggingOut] = useState(false);
     const {handleLogout} = useLogin();
     const userInfo = authService.getUserInfo();
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        if (!userInfo?.sub) {
+            navigate('/login');
+        }
+    }, [userInfo, navigate]);
 
     const handleCreateClick = async () => {
         setIsCreating(true);
@@ -31,8 +38,13 @@ export const BudgetContent = () => {
     const handleCreateBudget = async (budgetData) => {
         setIsCreating(true);
         await withMinimumDelay(async () => {
-            createBudget(budgetData.name, budgetData.type, budgetData.totalBudget);
-            setShowNewBudgetForm(false);
+            try {
+                await createBudget(budgetData.name, budgetData.type, budgetData.totalBudget);
+                setShowNewBudgetForm(false);
+            } catch (error) {
+                console.error('Error creating budget:', error);
+                // Handle error presentation to user
+            }
         });
         setIsCreating(false);
     };
@@ -44,6 +56,14 @@ export const BudgetContent = () => {
         });
         setIsLoggingOut(false);
     };
+
+    if (isLoading) {
+        return (
+            <div className="min-h-screen bg-gray-200 flex items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-gray-600" />
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-gray-200 py-6 px-4 sm:px-6 lg:px-8">
@@ -92,10 +112,11 @@ export const BudgetContent = () => {
                     </div>
                 </div>
 
+                {/* Budget Forms and Lists */}
                 {showNewBudgetForm && (
                     <div className="fixed inset-0 overflow-y-auto h-full w-full z-50">
-                        <div className="absolute inset-0 bg-gray-600 bg-opacity-50 pointer-events-none"></div>
-                        <div className="relative top-20 mx-4 md:mx-auto p-5 border md:w-full max-w-[90%] md:max-w-xl shadow-lg rounded-md bg-white">
+                        <div className="absolute inset-0 bg-gray-600 bg-opacity-50"></div>
+                        <div className="relative top-20 mx-auto p-5 border w-full max-w-xl shadow-lg rounded-md bg-white">
                             <div className="flex justify-between items-center mb-4">
                                 <h2 className="text-xl font-semibold text-gray-900">Create New Budget</h2>
                                 <button
@@ -105,28 +126,12 @@ export const BudgetContent = () => {
                                     <X className="h-6 w-6"/>
                                 </button>
                             </div>
-                            <div className="mb-4">
-                                <div className="mb-4">
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Budget Type</label>
-                                    <select
-                                        value={selectedBudgetType}
-                                        onChange={(e) => setSelectedBudgetType(e.target.value)}
-                                        className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
-                                    >
-                                        {Object.keys(budgetTemplates).map(type => (
-                                            <option key={type} value={type}>
-                                                {type.charAt(0).toUpperCase() + type.slice(1)}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <BudgetForm
-                                    onSave={handleCreateBudget}
-                                    onClose={() => setShowNewBudgetForm(false)}
-                                    budgetType={selectedBudgetType}
-                                    isNewBudget={true}
-                                />
-                            </div>
+                            <BudgetForm
+                                onSave={handleCreateBudget}
+                                onClose={() => setShowNewBudgetForm(false)}
+                                budgetType={selectedBudgetType}
+                                isNewBudget={true}
+                            />
                         </div>
                     </div>
                 )}

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { FileText, Trash2, Calendar, Clock, DollarSign, Paperclip, Camera, Loader2 } from 'lucide-react';
 import { generateUniqueColor } from '../utils/colorGenerator';
+import { withMinimumDelay } from '../utils/withDelay';
 
 export const BudgetList = ({ budgets, onSelect, onDelete }) => {
     const [deletingBudgetId, setDeletingBudgetId] = useState(null);
@@ -9,9 +10,9 @@ export const BudgetList = ({ budgets, onSelect, onDelete }) => {
     const [openingBudgetId, setOpeningBudgetId] = useState(null);
 
     const handleDelete = async (e, budgetId) => {
-        e.stopPropagation(); // Prevent triggering card click
+        e.stopPropagation();
         setConfirmingDeleteId(budgetId);
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await withMinimumDelay(async () => {});
         setConfirmingDeleteId(null);
         setDeletingBudgetId(budgetId);
     };
@@ -20,8 +21,11 @@ export const BudgetList = ({ budgets, onSelect, onDelete }) => {
         if (deletingBudgetId) {
             setIsDeleting(true);
             try {
-                await new Promise(resolve => setTimeout(resolve, 500));
-                await onDelete(deletingBudgetId); // Assuming onDelete might be async
+                await withMinimumDelay(async () => {
+                    await onDelete(deletingBudgetId);
+                });
+            } catch (error) {
+                console.error('Error deleting budget:', error);
             } finally {
                 setIsDeleting(false);
                 setDeletingBudgetId(null);
@@ -30,12 +34,15 @@ export const BudgetList = ({ budgets, onSelect, onDelete }) => {
     };
 
     const handleOpenBudget = async (budget) => {
-        if (openingBudgetId) return; // Prevent multiple clicks
+        if (openingBudgetId) return;
 
         setOpeningBudgetId(budget.id);
         try {
-            await new Promise(resolve => setTimeout(resolve, 500));
-            await onSelect(budget); // Assuming onSelect might be async
+            await withMinimumDelay(async () => {
+                await onSelect(budget);
+            });
+        } catch (error) {
+            console.error('Error opening budget:', error);
         } finally {
             setOpeningBudgetId(null);
         }
@@ -68,7 +75,7 @@ export const BudgetList = ({ budgets, onSelect, onDelete }) => {
                                         }}
                                         disabled={openingBudgetId === budget.id || confirmingDeleteId === budget.id}
                                         className="text-indigo-600 hover:text-indigo-800 transition-colors duration-200
-                   disabled:opacity-50 disabled:cursor-not-allowed"
+                                            disabled:opacity-50 disabled:cursor-not-allowed"
                                         title="View details"
                                     >
                                         {openingBudgetId === budget.id ? (
@@ -100,7 +107,9 @@ export const BudgetList = ({ budgets, onSelect, onDelete }) => {
                                     <Calendar className="h-7 w-7 mr-2 text-gray-400"/>
                                     <div>
                                         <div className="text-sm text-gray-500">Last updated:</div>
-                                        <div className="text-sm text-gray-900">{new Date(budget.updatedAt).toLocaleDateString()}</div>
+                                        <div className="text-sm text-gray-900">
+                                            {new Date(budget.updatedAt).toLocaleDateString()}
+                                        </div>
                                     </div>
                                 </div>
                                 <div className="flex items-center">
@@ -212,6 +221,4 @@ export const BudgetList = ({ budgets, onSelect, onDelete }) => {
             )}
         </div>
     );
-
-
 };

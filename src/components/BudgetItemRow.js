@@ -1,12 +1,23 @@
 import React, { useState } from 'react';
 import { MinusCircle, Plus, Edit2, Loader2 } from 'lucide-react';
 import { budgetTemplates } from '../data/budgetTemplates';
+import { withMinimumDelay } from '../utils/withDelay';
 
-export const BudgetItemRow = ({ item, budgetType, isCommitted, onUpdate, onRemove, onCommit, onEdit }) => {
+export const BudgetItemRow = ({
+                                  item,
+                                  budgetType,
+                                  isCommitted,
+                                  onUpdate,
+                                  onRemove,
+                                  onCommit,
+                                  onEdit,
+                                  isSaving = false
+                              }) => {
     const [isDeleting, setIsDeleting] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [isCommitting, setIsCommitting] = useState(false);
+    const [error, setError] = useState('');
     const categories = budgetTemplates[budgetType]?.categories || [];
 
     const handleDelete = async () => {
@@ -15,24 +26,54 @@ export const BudgetItemRow = ({ item, budgetType, isCommitted, onUpdate, onRemov
 
     const confirmDelete = async () => {
         setIsDeleting(true);
-        await new Promise(resolve => setTimeout(resolve, 500));
-        onRemove();
-        setIsDeleting(false);
-        setShowDeleteConfirm(false);
+        try {
+            await withMinimumDelay(async () => {
+                await onRemove();
+            });
+        } catch (error) {
+            console.error('Error deleting item:', error);
+            setError('Failed to delete item. Please try again.');
+        } finally {
+            setIsDeleting(false);
+            setShowDeleteConfirm(false);
+        }
     };
 
     const handleEdit = async () => {
         setIsEditing(true);
-        await new Promise(resolve => setTimeout(resolve, 500));
-        setIsEditing(false);
-        onEdit();
+        try {
+            await withMinimumDelay(async () => {
+                await onEdit();
+            });
+        } catch (error) {
+            console.error('Error editing item:', error);
+            setError('Failed to edit item. Please try again.');
+        } finally {
+            setIsEditing(false);
+        }
     };
 
     const handleCommit = async () => {
         setIsCommitting(true);
-        await new Promise(resolve => setTimeout(resolve, 500));
-        onCommit();
-        setIsCommitting(false);
+        try {
+            await withMinimumDelay(async () => {
+                await onCommit();
+            });
+        } catch (error) {
+            console.error('Error committing item:', error);
+            setError('Failed to commit item. Please try again.');
+        } finally {
+            setIsCommitting(false);
+        }
+    };
+
+    const handleFieldUpdate = async (updates) => {
+        try {
+            await onUpdate(updates);
+        } catch (error) {
+            console.error('Error updating field:', error);
+            setError('Failed to update field. Please try again.');
+        }
     };
 
     return (
@@ -41,8 +82,8 @@ export const BudgetItemRow = ({ item, budgetType, isCommitted, onUpdate, onRemov
                 <td className="px-6 py-4 whitespace-nowrap">
                     <select
                         value={item.category}
-                        onChange={(e) => onUpdate({ category: e.target.value })}
-                        disabled={isCommitted}
+                        onChange={(e) => handleFieldUpdate({ category: e.target.value })}
+                        disabled={isCommitted || isSaving}
                         className={`block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 ${
                             isCommitted ? 'bg-gray-50' : ''
                         }`}
@@ -57,8 +98,8 @@ export const BudgetItemRow = ({ item, budgetType, isCommitted, onUpdate, onRemov
                     <input
                         type="text"
                         value={item.description}
-                        onChange={(e) => onUpdate({ description: e.target.value })}
-                        disabled={isCommitted}
+                        onChange={(e) => handleFieldUpdate({ description: e.target.value })}
+                        disabled={isCommitted || isSaving}
                         className={`block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 ${
                             isCommitted ? 'bg-gray-50' : ''
                         }`}
@@ -68,8 +109,8 @@ export const BudgetItemRow = ({ item, budgetType, isCommitted, onUpdate, onRemov
                     <input
                         type="date"
                         value={item.date || ''}
-                        onChange={(e) => onUpdate({ date: e.target.value })}
-                        disabled={isCommitted}
+                        onChange={(e) => handleFieldUpdate({ date: e.target.value })}
+                        disabled={isCommitted || isSaving}
                         className={`block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 ${
                             isCommitted ? 'bg-gray-50' : ''
                         }`}
@@ -79,10 +120,10 @@ export const BudgetItemRow = ({ item, budgetType, isCommitted, onUpdate, onRemov
                     <input
                         type="number"
                         value={item.amount || ''}
-                        onChange={(e) => onUpdate({ amount: Number(e.target.value) })}
+                        onChange={(e) => handleFieldUpdate({ amount: Number(e.target.value) })}
                         min="0"
                         step="0.01"
-                        disabled={isCommitted}
+                        disabled={isCommitted || isSaving}
                         className={`block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-right ${
                             isCommitted ? 'bg-gray-50' : ''
                         }`}
@@ -93,7 +134,7 @@ export const BudgetItemRow = ({ item, budgetType, isCommitted, onUpdate, onRemov
                         {!isCommitted ? (
                             <button
                                 onClick={handleCommit}
-                                disabled={!item.category || !item.description || !item.amount || !item.date || isCommitting}
+                                disabled={!item.category || !item.description || !item.amount || !item.date || isCommitting || isSaving}
                                 className="inline-flex items-center p-2 border border-transparent rounded-md text-green-600 hover:bg-green-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
                                 title="Add to budget"
                             >
@@ -106,7 +147,7 @@ export const BudgetItemRow = ({ item, budgetType, isCommitted, onUpdate, onRemov
                         ) : (
                             <button
                                 onClick={handleEdit}
-                                disabled={isEditing}
+                                disabled={isEditing || isSaving}
                                 className="inline-flex items-center p-2 border border-transparent rounded-md text-blue-600 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
                                 title="Edit item"
                             >
@@ -119,7 +160,7 @@ export const BudgetItemRow = ({ item, budgetType, isCommitted, onUpdate, onRemov
                         )}
                         <button
                             onClick={handleDelete}
-                            disabled={isDeleting}
+                            disabled={isDeleting || isSaving}
                             className="inline-flex items-center p-2 border border-transparent rounded-md text-red-600 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all duration-200"
                             title="Remove item"
                         >
@@ -132,6 +173,14 @@ export const BudgetItemRow = ({ item, budgetType, isCommitted, onUpdate, onRemov
                     </div>
                 </td>
             </tr>
+
+            {error && (
+                <tr>
+                    <td colSpan={5}>
+                        <div className="text-red-600 text-sm px-6 py-2">{error}</div>
+                    </td>
+                </tr>
+            )}
 
             {showDeleteConfirm && (
                 <tr>

@@ -1,4 +1,3 @@
-// src/hooks/useLogin.js
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import authService from '../services/authService';
@@ -25,7 +24,6 @@ export const useLogin = (setPermanentMessage) => {
         }
     };
 
-    // Change to non-async since we don't need to await anything
     const handleLogout = () => {
         authService.removeToken();
         navigate('/login');
