@@ -52,18 +52,13 @@ export const BudgetContent = () => {
     const onLogout = async () => {
         setIsLoggingOut(true);
 
-        // Inline implementation of a minimum delay
-        const startTime = Date.now();
-        await handleLogout(); // Perform the actual logout
-        const elapsedTime = Date.now() - startTime;
+        // Inline delay before invoking the logout handler
+        await new Promise((resolve) => setTimeout(resolve, 2000));
 
-        // Ensure the delay lasts at least 2 seconds
-        if (elapsedTime < 2000) {
-            await new Promise((resolve) => setTimeout(resolve, 2000 - elapsedTime));
-        }
-
+        handleLogout(); // This still includes the navigation logic
         setIsLoggingOut(false);
     };
+
 
 
 
