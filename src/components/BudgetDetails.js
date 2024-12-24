@@ -52,6 +52,7 @@ export const BudgetDetails = ({ budget, onClose, onUpdate }) => {
     const [isPrinting, setIsPrinting] = useState(false);
     const [isSharing, setIsSharing] = useState(false);
 
+
     useEffect(() => {
         setLocalBudget(budget);
     }, [budget]);
