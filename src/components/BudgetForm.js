@@ -14,6 +14,8 @@ export const BudgetForm = ({ onSave, onClose, budgetType, isNewBudget = false, i
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isCancelling, setIsCancelling] = useState(false);
 
+    const categories = budgetTemplates[budgetType]?.categories || [];
+
     useEffect(() => {
         if (initialItem) {
             setCategory(initialItem.category);
