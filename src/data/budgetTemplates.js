@@ -1,10 +1,10 @@
 export const budgetTemplates = {
     weekly: {
-        type: 'weekly',
+        type: 'Weekly',
         categories: ['Groceries', 'Transportation', 'Entertainment', 'Dining Out', 'Miscellaneous']
     },
     monthly: {
-        type: 'monthly',
+        type: 'Monthly',
         categories: [
             'Rent/Mortgage',
             'Utilities',
@@ -19,7 +19,7 @@ export const budgetTemplates = {
         ]
     },
     vacation: {
-        type: 'vacation',
+        type: 'Vacation',
         categories: [
             'Transportation',
             'Accommodation',
@@ -30,7 +30,7 @@ export const budgetTemplates = {
         ]
     },
     event: {
-        type: 'event',
+        type: 'Event',
         categories: [
             'Venue',
             'Catering',
