@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FileText, Trash2, Calendar, Clock, DollarSign, Paperclip, Camera, Loader2 } from 'lucide-react';
+import { FileText, Trash2, Calendar, Clock, DollarSign, Paperclip, Camera, Loader2, Tag } from 'lucide-react';
 import { generateUniqueColor } from '../utils/colorGenerator';
 import { withMinimumDelay } from '../utils/withDelay';
 
@@ -124,7 +124,7 @@ export const BudgetList = ({ budgets, onSelect, onDelete }) => {
                                     </div>
                                 </div>
                                 <div className="flex items-center">
-                                    <Clock className="h-7 w-7 mr-2 text-gray-400" />
+                                    <Tag className="h-7 w-7 mr-2 text-gray-400" />
                                     <div>
                                         <div className="text-sm text-gray-500">Type:</div>
                                         <div className="text-sm text-gray-900">{budget.type}</div>
