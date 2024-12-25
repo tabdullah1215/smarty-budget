@@ -2,7 +2,7 @@
 import React from 'react';
 
 const DashboardHeader = ({
-                             subtitle = "App Manager",
+                             subtitle = "Budget Tracker",
                              title,
                              permanentMessage,
                              logoUrl = "/images/smartyapps-logo.png",
