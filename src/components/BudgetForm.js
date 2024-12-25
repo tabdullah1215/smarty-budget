@@ -159,7 +159,7 @@ export const BudgetForm = ({
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
             <form
                 onSubmit={handleSubmit}
-                className="relative top-20 mx-auto p-5 border w-full max-w-xl shadow-lg rounded-md bg-white sm:px-6"
+                className="relative mx-auto p-4 sm:p-6 border w-[90%] max-w-xl shadow-lg rounded-md bg-white"
             >
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="text-xl font-semibold text-gray-900">

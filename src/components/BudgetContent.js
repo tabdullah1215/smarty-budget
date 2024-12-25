@@ -168,7 +168,7 @@ export const BudgetContent = () => {
                     {selectedBudget && (
                         <div
                             className="absolute inset-0 bg-gray-600 bg-opacity-50 z-50 flex justify-center items-center p-4 sm:p-6">
-                            <div className="w-full max-w-2xl bg-white shadow-lg rounded-lg p-6">
+                            <div className="w-[90%] max-w-2xl bg-white shadow-lg rounded-lg p-6">
                                 <BudgetDetails
                                     budget={selectedBudget}
                                     onClose={() => setSelectedBudget(null)}
