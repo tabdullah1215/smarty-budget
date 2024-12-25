@@ -167,8 +167,21 @@ export const BudgetContent = () => {
                     {/* Budget Details Overlay */}
                     {selectedBudget && (
                         <div
-                            className="absolute inset-0 bg-gray-600 bg-opacity-50 z-50 flex justify-center items-center p-4 sm:p-6">
-                            <div className="w-[90%] max-w-2xl bg-white shadow-lg rounded-lg p-6">
+                            className="absolute inset-0 bg-gray-600 bg-opacity-50 z-50 flex justify-center items-center"
+                            style={{
+                                padding: '1rem', // Padding for spacing around the overlay content
+                            }}
+                        >
+                            <div
+                                style={{
+                                    maxWidth: '800px', // Limit the dialog width for larger screens
+                                    width: '90%',      // Take 90% of the screen width for smaller screens
+                                    background: 'white', // Background color for the dialog
+                                    borderRadius: '0.5rem', // Rounded corners
+                                    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)', // Subtle shadow for elevation
+                                    padding: '1.5rem', // Internal padding for content
+                                }}
+                            >
                                 <BudgetDetails
                                     budget={selectedBudget}
                                     onClose={() => setSelectedBudget(null)}
