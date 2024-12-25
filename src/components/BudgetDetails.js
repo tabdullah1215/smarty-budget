@@ -86,7 +86,7 @@ export const BudgetDetails = ({ budget, onClose, onUpdate }) => {
             await new Promise(resolve => setTimeout(resolve, 500));
             const shareData = {
                 title: localBudget.name,
-                text: `Budget: ${localBudget.name}\nTotal: $${localBudget.totalBudget}\nType: ${localBudget.type}`,
+                text: `Budget: ${localBudget.name}\nTotal: $${localBudget.totalBudget}\nType: ${capitalizeFirstLetter(localBudget.type)}`,
                 url: window.location.href,
             };
             await navigator.share(shareData);
