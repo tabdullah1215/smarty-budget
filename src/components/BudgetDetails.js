@@ -4,6 +4,7 @@ import { Printer, Share2, X, PlusCircle, Loader2 } from 'lucide-react';
 import { BudgetForm } from './BudgetForm';
 import { BudgetItemRow } from './BudgetItemRow';
 import { withMinimumDelay } from '../utils/withDelay';
+import { capitalizeFirstLetter} from '../utils/helpers';
 
 const PrintableContent = React.forwardRef(({ budget }, ref) => {
     return (
@@ -167,7 +168,7 @@ export const BudgetDetails = ({ budget, onClose, onUpdate }) => {
             <div className="relative top-20 mx-auto p-5 border w-full max-w-4xl shadow-lg rounded-md bg-white">
                 <div className="flex justify-between items-center mb-6">
                     <h2 className="text-2xl font-bold text-gray-900">{localBudget.name}</h2>
-                    <p className="text-sm text-gray-600 mt-1 capitalize">Budget Type: {localBudget.type}</p>
+                    <p className="text-sm text-gray-600 mt-1 capitalize">Budget Type: {capitalizeFirstLetter(localBudget.type)}</p>
                     <div className="flex space-x-2">
                         <button
                             onClick={handlePrintClick}
