@@ -166,7 +166,6 @@ export const BudgetContent = () => {
                 <div className="relative min-h-screen">
                     {/* Budget List */}
                     <div className="relative">
-                        >
                         <BudgetList
                             budgets={budgets}
                             onSelect={setSelectedBudget}
