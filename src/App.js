@@ -142,41 +142,43 @@ function App() {
 
     return (
         <ErrorBoundary>
-            <BrowserRouter>
-                <Routes>
-                    {/* Public routes */}
-                    <Route path="/login" element={<Login />} />
-                    <Route
-                        path="/register/:appId/:linkType/:token"
-                        element={<AppRegistration />}
-                    />
+            <div className="h-full overflow-hidden">
+                <BrowserRouter>
+                    <Routes>
+                        {/* Public routes */}
+                        <Route path="/login" element={<Login/>}/>
+                        <Route
+                            path="/register/:appId/:linkType/:token"
+                            element={<AppRegistration/>}
+                        />
 
-                    {/* Protected routes */}
-                    <Route
-                        path="/dashboard"
-                        element={
-                            <ProtectedRoute>
-                                <BudgetContent />
-                            </ProtectedRoute>
-                        }
-                    />
+                        {/* Protected routes */}
+                        <Route
+                            path="/dashboard"
+                            element={
+                                <ProtectedRoute>
+                                    <BudgetContent/>
+                                </ProtectedRoute>
+                            }
+                        />
 
-                    {/* Root redirect to dashboard */}
-                    <Route
-                        path="/"
-                        element={
-                            <ProtectedRoute>
-                                <Navigate to="/dashboard" replace />
-                            </ProtectedRoute>
-                        }
-                    />
+                        {/* Root redirect to dashboard */}
+                        <Route
+                            path="/"
+                            element={
+                                <ProtectedRoute>
+                                    <Navigate to="/dashboard" replace/>
+                                </ProtectedRoute>
+                            }
+                        />
 
-                    {/* Catch all redirect to login */}
-                    <Route path="*" element={<Navigate to="/login" replace />} />
-                </Routes>
-            </BrowserRouter>
+                        {/* Catch all redirect to login */}
+                        <Route path="*" element={<Navigate to="/login" replace/>}/>
+                    </Routes>
+                </BrowserRouter>
+            </div>
         </ErrorBoundary>
-    );
+);
 }
 
 export default App;

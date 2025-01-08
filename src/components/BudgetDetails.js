@@ -164,11 +164,13 @@ export const BudgetDetails = ({ budget, onClose, onUpdate }) => {
         .reduce((sum, item) => sum + item.amount, 0);
 
     return (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-            <div className="relative top-20 mx-auto p-5 border w-full max-w-4xl shadow-lg rounded-md bg-white">
+        <div
+            className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
+            <div className="mx-auto p-5 border w-[95%] max-w-4xl shadow-lg rounded-md bg-white">
                 <div className="flex justify-between items-center mb-6">
                     <h2 className="text-2xl font-bold text-gray-900">{localBudget.name}</h2>
-                    <p className="text-sm text-gray-600 mt-1 capitalize">Budget Type: {capitalizeFirstLetter(localBudget.type)}</p>
+                    <p className="text-sm text-gray-600 mt-1 capitalize">Budget
+                        Type: {capitalizeFirstLetter(localBudget.type)}</p>
                     <div className="flex space-x-2">
                         <button
                             onClick={handlePrintClick}
@@ -222,7 +224,7 @@ export const BudgetDetails = ({ budget, onClose, onUpdate }) => {
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 mb-6">
-                <div className="bg-gray-50 p-4 rounded-lg">
+                    <div className="bg-gray-50 p-4 rounded-lg">
                         <p className="text-sm text-gray-600">Total Budget</p>
                         <p className="text-2xl font-bold text-gray-900">
                             ${localBudget.totalBudget.toLocaleString()}

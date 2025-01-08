@@ -17,6 +17,7 @@ export const BudgetContent = () => {
     const [selectedBudgetType, setSelectedBudgetType] = useState('monthly');
     const [isCreating, setIsCreating] = useState(false);
     const [isLoggingOut, setIsLoggingOut] = useState(false);
+    const [isXClosing, setIsXClosing] = useState(false);
     const {handleLogout} = useLogin();
     const userInfo = authService.getUserInfo();
     const navigate = useNavigate();
@@ -33,6 +34,13 @@ export const BudgetContent = () => {
             setShowNewBudgetForm(true);
         });
         setIsCreating(false);
+    };
+
+    const handleXClose = async () => {
+        setIsXClosing(true);
+        await withMinimumDelay(async () => {});
+        setIsXClosing(false);
+        setShowNewBudgetForm(false);
     };
 
     const handleCreateBudget = async (budgetData) => {
@@ -75,14 +83,14 @@ export const BudgetContent = () => {
 
     if (isLoading) {
         return (
-            <div className="min-h-screen bg-gray-200 flex items-center justify-center">
+            <div className="h-screen bg-gray-200 flex items-center justify-center">
                 <Loader2 className="h-8 w-8 animate-spin text-gray-600" />
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-200 py-6 px-4 sm:px-6 lg:px-8">
+        <div className="h-screen bg-gray-200 py-6 px-4 sm:px-6 lg:px-8">
             <div className="max-w-7xl mx-auto">
                 {/* Header Card */}
                 <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
@@ -130,17 +138,20 @@ export const BudgetContent = () => {
 
                 {/* Budget Forms and Lists */}
                 {showNewBudgetForm && (
-                    <div className="fixed inset-0 overflow-y-auto h-full w-full z-50">
-                        <div className="absolute inset-0 bg-gray-600 bg-opacity-50"></div>
-                        <div
-                            className="relative top-20 mx-auto p-5 border w-full max-w-xl shadow-lg rounded-md bg-white">
+                    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
+                        <div className="mx-auto p-5 border w-[95%] max-w-xl shadow-lg rounded-md bg-white">
                             <div className="flex justify-between items-center mb-4">
                                 <h2 className="text-xl font-semibold text-gray-900">Create New Budget</h2>
                                 <button
-                                    onClick={() => setShowNewBudgetForm(false)}
-                                    className="text-gray-400 hover:text-gray-500 focus:outline-none"
+                                    onClick={handleXClose}
+                                    disabled={isXClosing}
+                                    className="text-gray-400 hover:text-gray-500 focus:outline-none transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    <X className="h-6 w-6"/>
+                                    {isXClosing ? (
+                                        <Loader2 className="h-6 w-6 animate-spin"/>
+                                    ) : (
+                                        <X className="h-6 w-6"/>
+                                    )}
                                 </button>
                             </div>
                             <BudgetForm
@@ -154,9 +165,8 @@ export const BudgetContent = () => {
                 )}
                 <div className="relative min-h-screen">
                     {/* Budget List */}
-                    <div
-                        className={`relative transition-opacity duration-300 ${selectedBudget ? 'pointer-events-none opacity-50' : 'opacity-100'}`}
-                    >
+                    <div className="relative">
+                        >
                         <BudgetList
                             budgets={budgets}
                             onSelect={setSelectedBudget}
@@ -167,20 +177,10 @@ export const BudgetContent = () => {
                     {/* Budget Details Overlay */}
                     {selectedBudget && (
                         <div
-                            className="absolute inset-0 bg-gray-600 bg-opacity-50 z-50 flex justify-center items-center"
-                            style={{
-                                padding: '1rem', // Padding for spacing around the overlay content
-                            }}
+                            className="fixed inset-0 bg-gray-600 bg-opacity-50 z-50 flex justify-center items-start pt-20"
                         >
                             <div
-                                style={{
-                                    maxWidth: '800px', // Limit the dialog width for larger screens
-                                    width: '90%',      // Take 90% of the screen width for smaller screens
-                                    background: 'white', // Background color for the dialog
-                                    borderRadius: '0.5rem', // Rounded corners
-                                    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)', // Subtle shadow for elevation
-                                    padding: '1.5rem', // Internal padding for content
-                                }}
+                                className="w-full max-w-4xl mx-auto px-4"
                             >
                                 <BudgetDetails
                                     budget={selectedBudget}
