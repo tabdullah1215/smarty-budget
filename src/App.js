@@ -5,6 +5,7 @@ import PWAGateway from './components/PWAGateway';
 import Login from './components/Login';
 import AppRegistration from './components/AppRegistration';
 import { BudgetContent } from "./components/BudgetContent";
+import { Home } from "./components/Home";  // Add this import
 import authService from './services/authService';
 import { indexdbService } from './services/IndexDBService';
 
@@ -144,12 +145,13 @@ function App() {
         <ErrorBoundary>
             <div className="h-full overflow-hidden">
                 <BrowserRouter>
+                    // Updated routes section in App.js
                     <Routes>
                         {/* Public routes */}
-                        <Route path="/login" element={<Login/>}/>
+                        <Route path="/login" element={<Login />} />
                         <Route
                             path="/register/:appId/:linkType/:token"
-                            element={<AppRegistration/>}
+                            element={<AppRegistration />}
                         />
 
                         {/* Protected routes */}
@@ -157,7 +159,15 @@ function App() {
                             path="/dashboard"
                             element={
                                 <ProtectedRoute>
-                                    <BudgetContent/>
+                                    <Home />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/budgets"
+                            element={
+                                <ProtectedRoute>
+                                    <BudgetContent />
                                 </ProtectedRoute>
                             }
                         />
@@ -167,13 +177,13 @@ function App() {
                             path="/"
                             element={
                                 <ProtectedRoute>
-                                    <Navigate to="/dashboard" replace/>
+                                    <Navigate to="/dashboard" replace />
                                 </ProtectedRoute>
                             }
                         />
 
                         {/* Catch all redirect to login */}
-                        <Route path="*" element={<Navigate to="/login" replace/>}/>
+                        <Route path="*" element={<Navigate to="/login" replace />} />
                     </Routes>
                 </BrowserRouter>
             </div>
