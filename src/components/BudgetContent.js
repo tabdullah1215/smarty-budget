@@ -51,35 +51,20 @@ export const BudgetContent = () => {
                 setShowNewBudgetForm(false);
             } catch (error) {
                 console.error('Error creating budget:', error);
-                // Handle error presentation to user
             }
         });
         setIsCreating(false);
     };
 
-    // const onLogout = async () => {
-    //     setIsLoggingOut(true);
-    //
-    //     // Inline delay before invoking the logout handler
-    //     await new Promise((resolve) => setTimeout(resolve, 2000));
-    //
-    //     handleLogout(); // This still includes the navigation logic
-    //     setIsLoggingOut(false);
-    // };
-
     const onLogout = async () => {
         setIsLoggingOut(true);
-
         try {
-            await withMinimumDelay(() => handleLogout(), 2000); // Ensure delay happens first
+            await withMinimumDelay(() => handleLogout(), 2000);
         } catch (error) {
-            console.error('Logout failed:', error); // Optional: Handle errors gracefully
+            console.error('Logout failed:', error);
         }
-
         setIsLoggingOut(false);
     };
-
-
 
     if (isLoading) {
         return (
@@ -90,10 +75,10 @@ export const BudgetContent = () => {
     }
 
     return (
-        <div className="h-screen bg-gray-200 py-6 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-7xl mx-auto">
-                {/* Header Card */}
-                <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
+        <div className="min-h-screen bg-gray-200">
+            {/* Fixed Header */}
+            <div className="fixed top-0 left-0 right-0 bg-white z-10 shadow-lg">
+                <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
                     <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
                         <div className="flex flex-col md:flex-row md:items-center gap-4">
                             <h1 className="text-3xl font-bold text-gray-900">Smarty Budget Tracker</h1>
@@ -135,36 +120,11 @@ export const BudgetContent = () => {
                         </div>
                     </div>
                 </div>
+            </div>
 
-                {/* Budget Forms and Lists */}
-                {showNewBudgetForm && (
-                    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
-                        <div className="mx-auto p-5 border w-[95%] max-w-xl shadow-lg rounded-md bg-white">
-                            <div className="flex justify-between items-center mb-4">
-                                <h2 className="text-xl font-semibold text-gray-900">Create New Budget</h2>
-                                <button
-                                    onClick={handleXClose}
-                                    disabled={isXClosing}
-                                    className="text-gray-400 hover:text-gray-500 focus:outline-none transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                    {isXClosing ? (
-                                        <Loader2 className="h-6 w-6 animate-spin"/>
-                                    ) : (
-                                        <X className="h-6 w-6"/>
-                                    )}
-                                </button>
-                            </div>
-                            <BudgetForm
-                                onSave={handleCreateBudget}
-                                onClose={() => setShowNewBudgetForm(false)}
-                                budgetType={selectedBudgetType}
-                                isNewBudget={true}
-                            />
-                        </div>
-                    </div>
-                )}
-                <div className="relative min-h-screen">
-                    {/* Budget List */}
+            {/* Scrollable Content Area */}
+            <div className="pt-64 md:pt-36 px-4 sm:px-6 lg:px-8">
+                <div className="max-w-7xl mx-auto pb-8">
                     <div className="relative">
                         <BudgetList
                             budgets={budgets}
@@ -172,25 +132,49 @@ export const BudgetContent = () => {
                             onDelete={deleteBudget}
                         />
                     </div>
-
-                    {/* Budget Details Overlay */}
-                    {selectedBudget && (
-                        <div
-                            className="fixed inset-0 bg-gray-600 bg-opacity-50 z-50 flex justify-center items-start pt-20"
-                        >
-                            <div
-                                className="w-full max-w-4xl mx-auto px-4"
-                            >
-                                <BudgetDetails
-                                    budget={selectedBudget}
-                                    onClose={() => setSelectedBudget(null)}
-                                    onUpdate={updateBudget}
-                                />
-                            </div>
-                        </div>
-                    )}
                 </div>
             </div>
+
+            {/* Modal Forms */}
+            {showNewBudgetForm && (
+                <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
+                    <div className="mx-auto p-5 border w-[95%] max-w-xl shadow-lg rounded-md bg-white">
+                        <div className="flex justify-between items-center mb-4">
+                            <h2 className="text-xl font-semibold text-gray-900">Create New Budget</h2>
+                            <button
+                                onClick={handleXClose}
+                                disabled={isXClosing}
+                                className="text-gray-400 hover:text-gray-500 focus:outline-none transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {isXClosing ? (
+                                    <Loader2 className="h-6 w-6 animate-spin"/>
+                                ) : (
+                                    <X className="h-6 w-6"/>
+                                )}
+                            </button>
+                        </div>
+                        <BudgetForm
+                            onSave={handleCreateBudget}
+                            onClose={() => setShowNewBudgetForm(false)}
+                            budgetType={selectedBudgetType}
+                            isNewBudget={true}
+                        />
+                    </div>
+                </div>
+            )}
+
+            {/* Budget Details Modal */}
+            {selectedBudget && (
+                <div className="fixed inset-0 bg-gray-600 bg-opacity-50 z-50 flex justify-center items-start pt-20 overflow-y-auto">
+                    <div className="w-full max-w-4xl mx-auto px-4 pb-8">
+                        <BudgetDetails
+                            budget={selectedBudget}
+                            onClose={() => setSelectedBudget(null)}
+                            onUpdate={updateBudget}
+                        />
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
