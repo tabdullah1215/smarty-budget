@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, Loader2, ArrowLeft } from 'lucide-react';
+import { Loader2, ArrowLeft, LogOut } from 'lucide-react';
 import { useLogin } from '../hooks/useLogin';
 import authService from '../services/authService';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -17,11 +17,18 @@ export const Header = ({ showCreateButton = false, onCreateClick, isCreatingBudg
     const onLogout = async () => {
         setIsLoggingOut(true);
         try {
-            await handleLogout();
+            await withMinimumDelay(async () => {
+                const logoutIcon = document.querySelector('.logout-icon');
+                if (logoutIcon) {
+                    logoutIcon.classList.add('animate-spin');
+                }
+                await handleLogout();
+            }, 2000); // 2 second delay with animation
         } catch (error) {
             console.error('Logout failed:', error);
+        } finally {
+            setIsLoggingOut(false);
         }
-        setIsLoggingOut(false);
     };
 
     const handleBack = async () => {
@@ -54,9 +61,14 @@ export const Header = ({ showCreateButton = false, onCreateClick, isCreatingBudg
                         <button
                             onClick={onLogout}
                             disabled={isLoggingOut}
-                            className="inline-flex items-center justify-center px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-blue-300"
+                            className="inline-flex items-center justify-center px-4 py-2
+                                        bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-blue-300 transition-all duration-300"
                         >
-                            {isLoggingOut && <Loader2 size={16} className="mr-2 animate-spin"/>}
+                            {isLoggingOut ? (
+                                <Loader2 className="logout-icon h-5 w-5 mr-2 animate-spin" />
+                            ) : (
+                                <LogOut className="logout-icon h-5 w-5 mr-2" />
+                            )}
                             {isLoggingOut ? 'Logging out...' : 'Logout'}
                         </button>
                         {showCreateButton && (

@@ -32,8 +32,8 @@ export const Home = () => {
             description: 'Coming soon: Track business travel expenses and receipts',
             isActive: false,
             icon: <Briefcase className="h-6 w-6" />,
-            color: 'text-green-600',
-            borderColor: 'border-green-600'
+            color: 'text-emerald-800',
+            borderColor: 'border-emerald-800'
         },
         {
             id: 'savings',
@@ -41,8 +41,8 @@ export const Home = () => {
             description: 'Coming soon: Set and track your savings goals',
             isActive: false,
             icon: <PiggyBank className="h-6 w-6" />,
-            color: 'text-orange-600',
-            borderColor: 'border-orange-600'
+            color: 'text-orange-800',
+            borderColor: 'border-orange-800'
         }
     ];
 
