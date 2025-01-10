@@ -1,5 +1,5 @@
 import React from 'react';
-import { Loader2, ArrowLeft, LogOut } from 'lucide-react';
+import { Plus, Loader2, ArrowLeft, LogOut } from 'lucide-react';
 import { useLogin } from '../hooks/useLogin';
 import authService from '../services/authService';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -12,7 +12,7 @@ export const Header = ({ showCreateButton = false, onCreateClick, isCreatingBudg
     const navigate = useNavigate();
     const location = useLocation();
     const showBackButton = location.pathname !== '/dashboard';
-    const [isNavigating, setIsNavigating] = React.useState(false);
+    const isHomePage = location.pathname === '/';
 
     const onLogout = async () => {
         setIsLoggingOut(true);
@@ -39,9 +39,19 @@ export const Header = ({ showCreateButton = false, onCreateClick, isCreatingBudg
         }, 1000);
     };
 
+    const getBudgetType = () => {
+        const path = location.pathname;
+        if (path === '/' || path === 'dashboard') return ''; // Home page - no budget type
+        if (path.includes('paycheck')) return 'Paycheck Budget';
+        if (path.includes('business')) return 'Business Trip Budget';
+        if (path.includes('savings')) return 'Savings Budget';
+        if (path.includes('budgets')) return 'Custom Budget';
+        return '';
+    };
+
     return (
         <div className="fixed top-0 left-0 right-0 bg-white z-10 shadow-lg">
-            <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+            <div className="max-w-7xl mx-auto py-2 px-4 sm:px-6 lg:px-8">
                 <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
                     <div className="flex flex-col md:flex-row md:items-center gap-4">
                         <div className="flex items-center gap-4">
@@ -88,11 +98,17 @@ export const Header = ({ showCreateButton = false, onCreateClick, isCreatingBudg
                                         Creating...
                                     </>
                                 ) : (
-                                    <>Create New Budget</>
+                                    'Create New Budget'
                                 )}
                             </button>
                         )}
                     </div>
+
+                    {!isHomePage && (
+                        <div className="text-center">
+                            <h2 className="text-lg text-gray-600">{getBudgetType()}</h2>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

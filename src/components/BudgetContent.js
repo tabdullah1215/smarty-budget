@@ -7,6 +7,7 @@ import { BudgetForm } from './BudgetForm';
 import { Header } from './Header';
 import { useBudgets } from '../hooks/useBudget';
 import authService from '../services/authService';
+import {withMinimumDelay} from "../utils/withDelay";
 
 export const BudgetContent = () => {
     const {budgets, createBudget, updateBudget, deleteBudget, isLoading} = useBudgets();
@@ -26,8 +27,12 @@ export const BudgetContent = () => {
 
     const handleCreateClick = async () => {
         setIsCreating(true);
-        setShowNewBudgetForm(true);
-        setIsCreating(false);
+        try {
+            await withMinimumDelay(async () => {}, 1000);
+            setShowNewBudgetForm(true);
+        } finally {
+            setIsCreating(false);
+        }
     };
 
     const handleXClose = async () => {
@@ -58,7 +63,10 @@ export const BudgetContent = () => {
 
     return (
         <div className="min-h-screen bg-gray-200">
-            <Header showCreateButton onCreateClick={handleCreateClick} />
+            <Header showCreateButton
+                    onCreateClick={handleCreateClick}
+                    isCreatingBudget={isCreating}
+            />
 
             <div className="pt-60 md:pt-36 px-4 sm:px-6 lg:px-8">
                 <div className="max-w-7xl mx-auto pb-8">
