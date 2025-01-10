@@ -4,13 +4,15 @@ import { useLocation } from 'react-router-dom';
 import DashboardHeader from '../components/DashboardHeader';
 import authService from '../services/authService';
 import { useLogin } from '../hooks/useLogin';
+import { withMinimumDelay } from '../utils/withDelay';
 
 function Login() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [permanentMessage, setPermanentMessage] = useState({ type: '', content: '' });
+    const [isLoading, setIsLoading] = useState(false);
     const location = useLocation();
-    const { isLoading, handleLogin } = useLogin(setPermanentMessage);
+    const { handleLogin } = useLogin(setPermanentMessage);
 
     useEffect(() => {
         authService.removeToken();
@@ -24,7 +26,29 @@ function Login() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        await handleLogin(email, password);
+        setIsLoading(true);
+        setPermanentMessage({ type: '', content: '' });
+
+        try {
+            await withMinimumDelay(async () => {
+                const loginButton = document.querySelector('.login-button-text');
+                if (loginButton) {
+                    loginButton.classList.add('animate-pulse');
+                }
+                await handleLogin(email, password);
+            }, 2000); // 2 second delay
+        } catch (error) {
+            setPermanentMessage({
+                type: 'error',
+                content: error.message
+            });
+        } finally {
+            setIsLoading(false);
+            const loginButton = document.querySelector('.login-button-text');
+            if (loginButton) {
+                loginButton.classList.remove('animate-pulse');
+            }
+        }
     };
 
     return (
