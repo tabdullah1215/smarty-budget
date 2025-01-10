@@ -21,14 +21,22 @@ class IndexDBService {
                 resolve(this.db);
             };
 
+            // Replace this entire block
             request.onupgradeneeded = (event) => {
                 const db = event.target.result;
 
                 // Create stores if they don't exist
                 if (!db.objectStoreNames.contains(DB_CONFIG.stores.budgets)) {
-                    const store = db.createObjectStore(DB_CONFIG.stores.budgets, { keyPath: 'id' });
-                    store.createIndex('userEmail', 'userEmail', { unique: false });
-                    store.createIndex('createdAt', 'createdAt', { unique: false });
+                    const store = db.createObjectStore(DB_CONFIG.stores.budgets, {keyPath: 'id'});
+                    store.createIndex('userEmail', 'userEmail', {unique: false});
+                    store.createIndex('createdAt', 'createdAt', {unique: false});
+                }
+
+                // Add the paycheckBudgets object store
+                if (!db.objectStoreNames.contains(DB_CONFIG.stores.paycheckBudgets)) {
+                    const paycheckStore = db.createObjectStore(DB_CONFIG.stores.paycheckBudgets, { keyPath: 'id' });
+                    paycheckStore.createIndex('userEmail', 'userEmail', { unique: false });
+                    paycheckStore.createIndex('createdAt', 'createdAt', { unique: false });
                 }
             };
         });
@@ -87,20 +95,61 @@ class IndexDBService {
         });
     }
 
+    async getPaycheckBudgetsByEmail(userEmail) {
+        if (!this.db) await this.initDB();
+
+        return new Promise((resolve, reject) => {
+            const transaction = this.db.transaction([DB_CONFIG.stores.paycheckBudgets], 'readonly');
+            const store = transaction.objectStore(DB_CONFIG.stores.paycheckBudgets);
+            const index = store.index('userEmail');
+            const request = index.getAll(IDBKeyRange.only(userEmail));
+
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
+    }
+
+    async addPaycheckBudget(budget) {
+        if (!this.db) await this.initDB();
+
+        return new Promise((resolve, reject) => {
+            const transaction = this.db.transaction([DB_CONFIG.stores.paycheckBudgets], 'readwrite');
+            const store = transaction.objectStore(DB_CONFIG.stores.paycheckBudgets);
+            const request = store.add(budget);
+
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
+    }
+
     async clearUserData(userEmail) {
         if (!this.db) await this.initDB();
 
+        // Clear regular budgets
         const budgets = await this.getBudgetsByEmail(userEmail);
-        const transaction = this.db.transaction([DB_CONFIG.stores.budgets], 'readwrite');
-        const store = transaction.objectStore(DB_CONFIG.stores.budgets);
-
-        return Promise.all(budgets.map(budget =>
+        const regularBudgetPromises = budgets.map(budget =>
             new Promise((resolve, reject) => {
+                const transaction = this.db.transaction([DB_CONFIG.stores.budgets], 'readwrite');
+                const store = transaction.objectStore(DB_CONFIG.stores.budgets);
                 const request = store.delete(budget.id);
                 request.onsuccess = () => resolve();
                 request.onerror = () => reject(request.error);
             })
-        ));
+        );
+
+        // Clear paycheck budgets
+        const paycheckBudgets = await this.getPaycheckBudgetsByEmail(userEmail);
+        const paycheckBudgetPromises = paycheckBudgets.map(budget =>
+            new Promise((resolve, reject) => {
+                const transaction = this.db.transaction([DB_CONFIG.stores.paycheckBudgets], 'readwrite');
+                const store = transaction.objectStore(DB_CONFIG.stores.paycheckBudgets);
+                const request = store.delete(budget.id);
+                request.onsuccess = () => resolve();
+                request.onerror = () => reject(request.error);
+            })
+        );
+
+        return Promise.all([...regularBudgetPromises, ...paycheckBudgetPromises]);
     }
 }
 

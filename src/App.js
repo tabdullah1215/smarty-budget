@@ -8,6 +8,7 @@ import { BudgetContent } from "./components/BudgetContent";
 import { Home } from "./components/Home";  // Add this import
 import authService from './services/authService';
 import { indexdbService } from './services/IndexDBService';
+import { PaycheckBudgets } from "./components/PaycheckBudgets";
 
 // Error Boundary Component
 class ErrorBoundary extends React.Component {
@@ -168,6 +169,15 @@ function App() {
                             element={
                                 <ProtectedRoute>
                                     <BudgetContent />
+                                </ProtectedRoute>
+                            }
+                        />
+
+                        <Route
+                            path="/paycheck-budgets"
+                            element={
+                                <ProtectedRoute>
+                                    <PaycheckBudgets />
                                 </ProtectedRoute>
                             }
                         />

@@ -20,8 +20,8 @@ export const Home = () => {
         {
             id: 'paycheck',
             title: 'Paycheck Budgets',
-            description: 'Coming soon: Track and manage your paycheck spending',
-            isActive: false,
+            description: 'Track and manage your paycheck spending',
+            isActive: true,
             icon: <Wallet className="h-6 w-6" />,
             color: 'text-blue-600',
             borderColor: 'border-blue-600'
@@ -47,15 +47,22 @@ export const Home = () => {
     ];
 
     const handleTileClick = async (tileId) => {
-        if (tileId === 'custom') {
-            const tileElement = document.getElementById(tileId);
-            const iconElement = tileElement?.querySelector('.tile-icon');
-            if (iconElement) {
-                iconElement.classList.add('animate-spin');
-                await withMinimumDelay(async () => {
-                    await navigate('/budgets');
-                }, 1000);
-            }
+        const tileElement = document.getElementById(tileId);
+        const iconElement = tileElement?.querySelector('.tile-icon');
+        if (iconElement) {
+            iconElement.classList.add('animate-spin');
+            await withMinimumDelay(async () => {
+                switch (tileId) {
+                    case 'custom':
+                        await navigate('/budgets');
+                        break;
+                    case 'paycheck':
+                        await navigate('/paycheck-budgets');
+                        break;
+                    default:
+                        break;
+                }
+            }, 1000);
         }
     };
 
