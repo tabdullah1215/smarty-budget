@@ -13,8 +13,8 @@ export const usePaycheckBudgets = () => {
         const loadPaycheckBudgets = async () => {
             if (!userEmail) return;
             try {
-                const userPaycheckBudgets = await indexdbService.getPaycheckBudgetsByEmail(userEmail);
-                setPaycheckBudgets(userPaycheckBudgets);
+                const userBudgets = await indexdbService.getPaycheckBudgetsByEmail(userEmail);
+                setPaycheckBudgets(userBudgets);
             } catch (error) {
                 console.error('Error loading paycheck budgets:', error);
             } finally {
@@ -25,14 +25,14 @@ export const usePaycheckBudgets = () => {
         loadPaycheckBudgets();
     }, [userEmail]);
 
-    const createPaycheckBudget = async ({ name, date, amount }) => {
+    const createPaycheckBudget = async (budgetData) => {
         if (!userEmail) throw new Error('User not authenticated');
 
         const newBudget = {
             id: uuidv4(),
-            name,
-            date,
-            amount,
+            name: budgetData.name,
+            date: budgetData.date,
+            amount: budgetData.amount,
             items: [],
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
@@ -49,9 +49,42 @@ export const usePaycheckBudgets = () => {
         }
     };
 
+    const updatePaycheckBudget = async (updatedBudget) => {
+        if (!userEmail) throw new Error('User not authenticated');
+
+        try {
+            const budgetToUpdate = {
+                ...updatedBudget,
+                updatedAt: new Date().toISOString(),
+                userEmail
+            };
+            await indexdbService.updatePaycheckBudget(budgetToUpdate);
+            setPaycheckBudgets(prev => prev.map(budget =>
+                budget.id === budgetToUpdate.id ? budgetToUpdate : budget
+            ));
+        } catch (error) {
+            console.error('Error updating paycheck budget:', error);
+            throw error;
+        }
+    };
+
+    const deletePaycheckBudget = async (budgetId) => {
+        if (!userEmail) throw new Error('User not authenticated');
+
+        try {
+            await indexdbService.deletePaycheckBudget(budgetId);
+            setPaycheckBudgets(prev => prev.filter(budget => budget.id !== budgetId));
+        } catch (error) {
+            console.error('Error deleting paycheck budget:', error);
+            throw error;
+        }
+    };
+
     return {
         paycheckBudgets,
         createPaycheckBudget,
+        updatePaycheckBudget,
+        deletePaycheckBudget,
         isLoading
     };
 };

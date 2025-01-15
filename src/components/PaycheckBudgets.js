@@ -1,19 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Loader2 } from 'lucide-react';
+import { Plus, Loader2, FileText, Trash2 } from 'lucide-react';
 import { Header } from './Header';
 import { PaycheckBudgetForm } from './PaycheckBudgetForm';
-import { usePaycheckBudgets } from '../hooks/usePaycheckBudget'; // Import the hook
+import { PaycheckBudgetDetails } from './PaycheckBudgetDetails';
+import { usePaycheckBudgets } from '../hooks/usePaycheckBudget';
+import { withMinimumDelay } from '../utils/withDelay';
 import authService from '../services/authService';
 
 export const PaycheckBudgets = () => {
     const [isCreating, setIsCreating] = useState(false);
     const [showNewBudgetForm, setShowNewBudgetForm] = useState(false);
+    const [selectedBudget, setSelectedBudget] = useState(null);
+    const [deletingBudgetId, setDeletingBudgetId] = useState(null);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [confirmingDeleteId, setConfirmingDeleteId] = useState(null);
+    const [openingBudgetId, setOpeningBudgetId] = useState(null);
+    const [isCancelling, setIsCancelling] = useState(false);
     const navigate = useNavigate();
     const userInfo = authService.getUserInfo();
 
-    // Use the usePaycheckBudgets hook
-    const { paycheckBudgets, createPaycheckBudget, isLoading } = usePaycheckBudgets();
+    const { paycheckBudgets, createPaycheckBudget, updatePaycheckBudget, deletePaycheckBudget, isLoading } = usePaycheckBudgets();
 
     useEffect(() => {
         if (!userInfo?.sub) {
@@ -31,13 +38,66 @@ export const PaycheckBudgets = () => {
         }
     };
 
+    const handleDelete = async (e, budgetId) => {
+        e.stopPropagation();
+        setConfirmingDeleteId(budgetId);
+        await withMinimumDelay(async () => {});
+        setConfirmingDeleteId(null);
+        setDeletingBudgetId(budgetId);
+    };
+
+    const handleCancelDelete = async () => {
+        setIsCancelling(true);
+        await withMinimumDelay(() => setDeletingBudgetId(null), 2000);
+        setIsCancelling(false);
+    };
+
+    const confirmDelete = async () => {
+        if (deletingBudgetId) {
+            setIsDeleting(true);
+            try {
+                await withMinimumDelay(async () => {
+                    await deletePaycheckBudget(deletingBudgetId);
+                });
+            } catch (error) {
+                console.error('Error deleting budget:', error);
+            } finally {
+                setIsDeleting(false);
+                setDeletingBudgetId(null);
+            }
+        }
+    };
+
+    const handleOpenBudget = async (budget) => {
+        if (openingBudgetId) return;
+
+        setOpeningBudgetId(budget.id);
+        try {
+            await withMinimumDelay(async () => {
+                setSelectedBudget(budget);
+            });
+        } catch (error) {
+            console.error('Error opening budget:', error);
+        } finally {
+            setOpeningBudgetId(null);
+        }
+    };
+
     const handleCreateBudget = async (budgetData) => {
         try {
-            // Use the createPaycheckBudget function from the hook
             await createPaycheckBudget(budgetData);
             setShowNewBudgetForm(false);
         } catch (error) {
             console.error('Error creating budget:', error);
+        }
+    };
+
+    const handleUpdateBudget = async (updatedBudget) => {
+        try {
+            await updatePaycheckBudget(updatedBudget);
+            setSelectedBudget(updatedBudget);
+        } catch (error) {
+            console.error('Error updating budget:', error);
         }
     };
 
@@ -93,13 +153,53 @@ export const PaycheckBudgets = () => {
                         </div>
                     ) : (
                         <div className="space-y-4">
-                            {paycheckBudgets.map((budget) => (
-                                <div key={budget.id} className="bg-white shadow-md rounded-lg p-6">
-                                    <h3 className="text-xl font-semibold text-gray-900">{budget.name}</h3>
-                                    <p className="text-gray-600">Amount: ${budget.amount.toLocaleString()}</p>
-                                    <p className="text-gray-600">Date: {new Date(budget.date).toLocaleDateString()}</p>
-                                </div>
-                            ))}
+                            {paycheckBudgets
+                                .sort((a, b) => new Date(b.date) - new Date(a.date))
+                                .map((budget) => (
+                                    <div
+                                        key={budget.id}
+                                        className="bg-white shadow-md rounded-lg p-6 hover:shadow-xl transition-all duration-200"
+                                    >
+                                        <div className="flex justify-between items-start">
+                                            <div>
+                                                <h3 className="text-xl font-semibold text-gray-900">{budget.name}</h3>
+                                                <p className="text-gray-600">Amount: ${budget.amount.toLocaleString()}</p>
+                                                <p className="text-gray-600">Date: {new Date(budget.date).toLocaleDateString()}</p>
+                                            </div>
+                                            <div className="flex space-x-4">
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        if (!openingBudgetId) handleOpenBudget(budget);
+                                                    }}
+                                                    disabled={openingBudgetId === budget.id || confirmingDeleteId === budget.id}
+                                                    className="text-indigo-600 hover:text-indigo-800 transition-colors duration-200
+                                                    disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    title="View details"
+                                                >
+                                                    {openingBudgetId === budget.id ? (
+                                                        <Loader2 className="h-7 w-7 animate-spin"/>
+                                                    ) : (
+                                                        <FileText className="h-7 w-7"/>
+                                                    )}
+                                                </button>
+                                                <button
+                                                    onClick={(e) => !confirmingDeleteId && handleDelete(e, budget.id)}
+                                                    disabled={confirmingDeleteId === budget.id || openingBudgetId === budget.id}
+                                                    className="text-red-600 hover:text-red-800 transition-colors duration-200
+                                                    disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    title="Delete budget"
+                                                >
+                                                    {confirmingDeleteId === budget.id ? (
+                                                        <Loader2 className="h-7 w-7 animate-spin"/>
+                                                    ) : (
+                                                        <Trash2 className="h-7 w-7"/>
+                                                    )}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
                         </div>
                     )}
                 </div>
@@ -110,6 +210,54 @@ export const PaycheckBudgets = () => {
                     onSave={handleCreateBudget}
                     onClose={() => setShowNewBudgetForm(false)}
                 />
+            )}
+
+            {selectedBudget && (
+                <PaycheckBudgetDetails
+                    budget={selectedBudget}
+                    onClose={() => setSelectedBudget(null)}
+                    onUpdate={handleUpdateBudget}
+                />
+            )}
+
+            {/* Delete Confirmation Modal */}
+            {deletingBudgetId && (
+                <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+                    <div className="relative top-20 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-md bg-white">
+                        <div className="mt-3 text-center">
+                            <h3 className="text-lg leading-6 font-medium text-gray-900">Delete Budget</h3>
+                            <div className="mt-2 px-7 py-3">
+                                <p className="text-sm text-gray-500">
+                                    Are you sure you want to delete this budget? This action cannot be undone.
+                                </p>
+                            </div>
+                            <div className="flex justify-center space-x-4 mt-4">
+                                <button
+                                    onClick={handleCancelDelete}
+                                    disabled={isCancelling || isDeleting}
+                                    className="px-4 py-2 bg-gray-100 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {isCancelling ? (
+                                        <Loader2 className="h-4 w-4 animate-spin"/>
+                                    ) : (
+                                        'Cancel'
+                                    )}
+                                </button>
+
+                                <button
+                                    onClick={confirmDelete}
+                                    disabled={isDeleting}
+                                    className="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+                                >
+                                    {isDeleting ? (
+                                        <Loader2 className="h-4 w-4 mr-2 animate-spin"/>
+                                    ) : null}
+                                    Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );

@@ -122,6 +122,19 @@ class IndexDBService {
         });
     }
 
+    async deletePaycheckBudget(budgetId) {
+        if (!this.db) await this.initDB();
+
+        return new Promise((resolve, reject) => {
+            const transaction = this.db.transaction([DB_CONFIG.stores.paycheckBudgets], 'readwrite');
+            const store = transaction.objectStore(DB_CONFIG.stores.paycheckBudgets);
+            const request = store.delete(budgetId);
+
+            request.onsuccess = () => resolve();
+            request.onerror = () => reject(request.error);
+        });
+    }
+
     async clearUserData(userEmail) {
         if (!this.db) await this.initDB();
 
