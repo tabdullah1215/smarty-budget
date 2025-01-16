@@ -63,7 +63,7 @@ export const BudgetDetails = ({ budget, onClose, onUpdate }) => {
         documentTitle: `${budget.name} - Budget Details`,
         onBeforePrint: async () => {
             setIsPrinting(true);
-            await new Promise((resolve) => setTimeout(resolve, 500));
+            await withMinimumDelay(async () => {}, 2000);
         },
         onAfterPrint: async () => {
             await new Promise((resolve) => {
@@ -83,7 +83,7 @@ export const BudgetDetails = ({ budget, onClose, onUpdate }) => {
     const handleShare = async () => {
         setIsSharing(true);
         try {
-            await new Promise(resolve => setTimeout(resolve, 500));
+            await withMinimumDelay(async () => {}, 2000);
             const shareData = {
                 title: localBudget.name,
                 text: `Budget: ${localBudget.name}\nTotal: $${localBudget.totalBudget}\nType: ${capitalizeFirstLetter(localBudget.type)}`,

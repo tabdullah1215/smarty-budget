@@ -31,7 +31,7 @@ export const PaycheckBudgets = () => {
     const handleCreateClick = async () => {
         setIsCreating(true);
         try {
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            await withMinimumDelay(async () => {});
             setShowNewBudgetForm(true);
         } finally {
             setIsCreating(false);
@@ -48,7 +48,7 @@ export const PaycheckBudgets = () => {
 
     const handleCancelDelete = async () => {
         setIsCancelling(true);
-        await withMinimumDelay(() => setDeletingBudgetId(null), 2000);
+        await withMinimumDelay(() => setDeletingBudgetId(null));
         setIsCancelling(false);
     };
 

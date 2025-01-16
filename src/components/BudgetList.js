@@ -23,7 +23,7 @@ export const BudgetList = ({ budgets, onSelect, onDelete }) => {
     const handleCancelDelete = async () => {
         setIsCancelling(true); // Set loading state
 
-        await withMinimumDelay(() => setDeletingBudgetId(null), 2000); // Add delay with animation support
+        await withMinimumDelay(() => setDeletingBudgetId(null)); // Add delay with animation support
 
         setIsCancelling(false); // Reset loading state
     };

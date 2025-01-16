@@ -28,7 +28,7 @@ export const BudgetContent = () => {
     const handleCreateClick = async () => {
         setIsCreating(true);
         try {
-            await withMinimumDelay(async () => {}, 1000);
+            await withMinimumDelay(async () => {});
             setShowNewBudgetForm(true);
         } finally {
             setIsCreating(false);
@@ -37,7 +37,7 @@ export const BudgetContent = () => {
 
     const handleXClose = async () => {
         setIsXClosing(true);
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        await withMinimumDelay(async () => {}, 2000);
         setIsXClosing(false);
         setShowNewBudgetForm(false);
     };

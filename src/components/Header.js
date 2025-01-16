@@ -55,14 +55,16 @@ export const Header = ({ showCreateButton = false, onCreateClick, isCreatingBudg
                 <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
                     <div className="flex flex-col md:flex-row md:items-center gap-4">
                         <div className="flex items-center gap-4">
-                            {showBackButton && (
+                            {showBackButton ? (
                                 <button
                                     onClick={handleBack}
                                     className="back-button text-gray-600 hover:text-gray-900 transition-all duration-500 transform hover:-translate-x-1"
                                 >
-                                    <ArrowLeft className="h-6 w-6" />
+                                    <ArrowLeft className="h-6 w-6"/>
                                 </button>
-                            )}
+                            ) : (
+                                <div className="w-6"/>
+                                )}
                             <h1 className="text-3xl font-bold text-gray-900">Smarty Budget Tracker</h1>
                         </div>
                         <span className="text-sm text-gray-600">{userInfo?.sub}</span>
@@ -75,9 +77,9 @@ export const Header = ({ showCreateButton = false, onCreateClick, isCreatingBudg
                                         bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-blue-300 transition-all duration-300"
                         >
                             {isLoggingOut ? (
-                                <Loader2 className="logout-icon h-5 w-5 mr-2 animate-spin" />
+                                <Loader2 className="logout-icon h-5 w-5 mr-2 animate-spin"/>
                             ) : (
-                                <LogOut className="logout-icon h-5 w-5 mr-2" />
+                                <LogOut className="logout-icon h-5 w-5 mr-2"/>
                             )}
                             {isLoggingOut ? 'Logging out...' : 'Logout'}
                         </button>

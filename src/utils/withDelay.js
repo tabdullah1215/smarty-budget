@@ -11,7 +11,7 @@
 //     return result;
 // };
 
-export const withMinimumDelay = async (operation, minimumDelay = 2000) => {
+export const withMinimumDelay = async (operation, minimumDelay = 1000) => {
     // First, wait for the minimum delay
     await new Promise((resolve) => setTimeout(resolve, minimumDelay));
 
