@@ -21,7 +21,6 @@ class IndexDBService {
                 resolve(this.db);
             };
 
-            // Replace this entire block
             request.onupgradeneeded = (event) => {
                 const db = event.target.result;
 
@@ -37,6 +36,42 @@ class IndexDBService {
                     const paycheckStore = db.createObjectStore(DB_CONFIG.stores.paycheckBudgets, { keyPath: 'id' });
                     paycheckStore.createIndex('userEmail', 'userEmail', { unique: false });
                     paycheckStore.createIndex('createdAt', 'createdAt', { unique: false });
+                }
+
+                // Add the paycheckCategories object store
+                if (!db.objectStoreNames.contains(DB_CONFIG.stores.paycheckCategories)) {
+                    const categoriesStore = db.createObjectStore(DB_CONFIG.stores.paycheckCategories, { keyPath: 'id' });
+                    categoriesStore.createIndex('name', 'name', { unique: true });
+
+                    // Add default categories
+                    const defaultCategories = [
+                        'Mortgage/Rent',
+                        'Utilities',
+                        'Transportation',
+                        'Insurance',
+                        'Healthcare',
+                        'Savings',
+                        'Debt Repayment',
+                        'Education',
+                        'Childcare',
+                        'Entertainment',
+                        'Dining Out',
+                        'Travel',
+                        'Gifts/Donations',
+                        'Personal Care',
+                        'Home Supplies',
+                        'Subscriptions',
+                        'Emergency Expenses',
+                        'Groceries',
+                        'Retail Shopping'
+                    ];
+
+                    defaultCategories.forEach((category, index) => {
+                        categoriesStore.add({
+                            id: index + 1,
+                            name: category
+                        });
+                    });
                 }
             };
         });
@@ -122,6 +157,19 @@ class IndexDBService {
         });
     }
 
+    async updatePaycheckBudget(budget) {
+        if (!this.db) await this.initDB();
+
+        return new Promise((resolve, reject) => {
+            const transaction = this.db.transaction([DB_CONFIG.stores.paycheckBudgets], 'readwrite');
+            const store = transaction.objectStore(DB_CONFIG.stores.paycheckBudgets);
+            const request = store.put(budget);
+
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
+    }
+
     async deletePaycheckBudget(budgetId) {
         if (!this.db) await this.initDB();
 
@@ -131,6 +179,19 @@ class IndexDBService {
             const request = store.delete(budgetId);
 
             request.onsuccess = () => resolve();
+            request.onerror = () => reject(request.error);
+        });
+    }
+
+    async getPaycheckCategories() {
+        if (!this.db) await this.initDB();
+
+        return new Promise((resolve, reject) => {
+            const transaction = this.db.transaction([DB_CONFIG.stores.paycheckCategories], 'readonly');
+            const store = transaction.objectStore(DB_CONFIG.stores.paycheckCategories);
+            const request = store.getAll();
+
+            request.onsuccess = () => resolve(request.result.sort((a, b) => a.name.localeCompare(b.name)));
             request.onerror = () => reject(request.error);
         });
     }

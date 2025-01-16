@@ -2,6 +2,7 @@ import React, { useRef, useState } from 'react';
 import { useReactToPrint } from 'react-to-print';
 import { Printer, Share2, X, PlusCircle, Loader2 } from 'lucide-react';
 import { withMinimumDelay } from '../utils/withDelay';
+import { PaycheckBudgetItemForm } from './PaycheckBudgetItemForm';
 
 const PrintableContent = React.forwardRef(({ budget }, ref) => {
     return (
@@ -40,8 +41,11 @@ const PrintableContent = React.forwardRef(({ budget }, ref) => {
 PrintableContent.displayName = 'PrintableContent';
 
 export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
+    const [showForm, setShowForm] = useState(false);
+    const [editingItem, setEditingItem] = useState(null);
     const [isClosing, setIsClosing] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
+    const [isAddingItem, setIsAddingItem] = useState(false);
     const componentRef = useRef(null);
     const [isPrinting, setIsPrinting] = useState(false);
     const [isSharing, setIsSharing] = useState(false);
@@ -83,6 +87,18 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
         } finally {
             setIsSharing(false);
         }
+    };
+
+    const handleAddItemClick = async () => {
+        setIsAddingItem(true);
+        await withMinimumDelay(async () => {});
+        setIsAddingItem(false);
+        setShowForm(true);
+    };
+
+    const handleFormClose = () => {
+        setShowForm(false);
+        setEditingItem(null);
     };
 
     const handleClose = async () => {
@@ -170,7 +186,8 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                 <div className="flex justify-between items-center mb-4">
                     <h3 className="text-lg font-medium text-gray-900">Expense Items</h3>
                     <button
-                        disabled={isSaving}
+                        onClick={handleAddItemClick}
+                        disabled={isAddingItem || isSaving}
                         className="inline-flex items-center px-3 py-2 border border-transparent
                              text-sm leading-4 font-medium rounded-md text-white
                              bg-indigo-600 hover:bg-indigo-700
@@ -178,7 +195,11 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                              transition-all duration-200
                              disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        <PlusCircle className="h-4 w-4 mr-2"/>
+                        {isAddingItem ? (
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin"/>
+                        ) : (
+                            <PlusCircle className="h-4 w-4 mr-2"/>
+                        )}
                         Record Expense
                     </button>
                 </div>
@@ -218,10 +239,40 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                                     </td>
                                 </tr>
                             )}
+                            {budget.items?.map(item => (
+                                <tr key={item.id}>
+                                    <td className="px-6 py-4 whitespace-nowrap">{item.category}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap">{item.description}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap">{item.date}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-right">${item.amount.toLocaleString()}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-right">
+                                        {/* Action buttons will be added later */}
+                                    </td>
+                                </tr>
+                            ))}
                             </tbody>
                         </table>
                     </div>
                 </div>
+
+                {showForm && (
+                    <PaycheckBudgetItemForm
+                        onSave={async (itemData) => {
+                            setIsSaving(true);
+                            try {
+                                // We'll implement the actual save logic later
+                                console.log('Item to save:', itemData);
+                                await withMinimumDelay(async () => {}, 1000); // Add delay to show saving state
+                                handleFormClose();
+                            } finally {
+                                setIsSaving(false);
+                            }
+                        }}
+                        onClose={handleFormClose}
+                        initialItem={editingItem}
+                        isSaving={isSaving}
+                    />
+                )}
 
                 <div style={{position: 'fixed', top: '-9999px', left: '-9999px'}}>
                     <PrintableContent
