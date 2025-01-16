@@ -4,6 +4,7 @@ import { Printer, Share2, X, PlusCircle, Loader2 } from 'lucide-react';
 import { useTransition, animated, config } from '@react-spring/web';
 import { withMinimumDelay } from '../utils/withDelay';
 import { PaycheckBudgetItemForm } from './PaycheckBudgetItemForm';
+import { modalTransitions, backdropTransitions } from '../utils/transitions';
 
 const PrintableContent = React.forwardRef(({ budget }, ref) => {
     return (
@@ -53,28 +54,9 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
     const [isSharing, setIsSharing] = useState(false);
     const [show, setShow] = useState(true); // Control modal visibility
 
-    const transitions = useTransition(show, {
-        from: {
-            opacity: 0,
-            transform: 'translate3d(0,20px,0) scale(0.95)'
-        },
-        enter: {
-            opacity: 1,
-            transform: 'translate3d(0,0px,0) scale(1)'
-        },
-        leave: {
-            opacity: 0,
-            transform: 'translate3d(0,20px,0) scale(0.95)'
-        },
-        config: { tension: 300, friction: 20 }
-    });
-
-    const backdropTransition = useTransition(show, {
-        from: { opacity: 0 },
-        enter: { opacity: 1 },
-        leave: { opacity: 0 },
-        config: config.default
-    });
+// Replace with the imported transitions
+    const transitions = useTransition(show, modalTransitions);
+    const backdropTransition = useTransition(show, backdropTransitions);
 
     const handlePrint = useReactToPrint({
         contentRef: componentRef,
@@ -132,6 +114,7 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
 
         await withMinimumDelay(async () => {});
         setShow(false); // Trigger exit animation
+        await withMinimumDelay(async () => {});
         setIsClosing(false);
         onClose();
     };

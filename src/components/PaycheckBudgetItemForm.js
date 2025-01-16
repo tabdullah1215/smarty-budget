@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { X, Loader2 } from 'lucide-react';
-import { useTransition, animated, config } from '@react-spring/web';
+import { useTransition, animated } from '@react-spring/web'; // No need to import `config` anymore
 import { withMinimumDelay } from '../utils/withDelay';
 import { indexdbService } from '../services/IndexDBService';
+// Add this import
+import { modalTransitions, backdropTransitions } from '../utils/transitions';
 
 export const PaycheckBudgetItemForm = ({
                                            onSave,
@@ -20,28 +22,9 @@ export const PaycheckBudgetItemForm = ({
     const [categories, setCategories] = useState([]);
     const [show, setShow] = useState(true);
 
-    const transitions = useTransition(show, {
-        from: {
-            opacity: 0,
-            transform: 'translate3d(0,20px,0) scale(0.95)'
-        },
-        enter: {
-            opacity: 1,
-            transform: 'translate3d(0,0px,0) scale(1)'
-        },
-        leave: {
-            opacity: 0,
-            transform: 'translate3d(0,20px,0) scale(0.95)'
-        },
-        config: { tension: 300, friction: 20 }
-    });
-
-    const backdropTransition = useTransition(show, {
-        from: { opacity: 0 },
-        enter: { opacity: 1 },
-        leave: { opacity: 0 },
-        config: config.default
-    });
+    // Replace with the imported transitions
+    const transitions = useTransition(show, modalTransitions);
+    const backdropTransition = useTransition(show, backdropTransitions);
 
     useEffect(() => {
         const loadCategories = async () => {
@@ -62,11 +45,12 @@ export const PaycheckBudgetItemForm = ({
     const handleCancel = async () => {
         setIsCancelling(true);
 
-        await withMinimumDelay(async () => {
-            onClose();
-        });
-        setShow(false); // Trigger exit animation
+        await withMinimumDelay(async () => {});
+        setShow(false);
+        await withMinimumDelay(async () => {});
         setIsCancelling(false);
+        onClose();
+
     };
 
     if (isLoading) {
@@ -122,7 +106,7 @@ export const PaycheckBudgetItemForm = ({
                                         onClick={handleCancel}
                                         disabled={isCancelling || isSaving}
                                         className="text-gray-400 hover:text-gray-500 focus:outline-none transition-colors duration-200
-                                        disabled:opacity-50 disabled:cursor-not-allowed p-2 hover:bg-gray-100 rounded-full"
+                                    disabled:opacity-50 disabled:cursor-not-allowed p-2 hover:bg-gray-100 rounded-full"
                                     >
                                         {isCancelling ? (
                                             <Loader2 className="h-6 w-6 animate-spin" />
@@ -156,8 +140,8 @@ export const PaycheckBudgetItemForm = ({
                                             value={category}
                                             onChange={(e) => setCategory(e.target.value)}
                                             className="block w-full rounded-lg border-2 border-gray-300 px-4 py-3
-                                            shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-200
-                                            focus:ring-opacity-50 transition-colors duration-200"
+                                        shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-200
+                                        focus:ring-opacity-50 transition-colors duration-200"
                                             required
                                             disabled={isSaving}
                                         >
@@ -177,8 +161,8 @@ export const PaycheckBudgetItemForm = ({
                                             value={description}
                                             onChange={(e) => setDescription(e.target.value)}
                                             className="block w-full rounded-lg border-2 border-gray-300 px-4 py-3
-                                            shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-200
-                                            focus:ring-opacity-50 transition-colors duration-200"
+                                        shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-200
+                                        focus:ring-opacity-50 transition-colors duration-200"
                                             disabled={isSaving}
                                             placeholder="e.g., Electric bill - August"
                                         />
@@ -193,8 +177,8 @@ export const PaycheckBudgetItemForm = ({
                                             value={date}
                                             onChange={(e) => setDate(e.target.value)}
                                             className="block w-full rounded-lg border-2 border-gray-300 px-4 py-3
-                                            shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-200
-                                            focus:ring-opacity-50 transition-colors duration-200"
+                                        shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-200
+                                        focus:ring-opacity-50 transition-colors duration-200"
                                             required
                                             disabled={isSaving}
                                         />
@@ -215,8 +199,8 @@ export const PaycheckBudgetItemForm = ({
                                                 min="0"
                                                 step="0.01"
                                                 className="block w-full rounded-lg border-2 border-gray-300 pl-8 pr-4 py-3
-                                                shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-200
-                                                focus:ring-opacity-50 transition-colors duration-200"
+                                            shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-200
+                                            focus:ring-opacity-50 transition-colors duration-200"
                                                 placeholder="0.00"
                                                 required
                                                 disabled={isSaving}
@@ -236,11 +220,11 @@ export const PaycheckBudgetItemForm = ({
                                             onClick={handleCancel}
                                             disabled={isCancelling || isSaving}
                                             className="inline-flex items-center px-4 py-2 bg-white text-gray-700
-                                            border-2 border-gray-300 rounded-lg hover:bg-gray-50
-                                            focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500
-                                            transition-all duration-200
-                                            disabled:opacity-50 disabled:cursor-not-allowed
-                                            min-w-[100px] justify-center shadow-sm"
+                                        border-2 border-gray-300 rounded-lg hover:bg-gray-50
+                                        focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500
+                                        transition-all duration-200
+                                        disabled:opacity-50 disabled:cursor-not-allowed
+                                        min-w-[100px] justify-center shadow-sm"
                                         >
                                             {isCancelling ? (
                                                 <>
@@ -255,12 +239,12 @@ export const PaycheckBudgetItemForm = ({
                                             type="submit"
                                             disabled={isSaving}
                                             className="inline-flex items-center px-4 py-2 border-2 border-transparent
-                                            rounded-lg shadow-sm text-sm font-medium text-white
-                                            bg-blue-600 hover:bg-blue-700
-                                            focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500
-                                            transition-all duration-200
-                                            disabled:opacity-50 disabled:cursor-not-allowed
-                                            min-w-[100px] justify-center"
+                                        rounded-lg shadow-sm text-sm font-medium text-white
+                                        bg-blue-600 hover:bg-blue-700
+                                        focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500
+                                        transition-all duration-200
+                                        disabled:opacity-50 disabled:cursor-not-allowed
+                                        min-w-[100px] justify-center"
                                         >
                                             {isSaving ? (
                                                 <>
