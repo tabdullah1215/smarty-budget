@@ -6,12 +6,7 @@ import { indexdbService } from '../services/IndexDBService';
 // Add this import
 import { modalTransitions, backdropTransitions } from '../utils/transitions';
 
-export const PaycheckBudgetItemForm = ({
-                                           onSave,
-                                           onClose,
-                                           initialItem = null,
-                                           isSaving = false
-                                       }) => {
+export const PaycheckBudgetItemForm = ({onSave, onClose, initialItem = null, isSaving = false}) => {
     const [category, setCategory] = useState(initialItem?.category || '');
     const [description, setDescription] = useState(initialItem?.description || '');
     const [date, setDate] = useState(initialItem?.date || new Date().toISOString().split('T')[0]);
@@ -51,6 +46,19 @@ export const PaycheckBudgetItemForm = ({
         setIsCancelling(false);
         onClose();
 
+    };
+
+    const handleSave = async (itemData) => {
+        try {
+            await onSave(itemData); // Call the parent's onSave function
+            // await withMinimumDelay(async () => {});
+            setShow(false); // Trigger exit animation
+            await withMinimumDelay(async () => {});
+            onClose();
+        } catch (error) {
+            console.error('Error saving item:', error);
+            setError('Failed to save item');
+        }
     };
 
     if (isLoading) {
@@ -125,7 +133,7 @@ export const PaycheckBudgetItemForm = ({
                                             date,
                                             amount: parseFloat(amount)
                                         };
-                                        await onSave(itemData);
+                                        await handleSave(itemData);
                                     } catch (error) {
                                         console.error('Error saving item:', error);
                                         setError('Failed to save item');

@@ -255,7 +255,6 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                                             try {
                                                 console.log('Item to save:', itemData);
                                                 await withMinimumDelay(async () => {});
-                                                handleFormClose();
                                             } finally {
                                                 setIsSaving(false);
                                             }
