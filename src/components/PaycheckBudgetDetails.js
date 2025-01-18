@@ -5,6 +5,7 @@ import { useTransition, animated } from '@react-spring/web';
 import { withMinimumDelay } from '../utils/withDelay';
 import { PaycheckBudgetItemForm } from './PaycheckBudgetItemForm';
 import { modalTransitions, backdropTransitions } from '../utils/transitions';
+import { useMessage } from '../contexts/MessageContext';
 
 const PrintableContent = React.forwardRef(({ budget }, ref) => {
     return (
@@ -54,6 +55,7 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
     const [isSharing, setIsSharing] = useState(false);
     const [show, setShow] = useState(true); // Control modal visibility
     const [error, setError] = useState("");
+    const { showMessage } = useMessage();
 
 // Replace with the imported transitions
     const transitions = useTransition(show, modalTransitions);
@@ -77,28 +79,24 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
     const handleSaveItem = async (itemData) => {
         setIsSaving(true);
         try {
-            // Generate a unique ID for the new item
             const newItem = {
                 id: crypto.randomUUID(),
                 ...itemData,
                 createdAt: new Date().toISOString()
             };
 
-            // Create updated budget with new item
             const updatedBudget = {
                 ...budget,
                 items: [...(budget.items || []), newItem]
             };
 
-            // Update the budget in IndexDB via the parent handler
             await onUpdate(updatedBudget);
-
-            // Close the form
-            // setShowForm(false); //not here, this is called in handleFormClose which is called by onClose in the child budgetform overlay
+            showMessage('success', 'Item saved successfully');
+            setShowForm(false);
             setEditingItem(null);
         } catch (error) {
             console.error('Error saving item:', error);
-            setError('Failed to save item. Please try again.');
+            showMessage('error', 'Failed to save item. Please try again.');
         } finally {
             setIsSaving(false);
         }

@@ -9,6 +9,7 @@ import { Home } from "./components/Home";  // Add this import
 import authService from './services/authService';
 import { indexdbService } from './services/IndexDBService';
 import { PaycheckBudgets } from "./components/PaycheckBudgets";
+import { MessageProvider } from './contexts/MessageContext';
 
 // Error Boundary Component
 class ErrorBoundary extends React.Component {
@@ -144,6 +145,7 @@ function App() {
 
     return (
         <ErrorBoundary>
+            <MessageProvider>
             <div className="h-full overflow-hidden">
                 <BrowserRouter>
                     // Updated routes section in App.js
@@ -197,6 +199,7 @@ function App() {
                     </Routes>
                 </BrowserRouter>
             </div>
+            </MessageProvider>
         </ErrorBoundary>
 );
 }
