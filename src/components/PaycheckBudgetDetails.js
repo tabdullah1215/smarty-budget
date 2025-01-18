@@ -1,11 +1,11 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useMemo } from 'react';
 import { useReactToPrint } from 'react-to-print';
-import { Printer, Share2, X, PlusCircle, Loader2 } from 'lucide-react';
+import { Printer, Share2, X, PlusCircle, Loader2, Edit2, Trash2 } from 'lucide-react';
 import { useTransition, animated } from '@react-spring/web';
 import { withMinimumDelay } from '../utils/withDelay';
 import { PaycheckBudgetItemForm } from './PaycheckBudgetItemForm';
 import { modalTransitions, backdropTransitions } from '../utils/transitions';
-import { useToast } from '../contexts/ToastContext';  // Replace useMessage with useToast
+import { useToast } from '../contexts/ToastContext';
 
 const PrintableContent = React.forwardRef(({ budget }, ref) => {
     return (
@@ -54,7 +54,7 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
     const [isPrinting, setIsPrinting] = useState(false);
     const [isSharing, setIsSharing] = useState(false);
     const [show, setShow] = useState(true); // Control modal visibility
-    const { showToast } = useToast();  // Replace useMessage with useToast
+    const { showToast } = useToast();
 
     // Replace with the imported transitions
     const transitions = useTransition(show, modalTransitions);
@@ -70,38 +70,131 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
         onAfterPrint: async () => {
             await new Promise((resolve) => {
                 setIsPrinting(false);
-                showToast('success', 'Budget printed successfully');  // Add toast notification
+                showToast('success', 'Budget printed successfully');
                 resolve();
             });
         },
         onPrintError: (error) => {
             console.error('Print error:', error);
-            showToast('error', 'Failed to print budget. Please try again.');  // Add toast notification
+            showToast('error', 'Failed to print budget. Please try again.');
             setIsPrinting(false);
         }
     });
 
+    const { totalSpent, remainingAmount, categoryTotals, monthlyBreakdown } = useMemo(() => {
+        // Calculate total spent
+        const total = budget.items?.reduce((sum, item) => sum + (item.amount || 0), 0) || 0;
+        const remaining = budget.amount - total;
+
+        // Calculate totals by category
+        const byCategory = budget.items?.reduce((acc, item) => {
+            acc[item.category] = (acc[item.category] || 0) + (item.amount || 0);
+            return acc;
+        }, {});
+
+        // Calculate monthly spending breakdown
+        const byMonth = budget.items?.reduce((acc, item) => {
+            const date = new Date(item.date);
+            const monthYear = date.toLocaleString('default', {
+                month: 'long',
+                year: 'numeric'
+            });
+
+            if (!acc[monthYear]) {
+                acc[monthYear] = {
+                    total: 0,
+                    items: [],
+                    month: date.getMonth(),
+                    year: date.getFullYear()
+                };
+            }
+
+            acc[monthYear].total += (item.amount || 0);
+            acc[monthYear].items.push(item);
+
+            return acc;
+        }, {});
+
+        // Sort monthly breakdown by date
+        const sortedByMonth = Object.entries(byMonth || {})
+            .sort(([, a], [, b]) => {
+                if (a.year !== b.year) return b.year - a.year;
+                return b.month - a.month;
+            })
+            .reduce((acc, [key, value]) => {
+                acc[key] = value;
+                return acc;
+            }, {});
+
+        return {
+            totalSpent: total,
+            remainingAmount: remaining,
+            categoryTotals: byCategory || {},
+            monthlyBreakdown: sortedByMonth
+        };
+    }, [budget.items, budget.amount]);
+
+    const budgetStats = useMemo(() => {
+        const percentageUsed = (totalSpent / budget.amount) * 100;
+        const isOverBudget = percentageUsed > 100;
+        const percentageRemaining = 100 - percentageUsed;
+
+        return {
+            percentageUsed: Math.min(percentageUsed, 100),
+            isOverBudget,
+            percentageRemaining: Math.max(percentageRemaining, 0),
+            status: isOverBudget ? 'over' : percentageUsed > 90 ? 'warning' : 'good'
+        };
+    }, [totalSpent, budget.amount]);
+
     const handleSaveItem = async (itemData) => {
         setIsSaving(true);
         try {
-            const newItem = {
-                id: crypto.randomUUID(),
-                ...itemData,
-                createdAt: new Date().toISOString()
-            };
+            // For editing, map through items and update the matching one
+            // For adding, append the new item to the array
+            const updatedItems = editingItem
+                ? budget.items.map(item =>
+                    item.id === editingItem.id
+                        ? {
+                            ...item,
+                            ...itemData,
+                            updatedAt: new Date().toISOString()
+                        }
+                        : item
+                )
+                : [
+                    ...budget.items,
+                    {
+                        id: crypto.randomUUID(),
+                        ...itemData,
+                        createdAt: new Date().toISOString(),
+                        updatedAt: new Date().toISOString()
+                    }
+                ];
 
+            // Create the complete updated budget object
             const updatedBudget = {
                 ...budget,
-                items: [...(budget.items || []), newItem]
+                items: updatedItems,
+                updatedAt: new Date().toISOString()
             };
 
+            // Update the budget through the parent component
             await onUpdate(updatedBudget);
-            showToast('success', 'Expense item added successfully');  // Replace showMessage with showToast
+
+            // Show success message
+            showToast('success', editingItem
+                ? 'Expense item updated successfully'
+                : 'New expense item added successfully'
+            );
+
+            // Reset form state
             setShowForm(false);
             setEditingItem(null);
+
         } catch (error) {
             console.error('Error saving item:', error);
-            showToast('error', 'Failed to save expense item. Please try again.');  // Replace showMessage with showToast
+            showToast('error', `Failed to ${editingItem ? 'update' : 'add'} expense item. Please try again.`);
         } finally {
             setIsSaving(false);
         }
@@ -124,14 +217,14 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                 url: window.location.href,
             };
             await navigator.share(shareData);
-            showToast('success', 'Budget shared successfully');  // Add toast notification
+            showToast('success', 'Budget shared successfully');
         } catch (error) {
             console.error('Error sharing:', error);
             if (error.name === 'AbortError') {
                 // User cancelled share
                 return;
             }
-            showToast('error', 'Failed to share budget. Please try again.');  // Add toast notification
+            showToast('error', 'Failed to share budget. Please try again.');
         } finally {
             setIsSharing(false);
         }
@@ -139,9 +232,13 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
 
     const handleAddItemClick = async () => {
         setIsAddingItem(true);
-        await withMinimumDelay(async () => {});
-        setIsAddingItem(false);
-        setShowForm(true);
+        try {
+            await withMinimumDelay(async () => {});
+            setEditingItem(null); // Clear any existing editing state
+            setShowForm(true);
+        } finally {
+            setIsAddingItem(false);
+        }
     };
 
     const handleFormClose = () => {
@@ -159,8 +256,24 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
         onClose();
     };
 
-    const totalSpent = budget.items?.reduce((sum, item) => sum + (item.amount || 0), 0) || 0;
-    const remainingAmount = budget.amount - totalSpent;
+    const handleEditItem = (item) => {
+        setEditingItem(item);
+        setShowForm(true);
+    };
+
+    const handleDeleteItem = async (itemId) => {
+        try {
+            const updatedBudget = {
+                ...budget,
+                items: budget.items.filter(item => item.id !== itemId)
+            };
+            await onUpdate(updatedBudget);
+            showToast('success', 'Expense item deleted successfully');
+        } catch (error) {
+            console.error('Error deleting item:', error);
+            showToast('error', 'Failed to delete expense item. Please try again.');
+        }
+    };
 
     return (
         <>
@@ -256,16 +369,37 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                                 </div>
 
                                 {/* Scrollable Content Section */}
-                                <div className="flex-1 overflow-hidden px-5">
-                                    <div className="overflow-y-auto overflow-x-auto h-full max-h-[calc(90vh-280px)]">
+                                <div className="flex-1 overflow-y-auto px-5">
+                                    <div className="relative w-full h-[calc(80vh-250px)]">
+                                        {/* Mobile-optimized table */}
                                         <table className="min-w-full divide-y divide-gray-200">
                                             <thead className="bg-gray-50 sticky top-0">
                                             <tr>
-                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
-                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
-                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                                                <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                                                <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                                {/* Hidden on mobile, visible on larger screens */}
+                                                <th scope="col"
+                                                    className="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category
+                                                </th>
+                                                <th scope="col"
+                                                    className="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description
+                                                </th>
+                                                <th scope="col"
+                                                    className="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date
+                                                </th>
+                                                <th scope="col"
+                                                    className="hidden md:table-cell px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Amount
+                                                </th>
+                                                <th scope="col"
+                                                    className="hidden md:table-cell px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions
+                                                </th>
+
+                                                {/* Visible on mobile only - simplified header */}
+                                                <th scope="col"
+                                                    className="md:hidden px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Expense
+                                                    Details
+                                                </th>
+                                                <th scope="col"
+                                                    className="md:hidden px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions
+                                                </th>
                                             </tr>
                                             </thead>
                                             <tbody className="bg-white divide-y divide-gray-200">
@@ -277,15 +411,63 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                                                 </tr>
                                             )}
                                             {budget.items?.map(item => (
-                                                <tr key={item.id}>
-                                                    <td className="px-6 py-4 whitespace-nowrap">{item.category}</td>
-                                                    <td className="px-6 py-4 whitespace-nowrap">{item.description}</td>
-                                                    <td className="px-6 py-4 whitespace-nowrap">{item.date}</td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-right">${item.amount.toLocaleString()}</td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-right">
-                                                        {/* Action buttons will be added later */}
-                                                    </td>
-                                                </tr>
+                                                <React.Fragment key={item.id}>
+                                                    {/* Desktop view */}
+                                                    <tr className="hidden md:table-row">
+                                                        <td className="px-6 py-4 whitespace-nowrap">{item.category}</td>
+                                                        <td className="px-6 py-4 whitespace-nowrap">{item.description}</td>
+                                                        <td className="px-6 py-4 whitespace-nowrap">{item.date}</td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-right">${item.amount.toLocaleString()}</td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-right">
+                                                            <div className="flex justify-end space-x-2">
+                                                                <button
+                                                                    onClick={() => handleEditItem(item)}
+                                                                    className="text-blue-600 hover:text-blue-800"
+                                                                >
+                                                                    <Edit2 className="h-5 w-5"/>
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => handleDeleteItem(item.id)}
+                                                                    className="text-red-600 hover:text-red-800"
+                                                                >
+                                                                    <Trash2 className="h-5 w-5"/>
+                                                                </button>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+
+                                                    {/* Mobile view */}
+                                                    <tr className="md:hidden">
+                                                        <td className="px-6 py-4">
+                                                            <div className="flex flex-col space-y-1">
+                                                                <span
+                                                                    className="font-medium text-gray-900">{item.category}</span>
+                                                                <span
+                                                                    className="text-gray-600">{item.description}</span>
+                                                                <span
+                                                                    className="text-gray-500 text-sm">{item.date}</span>
+                                                                <span
+                                                                    className="font-medium text-gray-900">${item.amount.toLocaleString()}</span>
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-6 py-4">
+                                                            <div className="flex justify-end space-x-2">
+                                                                <button
+                                                                    onClick={() => handleEditItem(item)}
+                                                                    className="text-blue-600 hover:text-blue-800"
+                                                                >
+                                                                    <Edit2 className="h-5 w-5"/>
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => handleDeleteItem(item.id)}
+                                                                    className="text-red-600 hover:text-red-800"
+                                                                >
+                                                                    <Trash2 className="h-5 w-5"/>
+                                                                </button>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                </React.Fragment>
                                             ))}
                                             </tbody>
                                         </table>
