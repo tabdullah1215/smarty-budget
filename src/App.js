@@ -10,6 +10,8 @@ import authService from './services/authService';
 import { indexdbService } from './services/IndexDBService';
 import { PaycheckBudgets } from "./components/PaycheckBudgets";
 import { MessageProvider } from './contexts/MessageContext';
+import { Toaster } from 'react-hot-toast';  // Add this import
+import { ToastProvider } from './contexts/ToastContext';  // Add this import
 
 // Error Boundary Component
 class ErrorBoundary extends React.Component {
@@ -145,63 +147,71 @@ function App() {
 
     return (
         <ErrorBoundary>
-            <MessageProvider>
-            <div className="h-full overflow-hidden">
-                <BrowserRouter>
-                    // Updated routes section in App.js
-                    <Routes>
-                        {/* Public routes */}
-                        <Route path="/login" element={<Login />} />
-                        <Route
-                            path="/register/:appId/:linkType/:token"
-                            element={<AppRegistration />}
-                        />
+            <ToastProvider>
+                <MessageProvider>
+                    <div className="h-full overflow-hidden">
+                        <BrowserRouter>
+                            <Routes>
+                                {/* Public routes */}
+                                <Route path="/login" element={<Login />} />
+                                <Route
+                                    path="/register/:appId/:linkType/:token"
+                                    element={<AppRegistration />}
+                                />
 
-                        {/* Protected routes */}
-                        <Route
-                            path="/dashboard"
-                            element={
-                                <ProtectedRoute>
-                                    <Home />
-                                </ProtectedRoute>
-                            }
-                        />
-                        <Route
-                            path="/budgets"
-                            element={
-                                <ProtectedRoute>
-                                    <BudgetContent />
-                                </ProtectedRoute>
-                            }
-                        />
+                                {/* Protected routes */}
+                                <Route
+                                    path="/dashboard"
+                                    element={
+                                        <ProtectedRoute>
+                                            <Home />
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path="/budgets"
+                                    element={
+                                        <ProtectedRoute>
+                                            <BudgetContent />
+                                        </ProtectedRoute>
+                                    }
+                                />
 
-                        <Route
-                            path="/paycheck-budgets"
-                            element={
-                                <ProtectedRoute>
-                                    <PaycheckBudgets />
-                                </ProtectedRoute>
-                            }
-                        />
+                                <Route
+                                    path="/paycheck-budgets"
+                                    element={
+                                        <ProtectedRoute>
+                                            <PaycheckBudgets />
+                                        </ProtectedRoute>
+                                    }
+                                />
 
-                        {/* Root redirect to dashboard */}
-                        <Route
-                            path="/"
-                            element={
-                                <ProtectedRoute>
-                                    <Navigate to="/dashboard" replace />
-                                </ProtectedRoute>
-                            }
-                        />
+                                {/* Root redirect to dashboard */}
+                                <Route
+                                    path="/"
+                                    element={
+                                        <ProtectedRoute>
+                                            <Navigate to="/dashboard" replace />
+                                        </ProtectedRoute>
+                                    }
+                                />
 
-                        {/* Catch all redirect to login */}
-                        <Route path="*" element={<Navigate to="/login" replace />} />
-                    </Routes>
-                </BrowserRouter>
-            </div>
-            </MessageProvider>
+                                {/* Catch all redirect to login */}
+                                <Route path="*" element={<Navigate to="/login" replace />} />
+                            </Routes>
+                        </BrowserRouter>
+                        <Toaster
+                            containerStyle={{
+                                top: 20,
+                                right: 20,
+                                zIndex: 10000 // Ensures toasts are above modals
+                            }}
+                        />
+                    </div>
+                </MessageProvider>
+            </ToastProvider>
         </ErrorBoundary>
-);
+    );
 }
 
 export default App;

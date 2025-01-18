@@ -5,7 +5,7 @@ import { useTransition, animated } from '@react-spring/web';
 import { withMinimumDelay } from '../utils/withDelay';
 import { PaycheckBudgetItemForm } from './PaycheckBudgetItemForm';
 import { modalTransitions, backdropTransitions } from '../utils/transitions';
-import { useMessage } from '../contexts/MessageContext';
+import { useToast } from '../contexts/ToastContext';  // Replace useMessage with useToast
 
 const PrintableContent = React.forwardRef(({ budget }, ref) => {
     return (
@@ -54,7 +54,7 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
     const [isPrinting, setIsPrinting] = useState(false);
     const [isSharing, setIsSharing] = useState(false);
     const [show, setShow] = useState(true); // Control modal visibility
-    const { showMessage } = useMessage();
+    const { showToast } = useToast();  // Replace useMessage with useToast
 
     // Replace with the imported transitions
     const transitions = useTransition(show, modalTransitions);
@@ -70,9 +70,15 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
         onAfterPrint: async () => {
             await new Promise((resolve) => {
                 setIsPrinting(false);
+                showToast('success', 'Budget printed successfully');  // Add toast notification
                 resolve();
             });
         },
+        onPrintError: (error) => {
+            console.error('Print error:', error);
+            showToast('error', 'Failed to print budget. Please try again.');  // Add toast notification
+            setIsPrinting(false);
+        }
     });
 
     const handleSaveItem = async (itemData) => {
@@ -90,12 +96,12 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
             };
 
             await onUpdate(updatedBudget);
-            showMessage('success', 'Item saved successfully');
+            showToast('success', 'Expense item added successfully');  // Replace showMessage with showToast
             setShowForm(false);
             setEditingItem(null);
         } catch (error) {
             console.error('Error saving item:', error);
-            showMessage('error', 'Failed to save item. Please try again.');
+            showToast('error', 'Failed to save expense item. Please try again.');  // Replace showMessage with showToast
         } finally {
             setIsSaving(false);
         }
@@ -118,8 +124,14 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                 url: window.location.href,
             };
             await navigator.share(shareData);
+            showToast('success', 'Budget shared successfully');  // Add toast notification
         } catch (error) {
             console.error('Error sharing:', error);
+            if (error.name === 'AbortError') {
+                // User cancelled share
+                return;
+            }
+            showToast('error', 'Failed to share budget. Please try again.');  // Add toast notification
         } finally {
             setIsSharing(false);
         }
