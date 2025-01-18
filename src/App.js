@@ -9,7 +9,6 @@ import { Home } from "./components/Home";  // Add this import
 import authService from './services/authService';
 import { indexdbService } from './services/IndexDBService';
 import { PaycheckBudgets } from "./components/PaycheckBudgets";
-import { MessageProvider } from './contexts/MessageContext';
 import { Toaster } from 'react-hot-toast';  // Add this import
 import { ToastProvider } from './contexts/ToastContext';  // Add this import
 
@@ -148,7 +147,6 @@ function App() {
     return (
         <ErrorBoundary>
             <ToastProvider>
-                <MessageProvider>
                     <div className="h-full overflow-hidden">
                         <BrowserRouter>
                             <Routes>
@@ -208,7 +206,6 @@ function App() {
                             }}
                         />
                     </div>
-                </MessageProvider>
             </ToastProvider>
         </ErrorBoundary>
     );

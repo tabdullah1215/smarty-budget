@@ -7,6 +7,7 @@ import { PaycheckBudgetDetails } from './PaycheckBudgetDetails';
 import { usePaycheckBudgets } from '../hooks/usePaycheckBudget';
 import { withMinimumDelay } from '../utils/withDelay';
 import authService from '../services/authService';
+import { useToast } from '../contexts/ToastContext';
 
 export const PaycheckBudgets = () => {
     const [isCreating, setIsCreating] = useState(false);
@@ -19,7 +20,7 @@ export const PaycheckBudgets = () => {
     const [isCancelling, setIsCancelling] = useState(false);
     const navigate = useNavigate();
     const userInfo = authService.getUserInfo();
-
+    const { showToast } = useToast();
     const { paycheckBudgets, createPaycheckBudget, updatePaycheckBudget, deletePaycheckBudget, isLoading } = usePaycheckBudgets();
 
     useEffect(() => {
@@ -86,9 +87,11 @@ export const PaycheckBudgets = () => {
     const handleCreateBudget = async (budgetData) => {
         try {
             await createPaycheckBudget(budgetData);
+            showToast('success', 'New paycheck budget created successfully');
             setShowNewBudgetForm(false);
         } catch (error) {
             console.error('Error creating budget:', error);
+            showToast('error', 'Failed to create paycheck budget. Please try again.');
         }
     };
 

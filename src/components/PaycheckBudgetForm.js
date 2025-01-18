@@ -13,6 +13,7 @@ export const PaycheckBudgetForm = ({
     const [error, setError] = useState('');
     const [isAdding, setIsAdding] = useState(false);
 
+// In PaycheckBudgetForm.js
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
@@ -31,6 +32,7 @@ export const PaycheckBudgetForm = ({
         } catch (error) {
             console.error('Error saving:', error);
             setError('Failed to save. Please try again.');
+            throw error; // Propagate error to parent
         } finally {
             setIsAdding(false);
         }
