@@ -42,10 +42,10 @@ export const Header = ({ showCreateButton = false, onCreateClick, isCreatingBudg
     const getBudgetType = () => {
         const path = location.pathname;
         if (path === '/' || path === 'dashboard') return ''; // Home page - no budget type
-        if (path.includes('paycheck')) return 'Paycheck Budget';
-        if (path.includes('business')) return 'Business Trip Budget';
-        if (path.includes('savings')) return 'Savings Budget';
-        if (path.includes('budgets')) return 'Custom Budget';
+        if (path.includes('paycheck')) return 'Paycheck Budgets';
+        if (path.includes('business')) return 'Business Trip Budgets';
+        if (path.includes('savings')) return 'Savings Budgets';
+        if (path.includes('budgets')) return 'Custom Budgets';
         return '';
     };
 

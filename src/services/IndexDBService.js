@@ -163,9 +163,17 @@ class IndexDBService {
         return new Promise((resolve, reject) => {
             const transaction = this.db.transaction([DB_CONFIG.stores.paycheckBudgets], 'readwrite');
             const store = transaction.objectStore(DB_CONFIG.stores.paycheckBudgets);
-            const request = store.put(budget);
 
-            request.onsuccess = () => resolve(request.result);
+            // Ensure the budget object is complete
+            const completePaycheckBudget = {
+                ...budget,
+                items: budget.items || [],
+                updatedAt: new Date().toISOString()
+            };
+
+            const request = store.put(completePaycheckBudget);
+
+            request.onsuccess = () => resolve(completePaycheckBudget);
             request.onerror = () => reject(request.error);
         });
     }

@@ -56,12 +56,16 @@ export const usePaycheckBudgets = () => {
             const budgetToUpdate = {
                 ...updatedBudget,
                 updatedAt: new Date().toISOString(),
-                userEmail
+                userEmail,
+                items: updatedBudget.items || [] // Ensure items array exists
             };
+
             await indexdbService.updatePaycheckBudget(budgetToUpdate);
             setPaycheckBudgets(prev => prev.map(budget =>
                 budget.id === budgetToUpdate.id ? budgetToUpdate : budget
             ));
+
+            return budgetToUpdate;
         } catch (error) {
             console.error('Error updating paycheck budget:', error);
             throw error;
