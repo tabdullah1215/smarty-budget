@@ -1,14 +1,12 @@
 import React from 'react';
 import { Loader2, ArrowLeft, LogOut, X } from 'lucide-react';
 import { useLogin } from '../hooks/useLogin';
-import { useMessage } from '../contexts/MessageContext';
 import authService from '../services/authService';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {withMinimumDelay} from "../utils/withDelay";
 
 export const Header = ({ showCreateButton = false, onCreateClick, isCreatingBudget = false }) => {
     const { handleLogout } = useLogin();
-    const { message, clearMessage } = useMessage();
     const [isLoggingOut, setIsLoggingOut] = React.useState(false);
     const userInfo = authService.getUserInfo();
     const navigate = useNavigate();
@@ -107,36 +105,12 @@ export const Header = ({ showCreateButton = false, onCreateClick, isCreatingBudg
                             </button>
                         )}
                     </div>
-
                     {!isHomePage && (
                         <div className="text-center">
                             <h2 className="text-lg text-gray-600">{getBudgetType()}</h2>
                         </div>
                     )}
                 </div>
-                {message.content && (
-                    <div className="mt-4 relative">
-                        <div
-                            className={`p-4 rounded-lg ${
-                                message.type === 'error'
-                                    ? 'bg-red-50 text-red-800 border border-red-200'
-                                    : message.type === 'success'
-                                        ? 'bg-green-50 text-green-800 border border-green-200'
-                                        : 'bg-blue-50 text-blue-800 border border-blue-200'
-                            }`}
-                        >
-                            <div className="flex justify-between items-center">
-                                <p className="text-sm font-medium">{message.content}</p>
-                                <button
-                                    onClick={clearMessage}
-                                    className="ml-4 text-gray-400 hover:text-gray-500"
-                                >
-                                    <X className="h-5 w-5" />
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
             </div>
         </div>
     );
