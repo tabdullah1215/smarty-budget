@@ -189,8 +189,10 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
             );
 
             // Reset form state
-            setShowForm(false);
-            setEditingItem(null);
+            // setShowForm(false);
+            // setEditingItem(null);
+
+            return true;
 
         } catch (error) {
             console.error('Error saving item:', error);
