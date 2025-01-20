@@ -1,3 +1,4 @@
+//PaycheckBudgetDetails.js
 import React, { useRef, useState, useMemo } from 'react';
 import { useReactToPrint } from 'react-to-print';
 import { Printer, Share2, X, PlusCircle, Loader2, Edit2, Trash2 } from 'lucide-react';
@@ -6,6 +7,7 @@ import { withMinimumDelay } from '../utils/withDelay';
 import { PaycheckBudgetItemForm } from './PaycheckBudgetItemForm';
 import { modalTransitions, backdropTransitions } from '../utils/transitions';
 import { useToast } from '../contexts/ToastContext';
+import { Camera } from 'lucide-react';
 
 const PrintableContent = React.forwardRef(({ budget }, ref) => {
     return (
@@ -276,6 +278,29 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
             showToast('error', 'Failed to delete expense item. Please try again.');
         }
     };
+    const handleImageUpload = (itemId) => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.onchange = async (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    const base64Data = reader.result.split(',')[1];
+                    // Clone the budget and update the item
+                    const updatedItems = budget.items.map(item =>
+                        item.id === itemId ? { ...item, image: base64Data } : item
+                    );
+                    const updatedBudget = { ...budget, items: updatedItems };
+                    // Call onUpdate to save the changes
+                    onUpdate(updatedBudget);
+                };
+                reader.readAsDataURL(file);
+            }
+        };
+        input.click();
+    };
 
     return (
         <>
@@ -375,7 +400,7 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                                     <div className="relative w-full h-[calc(80vh-250px)]">
                                         {/* Mobile-optimized table */}
                                         <table className="min-w-full divide-y divide-gray-200">
-                                            <thead className="bg-gray-50 sticky top-0">
+                                            <thead>
                                             <tr>
                                                 {/* Hidden on mobile, visible on larger screens */}
                                                 <th scope="col"
@@ -414,7 +439,6 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                                             )}
                                             {budget.items?.map(item => (
                                                 <React.Fragment key={item.id}>
-                                                    {/* Desktop view */}
                                                     <tr className="hidden md:table-row">
                                                         <td className="px-6 py-4 whitespace-nowrap">{item.category}</td>
                                                         <td className="px-6 py-4 whitespace-nowrap">{item.description}</td>
@@ -434,22 +458,32 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                                                                 >
                                                                     <Trash2 className="h-5 w-5"/>
                                                                 </button>
+                                                                <button
+                                                                    onClick={() => handleImageUpload(item.id)}
+                                                                    className="text-gray-600 hover:text-gray-800"
+                                                                >
+                                                                    <Camera className="h-5 w-5"/>
+                                                                </button>
                                                             </div>
                                                         </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-center">
+                                                            {item.image && (
+                                                                <img
+                                                                    src={`data:image/png;base64,${item.image}`}
+                                                                    alt="Budget Item"
+                                                                    className="w-20 h-20 object-cover rounded-md"
+                                                                />
+                                                            )}
+                                                        </td>
                                                     </tr>
-
                                                     {/* Mobile view */}
                                                     <tr className="md:hidden">
                                                         <td className="px-6 py-4">
                                                             <div className="flex flex-col space-y-1">
-                                                                <span
-                                                                    className="font-medium text-gray-900">{item.category}</span>
-                                                                <span
-                                                                    className="text-gray-600">{item.description}</span>
-                                                                <span
-                                                                    className="text-gray-500 text-sm">{item.date}</span>
-                                                                <span
-                                                                    className="font-medium text-gray-900">${item.amount.toLocaleString()}</span>
+                                                                <span className="font-medium text-gray-900">{item.category}</span>
+                                                                <span className="text-gray-600">{item.description}</span>
+                                                                <span className="text-gray-500 text-sm">{item.date}</span>
+                                                                <span className="font-medium text-gray-900">${item.amount.toLocaleString()}</span>
                                                             </div>
                                                         </td>
                                                         <td className="px-6 py-4">
@@ -458,13 +492,19 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                                                                     onClick={() => handleEditItem(item)}
                                                                     className="text-blue-600 hover:text-blue-800"
                                                                 >
-                                                                    <Edit2 className="h-5 w-5"/>
+                                                                    <Edit2 className="h-5 w-5" />
                                                                 </button>
                                                                 <button
                                                                     onClick={() => handleDeleteItem(item.id)}
                                                                     className="text-red-600 hover:text-red-800"
                                                                 >
-                                                                    <Trash2 className="h-5 w-5"/>
+                                                                    <Trash2 className="h-5 w-5" />
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => handleImageUpload(item.id)}
+                                                                    className="text-gray-600 hover:text-gray-800"
+                                                                >
+                                                                    <Camera className="h-5 w-5" />
                                                                 </button>
                                                             </div>
                                                         </td>

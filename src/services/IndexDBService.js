@@ -1,4 +1,4 @@
-// src/services/indexdbService.js
+//indexdbService.js
 import { DB_CONFIG } from '../config';
 
 class IndexDBService {
@@ -164,10 +164,12 @@ class IndexDBService {
             const transaction = this.db.transaction([DB_CONFIG.stores.paycheckBudgets], 'readwrite');
             const store = transaction.objectStore(DB_CONFIG.stores.paycheckBudgets);
 
-            // Ensure the budget object is complete
             const completePaycheckBudget = {
                 ...budget,
-                items: budget.items || [],
+                items: budget.items.map(item => ({
+                    ...item,
+                    image: item.image || null
+                })),
                 updatedAt: new Date().toISOString()
             };
 

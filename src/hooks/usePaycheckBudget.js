@@ -1,3 +1,4 @@
+//usePaycheckBudget.js
 import { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import authService from '../services/authService';
@@ -57,7 +58,7 @@ export const usePaycheckBudgets = () => {
                 ...updatedBudget,
                 updatedAt: new Date().toISOString(),
                 userEmail,
-                items: updatedBudget.items || [] // Ensure items array exists
+                items: updatedBudget.items || []
             };
 
             await indexdbService.updatePaycheckBudget(budgetToUpdate);
