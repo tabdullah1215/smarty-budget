@@ -441,109 +441,114 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                                             )}
                                             {budget.items?.map(item => (
                                                 <React.Fragment key={item.id}>
+                                                    {/* Desktop view */}
                                                     <tr className="hidden md:table-row">
                                                         <td className="px-6 py-4 whitespace-nowrap">{item.category}</td>
                                                         <td className="px-6 py-4 whitespace-nowrap">{item.description}</td>
                                                         <td className="px-6 py-4 whitespace-nowrap">{item.date}</td>
                                                         <td className="px-6 py-4 whitespace-nowrap text-right">${item.amount.toLocaleString()}</td>
-                                                        <td className="px-6 py-4 whitespace-nowrap text-right">
-                                                            <div className="flex justify-end space-x-2">
-                                                                <button
-                                                                    onClick={() => handleEditItem(item)}
-                                                                    className="text-blue-600 hover:text-blue-800"
-                                                                >
-                                                                    <Edit2 className="h-5 w-5"/>
-                                                                </button>
-                                                                <button
-                                                                    onClick={() => handleDeleteItem(item.id)}
-                                                                    className="text-red-600 hover:text-red-800"
-                                                                >
-                                                                    <Trash2 className="h-5 w-5"/>
-                                                                </button>
-                                                                <button
-                                                                    onClick={() => handleImageUpload(item.id)}
-                                                                    className="text-gray-600 hover:text-gray-800"
-                                                                >
-                                                                    <Camera className="h-5 w-5"/>
-                                                                </button>
+                                                        <td className="px-6 py-4 whitespace-nowrap">
+                                                            <div className="flex flex-col space-y-2">
+                                                                <div className="flex justify-end space-x-2">
+                                                                    <button
+                                                                        onClick={() => handleEditItem(item)}
+                                                                        className="text-blue-600 hover:text-blue-800 transition-colors duration-200"
+                                                                        title="Edit item"
+                                                                    >
+                                                                        <Edit2 className="h-5 w-5"/>
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() => handleDeleteItem(item.id)}
+                                                                        className="text-red-600 hover:text-red-800 transition-colors duration-200"
+                                                                        title="Delete item"
+                                                                    >
+                                                                        <Trash2 className="h-5 w-5"/>
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() => handleImageUpload(item.id)}
+                                                                        className="text-gray-600 hover:text-gray-800 transition-colors duration-200"
+                                                                        title={item.image ? "Update image" : "Add image"}
+                                                                    >
+                                                                        <Camera className="h-5 w-5"/>
+                                                                    </button>
+                                                                </div>
+                                                                {item.image && (
+                                                                    <div className="flex justify-center">
+                                                                        <button
+                                                                            onClick={() => {
+                                                                                setSelectedImage(item.image);
+                                                                                setSelectedImageType(item.fileType || 'image/png');
+                                                                            }}
+                                                                            className="group relative"
+                                                                            title="Click to enlarge"
+                                                                        >
+                                                                            <img
+                                                                                src={`data:${item.fileType || 'image/png'};base64,${item.image}`}
+                                                                                alt="Budget Item"
+                                                                                className="w-16 h-16 object-cover rounded-md border-2 border-gray-300
+                                     transition-transform duration-200 group-hover:scale-105"
+                                                                            />
+                                                                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 rounded-md transition-colors duration-200"/>
+                                                                        </button>
+                                                                    </div>
+                                                                )}
                                                             </div>
                                                         </td>
-                                                        <td className="px-6 py-4 whitespace-nowrap text-center">
-                                                            {item.image && (
-                                                                <button
-                                                                    onClick={() => {
-                                                                        setSelectedImage(item.image);
-                                                                        setSelectedImageType(item.fileType || 'image/png');
-                                                                    }}
-                                                                    className="group relative"
-                                                                    title="Click to enlarge"
-                                                                >
-                                                                    <img
-                                                                        src={`data:image/png;base64,${item.image}`}
-                                                                        alt="Budget Item"
-                                                                        className="w-20 h-20 object-cover rounded-md border-2 border-gray-300 transition-transform duration-200 group-hover:scale-105"
-                                                                    />
-                                                                    <div
-                                                                        className="absolute inset-0 bg-black/0 group-hover:bg-black/10 rounded-md transition-colors duration-200"/>
-                                                                </button>
-                                                            )}
-                                                        </td>
                                                     </tr>
+
                                                     {/* Mobile view */}
                                                     <tr className="md:hidden">
                                                         <td className="px-6 py-4">
                                                             <div className="flex flex-col space-y-1">
-                                                                <span
-                                                                    className="font-medium text-gray-900">{item.category}</span>
-                                                                <span
-                                                                    className="text-gray-600">{item.description}</span>
-                                                                <span
-                                                                    className="text-gray-500 text-sm">{item.date}</span>
-                                                                <span
-                                                                    className="font-medium text-gray-900">${item.amount.toLocaleString()}</span>
+                                                                <span className="font-medium text-gray-900">{item.category}</span>
+                                                                <span className="text-gray-600">{item.description}</span>
+                                                                <span className="text-gray-500 text-sm">{item.date}</span>
+                                                                <span className="font-medium text-gray-900">${item.amount.toLocaleString()}</span>
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-6 py-4">
+                                                            <div className="flex flex-col items-end space-y-2">
+                                                                <div className="flex space-x-2">
+                                                                    <button
+                                                                        onClick={() => handleEditItem(item)}
+                                                                        className="text-blue-600 hover:text-blue-800 transition-colors duration-200"
+                                                                        title="Edit item"
+                                                                    >
+                                                                        <Edit2 className="h-5 w-5"/>
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() => handleDeleteItem(item.id)}
+                                                                        className="text-red-600 hover:text-red-800 transition-colors duration-200"
+                                                                        title="Delete item"
+                                                                    >
+                                                                        <Trash2 className="h-5 w-5"/>
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() => handleImageUpload(item.id)}
+                                                                        className="text-gray-600 hover:text-gray-800 transition-colors duration-200"
+                                                                        title={item.image ? "Update image" : "Add image"}
+                                                                    >
+                                                                        <Camera className="h-5 w-5"/>
+                                                                    </button>
+                                                                </div>
                                                                 {item.image && (
                                                                     <button
                                                                         onClick={() => {
                                                                             setSelectedImage(item.image);
                                                                             setSelectedImageType(item.fileType || 'image/png');
                                                                         }}
-                                                                        className="group relative w-20 h-20"
+                                                                        className="group relative w-16 h-16"
                                                                         title="Click to enlarge"
                                                                     >
                                                                         <img
                                                                             src={`data:${item.fileType || 'image/png'};base64,${item.image}`}
                                                                             alt="Budget Item"
-                                                                            className="w-20 h-20 object-cover rounded-md border-2 border-gray-300 transition-transform duration-200 group-hover:scale-105"
+                                                                            className="w-16 h-16 object-cover rounded-md border-2 border-gray-300
+                                 transition-transform duration-200 group-hover:scale-105"
                                                                         />
-                                                                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 active:bg-black/20 rounded-md transition-colors duration-200"/>
+                                                                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 rounded-md transition-colors duration-200"/>
                                                                     </button>
                                                                 )}
-                                                            </div>
-                                                        </td>
-                                                        {/* Mobile view action buttons */}
-                                                        <td className="px-6 py-4">
-                                                            <div className="flex justify-end space-x-2">
-                                                                <button
-                                                                    onClick={() => handleEditItem(item)}
-                                                                    className="text-blue-600 hover:text-blue-800 transition-colors duration-200"
-                                                                    title="Edit item"
-                                                                >
-                                                                    <Edit2 className="h-5 w-5"/>
-                                                                </button>
-                                                                <button
-                                                                    onClick={() => handleDeleteItem(item.id)}
-                                                                    className="text-red-600 hover:text-red-800 transition-colors duration-200"
-                                                                    title="Delete item"
-                                                                >
-                                                                    <Trash2 className="h-5 w-5"/>
-                                                                </button>
-                                                                <button
-                                                                    onClick={() => handleImageUpload(item.id)}
-                                                                    className="text-gray-600 hover:text-gray-800 transition-colors duration-200"
-                                                                    title="Upload image"
-                                                                >
-                                                                    <Camera className="h-5 w-5"/>
-                                                                </button>
                                                             </div>
                                                         </td>
                                                     </tr>
