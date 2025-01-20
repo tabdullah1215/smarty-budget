@@ -288,12 +288,11 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                 const reader = new FileReader();
                 reader.onloadend = () => {
                     const base64Data = reader.result.split(',')[1];
-                    // Clone the budget and update the item
+                    const fileType = file.type;
                     const updatedItems = budget.items.map(item =>
-                        item.id === itemId ? { ...item, image: base64Data } : item
+                        item.id === itemId ? { ...item, image: base64Data, fileType: fileType } : item
                     );
                     const updatedBudget = { ...budget, items: updatedItems };
-                    // Call onUpdate to save the changes
                     onUpdate(updatedBudget);
                 };
                 reader.readAsDataURL(file);
@@ -480,10 +479,21 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                                                     <tr className="md:hidden">
                                                         <td className="px-6 py-4">
                                                             <div className="flex flex-col space-y-1">
-                                                                <span className="font-medium text-gray-900">{item.category}</span>
-                                                                <span className="text-gray-600">{item.description}</span>
-                                                                <span className="text-gray-500 text-sm">{item.date}</span>
-                                                                <span className="font-medium text-gray-900">${item.amount.toLocaleString()}</span>
+                                                                <span
+                                                                    className="font-medium text-gray-900">{item.category}</span>
+                                                                <span
+                                                                    className="text-gray-600">{item.description}</span>
+                                                                <span
+                                                                    className="text-gray-500 text-sm">{item.date}</span>
+                                                                <span
+                                                                    className="font-medium text-gray-900">${item.amount.toLocaleString()}</span>
+                                                                {item.image && (
+                                                                    <img
+                                                                        src={`data:${item.fileType || 'image/png'};base64,${item.image}`}
+                                                                        alt="Budget Item Image"
+                                                                        className="w-20 h-20 object-cover rounded-md"
+                                                                    />
+                                                                )}
                                                             </div>
                                                         </td>
                                                         <td className="px-6 py-4">
@@ -492,19 +502,19 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                                                                     onClick={() => handleEditItem(item)}
                                                                     className="text-blue-600 hover:text-blue-800"
                                                                 >
-                                                                    <Edit2 className="h-5 w-5" />
+                                                                    <Edit2 className="h-5 w-5"/>
                                                                 </button>
                                                                 <button
                                                                     onClick={() => handleDeleteItem(item.id)}
                                                                     className="text-red-600 hover:text-red-800"
                                                                 >
-                                                                    <Trash2 className="h-5 w-5" />
+                                                                    <Trash2 className="h-5 w-5"/>
                                                                 </button>
                                                                 <button
                                                                     onClick={() => handleImageUpload(item.id)}
                                                                     className="text-gray-600 hover:text-gray-800"
                                                                 >
-                                                                    <Camera className="h-5 w-5" />
+                                                                    <Camera className="h-5 w-5"/>
                                                                 </button>
                                                             </div>
                                                         </td>
