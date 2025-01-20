@@ -8,6 +8,7 @@ import { PaycheckBudgetItemForm } from './PaycheckBudgetItemForm';
 import { modalTransitions, backdropTransitions } from '../utils/transitions';
 import { useToast } from '../contexts/ToastContext';
 import { Camera } from 'lucide-react';
+import { ImageViewer } from './ImageViewer';
 
 const PrintableContent = React.forwardRef(({ budget }, ref) => {
     return (
@@ -57,6 +58,8 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
     const [isSharing, setIsSharing] = useState(false);
     const [show, setShow] = useState(true); // Control modal visibility
     const { showToast } = useToast();
+    const [selectedImage, setSelectedImage] = useState(null);
+    const [selectedImageType, setSelectedImageType] = useState(null);
 
     // Replace with the imported transitions
     const transitions = useTransition(show, modalTransitions);
@@ -190,10 +193,6 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                 : 'New expense item added successfully'
             );
 
-            // Reset form state
-            // setShowForm(false);
-            // setEditingItem(null);
-
             return true;
 
         } catch (error) {
@@ -294,6 +293,10 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                     );
                     const updatedBudget = { ...budget, items: updatedItems };
                     onUpdate(updatedBudget);
+                    showToast('success', 'Image uploaded successfully');
+                };
+                reader.onerror = () => {
+                    showToast('error', 'Failed to upload image. Please try again.');
                 };
                 reader.readAsDataURL(file);
             }
@@ -319,7 +322,7 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                         >
                             <div className="w-[95%] max-w-4xl bg-white rounded-lg shadow-xl max-h-[80vh] flex flex-col">
                                 {/* Fixed Header Section */}
-                                <div className="p-5 border-b">
+                                <div className="p-5 border-b border-black">
                                     <div className="flex justify-between items-center mb-6">
                                         <h2 className="text-2xl font-bold text-gray-900">{budget.name}</h2>
                                         <div className="flex space-x-2">
@@ -428,7 +431,7 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                                                 </th>
                                             </tr>
                                             </thead>
-                                            <tbody className="bg-white divide-y divide-gray-200">
+                                            <tbody className="bg-white divide-y divide-black">
                                             {budget.items?.length === 0 && (
                                                 <tr>
                                                     <td colSpan="5" className="px-6 py-4 text-center text-gray-500">
@@ -467,11 +470,22 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                                                         </td>
                                                         <td className="px-6 py-4 whitespace-nowrap text-center">
                                                             {item.image && (
-                                                                <img
-                                                                    src={`data:image/png;base64,${item.image}`}
-                                                                    alt="Budget Item"
-                                                                    className="w-20 h-20 object-cover rounded-md"
-                                                                />
+                                                                <button
+                                                                    onClick={() => {
+                                                                        setSelectedImage(item.image);
+                                                                        setSelectedImageType(item.fileType || 'image/png');
+                                                                    }}
+                                                                    className="group relative"
+                                                                    title="Click to enlarge"
+                                                                >
+                                                                    <img
+                                                                        src={`data:image/png;base64,${item.image}`}
+                                                                        alt="Budget Item"
+                                                                        className="w-20 h-20 object-cover rounded-md border-2 border-gray-300 transition-transform duration-200 group-hover:scale-105"
+                                                                    />
+                                                                    <div
+                                                                        className="absolute inset-0 bg-black/0 group-hover:bg-black/10 rounded-md transition-colors duration-200"/>
+                                                                </button>
                                                             )}
                                                         </td>
                                                     </tr>
@@ -488,31 +502,45 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                                                                 <span
                                                                     className="font-medium text-gray-900">${item.amount.toLocaleString()}</span>
                                                                 {item.image && (
-                                                                    <img
-                                                                        src={`data:${item.fileType || 'image/png'};base64,${item.image}`}
-                                                                        alt="Budget Item Image"
-                                                                        className="w-20 h-20 object-cover rounded-md"
-                                                                    />
+                                                                    <button
+                                                                        onClick={() => {
+                                                                            setSelectedImage(item.image);
+                                                                            setSelectedImageType(item.fileType || 'image/png');
+                                                                        }}
+                                                                        className="group relative w-20 h-20"
+                                                                        title="Click to enlarge"
+                                                                    >
+                                                                        <img
+                                                                            src={`data:${item.fileType || 'image/png'};base64,${item.image}`}
+                                                                            alt="Budget Item"
+                                                                            className="w-20 h-20 object-cover rounded-md border-2 border-gray-300 transition-transform duration-200 group-hover:scale-105"
+                                                                        />
+                                                                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 active:bg-black/20 rounded-md transition-colors duration-200"/>
+                                                                    </button>
                                                                 )}
                                                             </div>
                                                         </td>
+                                                        {/* Mobile view action buttons */}
                                                         <td className="px-6 py-4">
                                                             <div className="flex justify-end space-x-2">
                                                                 <button
                                                                     onClick={() => handleEditItem(item)}
-                                                                    className="text-blue-600 hover:text-blue-800"
+                                                                    className="text-blue-600 hover:text-blue-800 transition-colors duration-200"
+                                                                    title="Edit item"
                                                                 >
                                                                     <Edit2 className="h-5 w-5"/>
                                                                 </button>
                                                                 <button
                                                                     onClick={() => handleDeleteItem(item.id)}
-                                                                    className="text-red-600 hover:text-red-800"
+                                                                    className="text-red-600 hover:text-red-800 transition-colors duration-200"
+                                                                    title="Delete item"
                                                                 >
                                                                     <Trash2 className="h-5 w-5"/>
                                                                 </button>
                                                                 <button
                                                                     onClick={() => handleImageUpload(item.id)}
-                                                                    className="text-gray-600 hover:text-gray-800"
+                                                                    className="text-gray-600 hover:text-gray-800 transition-colors duration-200"
+                                                                    title="Upload image"
                                                                 >
                                                                     <Camera className="h-5 w-5"/>
                                                                 </button>
@@ -557,6 +585,17 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                                         onClose={handleFormClose}
                                         initialItem={editingItem}
                                         isSaving={isSaving}
+                                    />
+                                )}
+                                {/* Image Viewer Modal */}
+                                {selectedImage && (
+                                    <ImageViewer
+                                        imageData={selectedImage}
+                                        fileType={selectedImageType}
+                                        onClose={() => {
+                                            setSelectedImage(null);
+                                            setSelectedImageType(null);
+                                        }}
                                     />
                                 )}
 
