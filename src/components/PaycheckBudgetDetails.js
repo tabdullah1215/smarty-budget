@@ -56,14 +56,22 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
     const componentRef = useRef(null);
     const [isPrinting, setIsPrinting] = useState(false);
     const [isSharing, setIsSharing] = useState(false);
-    const [show, setShow] = useState(true); // Control modal visibility
+    const [show, setShow] = useState(true);
     const { showToast } = useToast();
     const [selectedImage, setSelectedImage] = useState(null);
     const [selectedImageType, setSelectedImageType] = useState(null);
 
-    // Replace with the imported transitions
+    // Delete confirmation states
+    const [showDeleteItemModal, setShowDeleteItemModal] = useState(false);
+    const [deletingItemId, setDeletingItemId] = useState(null);
+    const [isItemDeleting, setIsItemDeleting] = useState(false);
+    const [isItemCancelling, setIsItemCancelling] = useState(false);
+
+    // Transitions
     const transitions = useTransition(show, modalTransitions);
     const backdropTransition = useTransition(show, backdropTransitions);
+    const deleteItemTransitions = useTransition(showDeleteItemModal, modalTransitions);
+    const deleteItemBackdropTransition = useTransition(showDeleteItemModal, backdropTransitions);
 
     const handlePrint = useReactToPrint({
         contentRef: componentRef,
@@ -87,17 +95,14 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
     });
 
     const { totalSpent, remainingAmount, categoryTotals, monthlyBreakdown } = useMemo(() => {
-        // Calculate total spent
         const total = budget.items?.reduce((sum, item) => sum + (item.amount || 0), 0) || 0;
         const remaining = budget.amount - total;
 
-        // Calculate totals by category
         const byCategory = budget.items?.reduce((acc, item) => {
             acc[item.category] = (acc[item.category] || 0) + (item.amount || 0);
             return acc;
         }, {});
 
-        // Calculate monthly spending breakdown
         const byMonth = budget.items?.reduce((acc, item) => {
             const date = new Date(item.date);
             const monthYear = date.toLocaleString('default', {
@@ -120,7 +125,6 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
             return acc;
         }, {});
 
-        // Sort monthly breakdown by date
         const sortedByMonth = Object.entries(byMonth || {})
             .sort(([, a], [, b]) => {
                 if (a.year !== b.year) return b.year - a.year;
@@ -155,8 +159,6 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
     const handleSaveItem = async (itemData) => {
         setIsSaving(true);
         try {
-            // For editing, map through items and update the matching one
-            // For adding, append the new item to the array
             const updatedItems = editingItem
                 ? budget.items.map(item =>
                     item.id === editingItem.id
@@ -177,22 +179,17 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                     }
                 ];
 
-            // Create the complete updated budget object
             const updatedBudget = {
                 ...budget,
                 items: updatedItems,
                 updatedAt: new Date().toISOString()
             };
 
-            // Update the budget through the parent component
             await onUpdate(updatedBudget);
-
-            // Show success message
             showToast('success', editingItem
                 ? 'Expense item updated successfully'
                 : 'New expense item added successfully'
             );
-
             return true;
 
         } catch (error) {
@@ -223,10 +220,7 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
             showToast('success', 'Budget shared successfully');
         } catch (error) {
             console.error('Error sharing:', error);
-            if (error.name === 'AbortError') {
-                // User cancelled share
-                return;
-            }
+            if (error.name === 'AbortError') return;
             showToast('error', 'Failed to share budget. Please try again.');
         } finally {
             setIsSharing(false);
@@ -237,7 +231,7 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
         setIsAddingItem(true);
         try {
             await withMinimumDelay(async () => {});
-            setEditingItem(null); // Clear any existing editing state
+            setEditingItem(null);
             setShowForm(true);
         } finally {
             setIsAddingItem(false);
@@ -251,9 +245,8 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
 
     const handleClose = async () => {
         setIsClosing(true);
-
         await withMinimumDelay(async () => {});
-        setShow(false); // Trigger exit animation
+        setShow(false);
         await withMinimumDelay(async () => {});
         setIsClosing(false);
         onClose();
@@ -264,19 +257,44 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
         setShowForm(true);
     };
 
-    const handleDeleteItem = async (itemId) => {
-        try {
-            const updatedBudget = {
-                ...budget,
-                items: budget.items.filter(item => item.id !== itemId)
-            };
-            await onUpdate(updatedBudget);
-            showToast('success', 'Expense item deleted successfully');
-        } catch (error) {
-            console.error('Error deleting item:', error);
-            showToast('error', 'Failed to delete expense item. Please try again.');
+    const handleCancelItemDelete = async () => {
+        setIsItemCancelling(true);
+        await withMinimumDelay(async () => {});
+        setShowDeleteItemModal(false);
+        await withMinimumDelay(async () => {});
+        setDeletingItemId(null);
+        setIsItemCancelling(false);
+    };
+
+    const confirmItemDelete = async () => {
+        if (deletingItemId) {
+            setIsItemDeleting(true);
+            try {
+                await withMinimumDelay(async () => {
+                    const updatedBudget = {
+                        ...budget,
+                        items: budget.items.filter(item => item.id !== deletingItemId)
+                    };
+                    await onUpdate(updatedBudget);
+                    showToast('success', 'Expense item deleted successfully');
+                    setShowDeleteItemModal(false);
+                });
+                await withMinimumDelay(async () => {});
+                setDeletingItemId(null);
+            } catch (error) {
+                console.error('Error deleting item:', error);
+                showToast('error', 'Failed to delete expense item. Please try again.');
+            } finally {
+                setIsItemDeleting(false);
+            }
         }
     };
+
+    const handleDeleteItem = async (itemId) => {
+        setDeletingItemId(itemId);
+        setShowDeleteItemModal(true);
+    };
+
     const handleImageUpload = (itemId) => {
         const input = document.createElement('input');
         input.type = 'file';
@@ -321,7 +339,7 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                             className="fixed inset-0 z-50 flex items-center justify-center"
                         >
                             <div className="w-[95%] max-w-4xl bg-white rounded-lg shadow-xl max-h-[80vh] flex flex-col">
-                                {/* Fixed Header Section */}
+                                {/* Header Section */}
                                 <div className="p-5 border-b border-black">
                                     <div className="flex justify-between items-center mb-6">
                                         <h2 className="text-2xl font-bold text-gray-900">{budget.name}</h2>
@@ -397,38 +415,19 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                                     </div>
                                 </div>
 
-                                {/* Scrollable Content Section */}
+                                {/* Scrollable Content */}
                                 <div className="flex-1 overflow-y-auto px-5">
                                     <div className="relative w-full h-[calc(80vh-250px)]">
-                                        {/* Mobile-optimized table */}
                                         <table className="min-w-full divide-y divide-gray-200">
                                             <thead>
                                             <tr>
-                                                {/* Hidden on mobile, visible on larger screens */}
-                                                <th scope="col"
-                                                    className="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category
-                                                </th>
-                                                <th scope="col"
-                                                    className="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description
-                                                </th>
-                                                <th scope="col"
-                                                    className="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date
-                                                </th>
-                                                <th scope="col"
-                                                    className="hidden md:table-cell px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Amount
-                                                </th>
-                                                <th scope="col"
-                                                    className="hidden md:table-cell px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions
-                                                </th>
-
-                                                {/* Visible on mobile only - simplified header */}
-                                                <th scope="col"
-                                                    className="md:hidden px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Expense
-                                                    Details
-                                                </th>
-                                                <th scope="col"
-                                                    className="md:hidden px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions
-                                                </th>
+                                                <th className="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                                                <th className="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                                                <th className="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                                <th className="hidden md:table-cell px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                                                <th className="hidden md:table-cell px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                                <th className="md:hidden px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Expense Details</th>
+                                                <th className="md:hidden px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                                             </tr>
                                             </thead>
                                             <tbody className="bg-white divide-y divide-black">
@@ -441,7 +440,7 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                                             )}
                                             {budget.items?.map(item => (
                                                 <React.Fragment key={item.id}>
-                                                    {/* Desktop view */}
+                                                    {/* Desktop Row */}
                                                     <tr className="hidden md:table-row">
                                                         <td className="px-6 py-4 whitespace-nowrap">{item.category}</td>
                                                         <td className="px-6 py-4 whitespace-nowrap">{item.description}</td>
@@ -485,8 +484,7 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                                                                             <img
                                                                                 src={`data:${item.fileType || 'image/png'};base64,${item.image}`}
                                                                                 alt="Budget Item"
-                                                                                className="w-16 h-16 object-cover rounded-md border-2 border-gray-300
-                                     transition-transform duration-200 group-hover:scale-105"
+                                                                                className="w-16 h-16 object-cover rounded-md border-2 border-gray-300 transition-transform duration-200 group-hover:scale-105"
                                                                             />
                                                                             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 rounded-md transition-colors duration-200"/>
                                                                         </button>
@@ -496,7 +494,7 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                                                         </td>
                                                     </tr>
 
-                                                    {/* Mobile view */}
+                                                    {/* Mobile Row */}
                                                     <tr className="md:hidden">
                                                         <td className="px-6 py-4">
                                                             <div className="flex flex-col space-y-1">
@@ -543,8 +541,7 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                                                                         <img
                                                                             src={`data:${item.fileType || 'image/png'};base64,${item.image}`}
                                                                             alt="Budget Item"
-                                                                            className="w-16 h-16 object-cover rounded-md border-2 border-gray-300
-                                 transition-transform duration-200 group-hover:scale-105"
+                                                                            className="w-16 h-16 object-cover rounded-md border-2 border-gray-300 transition-transform duration-200 group-hover:scale-105"
                                                                         />
                                                                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 rounded-md transition-colors duration-200"/>
                                                                     </button>
@@ -559,7 +556,7 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                                     </div>
                                 </div>
 
-                                {/* Fixed Footer Section */}
+                                {/* Footer Section */}
                                 <div className="p-5 border-t">
                                     <div className="flex justify-end">
                                         <button
@@ -575,6 +572,7 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                                     </div>
                                 </div>
 
+                                {/* Modals */}
                                 {showForm && (
                                     <PaycheckBudgetItemForm
                                         onSave={async (itemData) => {
@@ -592,7 +590,7 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                                         isSaving={isSaving}
                                     />
                                 )}
-                                {/* Image Viewer Modal */}
+
                                 {selectedImage && (
                                     <ImageViewer
                                         imageData={selectedImage}
@@ -612,6 +610,60 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                                 </div>
                             </div>
                         </animated.div>
+                    )
+            )}
+
+            {/* Delete Confirmation Modal */}
+            {deleteItemTransitions((style, item) =>
+                    item && deletingItemId && (
+                        <>
+                            {deleteItemBackdropTransition((backdropStyle, show) =>
+                                    show && (
+                                        <animated.div
+                                            style={backdropStyle}
+                                            className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50"
+                                        />
+                                    )
+                            )}
+                            <animated.div
+                                style={style}
+                                className="fixed inset-0 z-50 flex items-center justify-center"
+                            >
+                                <div className="relative mx-auto p-5 border w-full max-w-lg shadow-lg rounded-md bg-white">
+                                    <div className="mt-3 text-center">
+                                        <h3 className="text-lg leading-6 font-medium text-gray-900">Delete Expense Item</h3>
+                                        <div className="mt-2 px-7 py-3">
+                                            <p className="text-sm text-gray-500">
+                                                Are you sure you want to delete this expense item? This action cannot be undone.
+                                            </p>
+                                        </div>
+                                        <div className="flex justify-center space-x-4 mt-4">
+                                            <button
+                                                onClick={handleCancelItemDelete}
+                                                disabled={isItemCancelling || isItemDeleting}
+                                                className="px-4 py-2 bg-gray-100 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                                            >
+                                                {isItemCancelling ? (
+                                                    <Loader2 className="h-4 w-4 animate-spin"/>
+                                                ) : (
+                                                    'Cancel'
+                                                )}
+                                            </button>
+                                            <button
+                                                onClick={confirmItemDelete}
+                                                disabled={isItemDeleting}
+                                                className="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                                            >
+                                                {isItemDeleting ? (
+                                                    <Loader2 className="h-4 w-4 mr-2 animate-spin"/>
+                                                ) : null}
+                                                Delete
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </animated.div>
+                        </>
                     )
             )}
         </>
