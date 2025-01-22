@@ -646,9 +646,9 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                             )}
                             <animated.div
                                 style={style}
-                                className="fixed inset-0 z-50 flex items-center justify-center"
+                                className="fixed inset-0 z-50 flex items-center justify-center px-4"
                             >
-                                <div className="relative mx-auto p-5 border w-full max-w-lg shadow-lg rounded-md bg-white">
+                                <div className="relative mx-auto p-5 border w-[90%] max-w-lg shadow-lg rounded-md bg-white">
                                     <div className="mt-3 text-center">
                                         <h3 className="text-lg leading-6 font-medium text-gray-900">Delete Expense Item</h3>
                                         <div className="mt-2 px-7 py-3">
