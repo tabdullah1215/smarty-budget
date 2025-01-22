@@ -1,5 +1,5 @@
 //PaycheckBudgetDetails.js
-import React, { useRef, useState, useMemo } from 'react';
+import React, {useRef, useState, useMemo, useEffect} from 'react';
 import { useReactToPrint } from 'react-to-print';
 import { Printer, Share2, X, PlusCircle, Loader2, Edit2, Trash2 } from 'lucide-react';
 import { useTransition, animated } from '@react-spring/web';
@@ -9,6 +9,7 @@ import { modalTransitions, backdropTransitions } from '../utils/transitions';
 import { useToast } from '../contexts/ToastContext';
 import { Camera } from 'lucide-react';
 import { ImageViewer } from './ImageViewer';
+import { disableScroll, enableScroll } from '../utils/scrollLock';
 
 const PrintableContent = React.forwardRef(({ budget }, ref) => {
     return (
@@ -372,6 +373,17 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                 console.error('Error uploading image:', error);
             }
     };
+
+    useEffect(() => {
+        // Disable scroll when component mounts
+        disableScroll();
+
+        // Re-enable scroll when component unmounts
+        return () => {
+            enableScroll();
+        };
+    }, []);
+
     return (
         <>
             {backdropTransition((style, item) =>
