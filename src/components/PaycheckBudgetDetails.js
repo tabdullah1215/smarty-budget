@@ -465,7 +465,7 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                                                                         className="text-blue-600 hover:text-blue-800 transition-colors duration-200"
                                                                         title="Edit item"
                                                                     >
-                                                                        <Edit2 className="h-5 w-5"/>
+                                                                        <Edit2 className="h-5 w-5 "/>
                                                                     </button>
                                                                     <button
                                                                         onClick={() => handleDeleteItem(item.id)}

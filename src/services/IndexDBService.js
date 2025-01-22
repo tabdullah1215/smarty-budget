@@ -193,6 +193,19 @@ class IndexDBService {
         });
     }
 
+    async addPaycheckCategory(category) {
+        if (!this.db) await this.initDB();
+
+        return new Promise((resolve, reject) => {
+            const transaction = this.db.transaction([DB_CONFIG.stores.paycheckCategories], 'readwrite');
+            const store = transaction.objectStore(DB_CONFIG.stores.paycheckCategories);
+            const request = store.add(category);
+
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
+    }
+
     async getPaycheckCategories() {
         if (!this.db) await this.initDB();
 

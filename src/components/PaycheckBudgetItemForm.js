@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { X, Loader2 } from 'lucide-react';
+import { X, Loader2, PlusCircle } from 'lucide-react';
 import { useTransition, animated } from '@react-spring/web'; // No need to import `config` anymore
 import { withMinimumDelay } from '../utils/withDelay';
 import { indexdbService } from '../services/IndexDBService';
 // Add this import
 import { modalTransitions, backdropTransitions } from '../utils/transitions';
+import AddCategoryModal from './AddCategoryModal';
 
 export const PaycheckBudgetItemForm = ({onSave, onClose, initialItem = null, isSaving = false}) => {
     const [category, setCategory] = useState(initialItem?.category || '');
@@ -16,6 +17,7 @@ export const PaycheckBudgetItemForm = ({onSave, onClose, initialItem = null, isS
     const [isLoading, setIsLoading] = useState(true);
     const [categories, setCategories] = useState([]);
     const [show, setShow] = useState(true);
+    const [showAddCategory, setShowAddCategory] = useState(false);
 
     // Replace with the imported transitions
     const transitions = useTransition(show, modalTransitions);
@@ -141,15 +143,26 @@ export const PaycheckBudgetItemForm = ({onSave, onClose, initialItem = null, isS
                                 }}>
                                     {/* Form fields */}
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            Category
-                                        </label>
+                                        <div className="flex justify-between items-center mb-2">
+                                            <label className="block text-sm font-medium text-gray-700">
+                                                Category
+                                            </label>
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowAddCategory(true)}
+                                                className="p-1 text-gray-600 hover:text-gray-900 transition-colors duration-200
+                hover:bg-gray-100 rounded-full"
+                                                title="Add new category"
+                                            >
+                                                <PlusCircle className="h-5 w-5"/>
+                                            </button>
+                                        </div>
                                         <select
                                             value={category}
                                             onChange={(e) => setCategory(e.target.value)}
                                             className="block w-full rounded-lg border-2 border-gray-300 px-4 py-3
-                                        shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-200
-                                        focus:ring-opacity-50 transition-colors duration-200"
+            shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-200
+            focus:ring-opacity-50 transition-colors duration-200"
                                             required
                                             disabled={isSaving}
                                         >
@@ -159,7 +172,6 @@ export const PaycheckBudgetItemForm = ({onSave, onClose, initialItem = null, isS
                                             ))}
                                         </select>
                                     </div>
-
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-2">
                                             Description/Reference (Optional)
@@ -197,7 +209,8 @@ export const PaycheckBudgetItemForm = ({onSave, onClose, initialItem = null, isS
                                             Amount
                                         </label>
                                         <div className="relative">
-                                        <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                                        <span
+                                            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
                                             $
                                         </span>
                                             <input
@@ -217,7 +230,8 @@ export const PaycheckBudgetItemForm = ({onSave, onClose, initialItem = null, isS
                                     </div>
 
                                     {error && (
-                                        <div className="text-red-600 text-sm bg-red-50 p-3 rounded-lg border border-red-200">
+                                        <div
+                                            className="text-red-600 text-sm bg-red-50 p-3 rounded-lg border border-red-200">
                                             {error}
                                         </div>
                                     )}
@@ -236,7 +250,7 @@ export const PaycheckBudgetItemForm = ({onSave, onClose, initialItem = null, isS
                                         >
                                             {isCancelling ? (
                                                 <>
-                                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                                    <Loader2 className="h-4 w-4 mr-2 animate-spin"/>
                                                     Cancelling...
                                                 </>
                                             ) : (
@@ -256,7 +270,7 @@ export const PaycheckBudgetItemForm = ({onSave, onClose, initialItem = null, isS
                                         >
                                             {isSaving ? (
                                                 <>
-                                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                                    <Loader2 className="h-4 w-4 mr-2 animate-spin"/>
                                                     {initialItem ? 'Updating...' : 'Adding...'}
                                                 </>
                                             ) : (
@@ -268,6 +282,16 @@ export const PaycheckBudgetItemForm = ({onSave, onClose, initialItem = null, isS
                             </div>
                         </animated.div>
                     )
+            )}
+            {showAddCategory && (
+                <AddCategoryModal
+                    onClose={() => setShowAddCategory(false)}
+                    onCategoryAdded={(newCategory) => {
+                        setCategories(prev => [...prev, newCategory].sort((a, b) =>
+                            a.name.localeCompare(b.name)
+                        ));
+                    }}
+                />
             )}
         </div>
     );
