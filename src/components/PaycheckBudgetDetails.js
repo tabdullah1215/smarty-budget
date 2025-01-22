@@ -66,6 +66,7 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
     const [deletingItemId, setDeletingItemId] = useState(null);
     const [isItemDeleting, setIsItemDeleting] = useState(false);
     const [isItemCancelling, setIsItemCancelling] = useState(false);
+    const [deletingButtonId, setDeletingButtonId] = useState(null);
 
     // Transitions
     const transitions = useTransition(show, modalTransitions);
@@ -291,8 +292,16 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
     };
 
     const handleDeleteItem = async (itemId) => {
-        setDeletingItemId(itemId);
-        setShowDeleteItemModal(true);
+        setDeletingButtonId(itemId);
+        try {
+            await withMinimumDelay(async () => {});
+            setDeletingButtonId(null);
+            setDeletingItemId(itemId);
+            setShowDeleteItemModal(true);
+        } catch (error) {
+            setDeletingButtonId(null);
+            console.error('Error initiating delete:', error);
+        }
     };
 
     const handleImageUpload = (itemId) => {
@@ -458,10 +467,15 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                                                                     </button>
                                                                     <button
                                                                         onClick={() => handleDeleteItem(item.id)}
+                                                                        disabled={deletingButtonId === item.id}
                                                                         className="text-red-600 hover:text-red-800 transition-colors duration-200"
                                                                         title="Delete item"
                                                                     >
-                                                                        <Trash2 className="h-5 w-5"/>
+                                                                        {deletingButtonId === item.id ? (
+                                                                            <Loader2 className="h-5 w-5 animate-spin"/>
+                                                                        ) : (
+                                                                            <Trash2 className="h-5 w-5"/>
+                                                                        )}
                                                                     </button>
                                                                     <button
                                                                         onClick={() => handleImageUpload(item.id)}
@@ -516,10 +530,15 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                                                                     </button>
                                                                     <button
                                                                         onClick={() => handleDeleteItem(item.id)}
+                                                                        disabled={deletingButtonId === item.id}
                                                                         className="text-red-600 hover:text-red-800 transition-colors duration-200"
                                                                         title="Delete item"
                                                                     >
-                                                                        <Trash2 className="h-5 w-5"/>
+                                                                        {deletingButtonId === item.id ? (
+                                                                            <Loader2 className="h-5 w-5 animate-spin"/>
+                                                                        ) : (
+                                                                            <Trash2 className="h-5 w-5"/>
+                                                                        )}
                                                                     </button>
                                                                     <button
                                                                         onClick={() => handleImageUpload(item.id)}
