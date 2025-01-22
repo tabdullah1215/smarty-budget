@@ -154,7 +154,7 @@ export const PaycheckBudgetItemForm = ({onSave, onClose, initialItem = null, isS
                 hover:bg-gray-100 rounded-full"
                                                 title="Add new category"
                                             >
-                                                <PlusCircle className="h-5 w-5"/>
+                                                <PlusCircle className="h-6 w-6 stroke-[1.5]"/>
                                             </button>
                                         </div>
                                         <select

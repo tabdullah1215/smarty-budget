@@ -67,6 +67,8 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
     const [isItemDeleting, setIsItemDeleting] = useState(false);
     const [isItemCancelling, setIsItemCancelling] = useState(false);
     const [deletingButtonId, setDeletingButtonId] = useState(null);
+    const [editingItemId, setEditingItemId] = useState(null);
+    const [uploadingImageItemId, setUploadingImageItemId] = useState(null);
 
 // Transitions
     const transitions = useTransition(show, modalTransitions);
@@ -253,9 +255,17 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
         onClose();
     };
 
-    const handleEditItem = (item) => {
-        setEditingItem(item);
-        setShowForm(true);
+    const handleEditItem = async (item) => {
+        setEditingItemId(item.id);  // Set loading state for specific button
+        try {
+            await withMinimumDelay(async () => {}, 800);
+            setEditingItemId(null);  // Clear loading state before showing form
+            setEditingItem(item);
+            setShowForm(true);
+        } catch (error) {
+            setEditingItemId(null);
+            console.error('Error initiating edit:', error);
+        }
     };
 
     const handleCancelItemDelete = async () => {
@@ -294,7 +304,8 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
     const handleDeleteItem = async (itemId) => {
         setDeletingButtonId(itemId);
         try {
-            await withMinimumDelay(async () => {});
+            await withMinimumDelay(async () => {
+            });
             setDeletingButtonId(null);
             setDeletingItemId(itemId);
             setShowDeleteItemModal(true);
@@ -302,35 +313,65 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
             setDeletingButtonId(null);
             console.error('Error initiating delete:', error);
         }
-    };
+    }
+    const handleImageUpload = async (itemId) => {
+            setUploadingImageItemId(itemId);
+            try {
+                await withMinimumDelay(async () => {
+                    const input = document.createElement('input');
+                    input.type = 'file';
+                    input.accept = 'image/*';
 
-    const handleImageUpload = (itemId) => {
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = 'image/*';
-        input.onchange = async (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onloadend = () => {
-                    const base64Data = reader.result.split(',')[1];
-                    const fileType = file.type;
-                    const updatedItems = budget.items.map(item =>
-                        item.id === itemId ? { ...item, image: base64Data, fileType: fileType } : item
-                    );
-                    const updatedBudget = { ...budget, items: updatedItems };
-                    onUpdate(updatedBudget);
-                    showToast('success', 'Image uploaded successfully');
-                };
-                reader.onerror = () => {
-                    showToast('error', 'Failed to upload image. Please try again.');
-                };
-                reader.readAsDataURL(file);
+                    // Create a promise that resolves when either file is selected or dialog is closed
+                    const fileSelection = new Promise((resolve) => {
+                        // Handle file selection
+                        input.onchange = () => {
+                            resolve(input.files[0] || null);
+                        };
+
+                        // Handle dialog close/cancel
+                        window.addEventListener('focus', function onFocus() {
+                            // Small delay to ensure we get the file if one was selected
+                            setTimeout(() => {
+                                if (!input.files.length) {
+                                    resolve(null);
+                                }
+                                window.removeEventListener('focus', onFocus);
+                            }, 300);
+                        });
+                    });
+
+                    input.click();
+
+                    const file = await fileSelection;
+                    if (!file) {
+                        setUploadingImageItemId(null);  // Clear loading state if cancelled
+                        return;
+                    }
+
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                        const base64Data = reader.result.split(',')[1];
+                        const fileType = file.type;
+                        const updatedItems = budget.items.map(item =>
+                            item.id === itemId ? { ...item, image: base64Data, fileType: fileType } : item
+                        );
+                        const updatedBudget = { ...budget, items: updatedItems };
+                        onUpdate(updatedBudget);
+                        showToast('success', 'Image uploaded successfully');
+                        setUploadingImageItemId(null);
+                    };
+                    reader.onerror = () => {
+                        showToast('error', 'Failed to upload image. Please try again.');
+                        setUploadingImageItemId(null);
+                    };
+                    reader.readAsDataURL(file);
+                }, 800);
+            } catch (error) {
+                setUploadingImageItemId(null);
+                console.error('Error uploading image:', error);
             }
-        };
-        input.click();
     };
-
     return (
         <>
             {backdropTransition((style, item) =>
@@ -415,9 +456,9 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                                             className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
                                             {isAddingItem ? (
-                                                <Loader2 className="h-4 w-4 mr-2 animate-spin"/>
+                                                <Loader2 className="h-6 w-6 mr-2 animate-spin stroke-[1.5]"/>
                                             ) : (
-                                                <PlusCircle className="h-4 w-4 mr-2"/>
+                                                <PlusCircle className="h-6 w-6 mr-2 stroke-[1.5]"/>
                                             )}
                                             Record Expense
                                         </button>
@@ -462,10 +503,17 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                                                                 <div className="flex justify-end space-x-2">
                                                                     <button
                                                                         onClick={() => handleEditItem(item)}
-                                                                        className="text-blue-600 hover:text-blue-800 transition-colors duration-200"
+                                                                        disabled={editingItemId === item.id || isSaving}
+                                                                        className="text-blue-600 hover:text-blue-800 transition-colors duration-200
+        disabled:opacity-50 disabled:cursor-not-allowed"
                                                                         title="Edit item"
                                                                     >
-                                                                        <Edit2 className="h-5 w-5 "/>
+                                                                        {editingItemId === item.id ? (
+                                                                            <Loader2
+                                                                                className="h-6 w-6 stroke-[1.5] animate-spin"/>
+                                                                        ) : (
+                                                                            <Edit2 className="h-6 w-6 stroke-[1.5]"/>
+                                                                        )}
                                                                     </button>
                                                                     <button
                                                                         onClick={() => handleDeleteItem(item.id)}
@@ -474,17 +522,24 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                                                                         title="Delete item"
                                                                     >
                                                                         {deletingButtonId === item.id ? (
-                                                                            <Loader2 className="h-5 w-5 animate-spin"/>
+                                                                            <Loader2 className="h-6 w-6 animate-spin"/>
                                                                         ) : (
-                                                                            <Trash2 className="h-5 w-5"/>
+                                                                            <Trash2 className="h-6 w-6 stroke-[1.5]"/>
                                                                         )}
                                                                     </button>
                                                                     <button
                                                                         onClick={() => handleImageUpload(item.id)}
-                                                                        className="text-gray-600 hover:text-gray-800 transition-colors duration-200"
+                                                                        disabled={uploadingImageItemId === item.id || isSaving}
+                                                                        className="text-gray-600 hover:text-gray-800 transition-colors duration-200
+        disabled:opacity-50 disabled:cursor-not-allowed"
                                                                         title={item.image ? "Update image" : "Add image"}
                                                                     >
-                                                                        <Camera className="h-5 w-5"/>
+                                                                        {uploadingImageItemId === item.id ? (
+                                                                            <Loader2
+                                                                                className="h-6 w-6 stroke-[1.5] animate-spin"/>
+                                                                        ) : (
+                                                                            <Camera className="h-6 w-6 stroke-[1.5]"/>
+                                                                        )}
                                                                     </button>
                                                                 </div>
                                                                 {item.image && (
@@ -530,10 +585,16 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                                                                 <div className="flex space-x-2">
                                                                     <button
                                                                         onClick={() => handleEditItem(item)}
+                                                                        disabled={editingItemId === item.id || isSaving}
                                                                         className="text-blue-600 hover:text-blue-800 transition-colors duration-200"
                                                                         title="Edit item"
                                                                     >
-                                                                        <Edit2 className="h-5 w-5"/>
+                                                                        {editingItemId === item.id ? (
+                                                                            <Loader2
+                                                                                className="h-6 w-6 stroke-[1.5] animate-spin"/>
+                                                                        ) : (
+                                                                            <Edit2 className="h-6 w-6 stroke-[1.5]"/>
+                                                                        )}
                                                                     </button>
                                                                     <button
                                                                         onClick={() => handleDeleteItem(item.id)}
@@ -549,10 +610,16 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                                                                     </button>
                                                                     <button
                                                                         onClick={() => handleImageUpload(item.id)}
+                                                                        disabled={uploadingImageItemId === item.id || isSaving}
                                                                         className="text-gray-600 hover:text-gray-800 transition-colors duration-200"
                                                                         title={item.image ? "Update image" : "Add image"}
                                                                     >
-                                                                        <Camera className="h-5 w-5"/>
+                                                                        {uploadingImageItemId === item.id ? (
+                                                                            <Loader2
+                                                                                className="h-6 w-6 stroke-[1.5] animate-spin"/>
+                                                                        ) : (
+                                                                            <Camera className="h-6 w-6 stroke-[1.5]"/>
+                                                                        )}
                                                                     </button>
                                                                 </div>
                                                                 {item.image && (
