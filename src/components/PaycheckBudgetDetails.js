@@ -68,7 +68,7 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
     const [isItemCancelling, setIsItemCancelling] = useState(false);
     const [deletingButtonId, setDeletingButtonId] = useState(null);
 
-    // Transitions
+// Transitions
     const transitions = useTransition(show, modalTransitions);
     const backdropTransition = useTransition(show, backdropTransitions);
     const deleteItemTransitions = useTransition(showDeleteItemModal, modalTransitions);
@@ -426,7 +426,7 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
 
                                 {/* Scrollable Content */}
                                 <div className="flex-1 overflow-y-auto px-5">
-                                    <div className="relative w-full h-[calc(80vh-250px)]">
+                                    <div className="relative w-full min-h-0 max-h-[calc(80vh-250px)]">
                                         <table className="min-w-full divide-y divide-gray-200">
                                             <thead>
                                             <tr>
@@ -435,7 +435,9 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                                                 <th className="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
                                                 <th className="hidden md:table-cell px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
                                                 <th className="hidden md:table-cell px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                                                <th className="md:hidden px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Expense Details</th>
+                                                <th className="md:hidden px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Expense
+                                                    Details
+                                                </th>
                                                 <th className="md:hidden px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                                             </tr>
                                             </thead>
@@ -500,7 +502,8 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                                                                                 alt="Budget Item"
                                                                                 className="w-16 h-16 object-cover rounded-md border-2 border-gray-300 transition-transform duration-200 group-hover:scale-105"
                                                                             />
-                                                                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 rounded-md transition-colors duration-200"/>
+                                                                            <div
+                                                                                className="absolute inset-0 bg-black/0 group-hover:bg-black/10 rounded-md transition-colors duration-200"/>
                                                                         </button>
                                                                     </div>
                                                                 )}
@@ -512,10 +515,14 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                                                     <tr className="md:hidden">
                                                         <td className="px-6 py-4">
                                                             <div className="flex flex-col space-y-1">
-                                                                <span className="font-medium text-gray-900">{item.category}</span>
-                                                                <span className="text-gray-600">{item.description}</span>
-                                                                <span className="text-gray-500 text-sm">{item.date}</span>
-                                                                <span className="font-medium text-gray-900">${item.amount.toLocaleString()}</span>
+                                                                <span
+                                                                    className="font-medium text-gray-900">{item.category}</span>
+                                                                <span
+                                                                    className="text-gray-600">{item.description}</span>
+                                                                <span
+                                                                    className="text-gray-500 text-sm">{item.date}</span>
+                                                                <span
+                                                                    className="font-medium text-gray-900">${item.amount.toLocaleString()}</span>
                                                             </div>
                                                         </td>
                                                         <td className="px-6 py-4">
@@ -562,7 +569,8 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                                                                             alt="Budget Item"
                                                                             className="w-16 h-16 object-cover rounded-md border-2 border-gray-300 transition-transform duration-200 group-hover:scale-105"
                                                                         />
-                                                                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 rounded-md transition-colors duration-200"/>
+                                                                        <div
+                                                                            className="absolute inset-0 bg-black/0 group-hover:bg-black/10 rounded-md transition-colors duration-200"/>
                                                                     </button>
                                                                 )}
                                                             </div>
