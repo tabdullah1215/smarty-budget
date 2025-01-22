@@ -499,8 +499,8 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                                                         <td className="px-6 py-4 whitespace-nowrap">{item.date}</td>
                                                         <td className="px-6 py-4 whitespace-nowrap text-right">${item.amount.toLocaleString()}</td>
                                                         <td className="px-6 py-4 whitespace-nowrap">
-                                                            <div className="flex flex-col space-y-2">
-                                                                <div className="flex justify-end space-x-2">
+                                                            <div className="flex flex-col items-center space-y-2">
+                                                                <div className="flex justify-center space-x-4">
                                                                     <button
                                                                         onClick={() => handleEditItem(item)}
                                                                         disabled={editingItemId === item.id || isSaving}
@@ -543,7 +543,7 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                                                                     </button>
                                                                 </div>
                                                                 {item.image && (
-                                                                    <div className="flex justify-center">
+                                                                    <div className="flex justify-center w-full">
                                                                         <button
                                                                             onClick={() => {
                                                                                 setSelectedImage(item.image);
@@ -581,8 +581,8 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                                                             </div>
                                                         </td>
                                                         <td className="px-6 py-4">
-                                                            <div className="flex flex-col items-end space-y-2">
-                                                                <div className="flex space-x-2">
+                                                            <div className="flex flex-col items-center space-y-2">
+                                                                <div className="flex justify-center space-x-2">
                                                                     <button
                                                                         onClick={() => handleEditItem(item)}
                                                                         disabled={editingItemId === item.id || isSaving}
@@ -623,6 +623,7 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                                                                     </button>
                                                                 </div>
                                                                 {item.image && (
+                                                                    <div className="flex justify-center w-full">
                                                                     <button
                                                                         onClick={() => {
                                                                             setSelectedImage(item.image);
@@ -639,6 +640,7 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                                                                         <div
                                                                             className="absolute inset-0 bg-black/0 group-hover:bg-black/10 rounded-md transition-colors duration-200"/>
                                                                     </button>
+                                                                    </div>
                                                                 )}
                                                             </div>
                                                         </td>
