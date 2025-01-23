@@ -1,7 +1,7 @@
 //PaycheckBudgetDetails.js
 import React, {useRef, useState, useMemo, useEffect} from 'react';
 import { useReactToPrint } from 'react-to-print';
-import { Printer, Share2, X, PlusCircle, Loader2, Edit2, Trash2, Paperclip } from 'lucide-react';
+import { Printer, Share2, X, PlusCircle, Loader2, Edit2, Trash2, Paperclip, XCircle } from 'lucide-react';
 import { useTransition, animated } from '@react-spring/web';
 import { withMinimumDelay } from '../utils/withDelay';
 import { PaycheckBudgetItemForm } from './PaycheckBudgetItemForm';
@@ -419,10 +419,10 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                         >
                             <div className="w-[95%] max-w-4xl bg-white rounded-lg shadow-xl max-h-[80vh] flex flex-col">
                                 {/* Header Section */}
-                                <div className="p-5 border-b border-black">
-                                    <div className="flex justify-between items-center mb-6">
-                                        <h2 className="text-2xl font-bold text-gray-900">{budget.name}</h2>
-                                        <div className="flex space-x-2">
+                                <div className="p-4 border-b border-black">
+                                    <div className="flex justify-between items-center mb-3">
+                                        <h2 className="text-lg md:text-2xl font-bold text-gray-900">{budget.name}</h2>
+                                        <div className="flex space-x-1.5">
                                             <button
                                                 onClick={handlePrintClick}
                                                 disabled={isPrinting || isSaving}
@@ -462,21 +462,21 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                                         </div>
                                     </div>
 
-                                    <div className="grid grid-cols-3 gap-4 mb-6">
-                                        <div className="bg-gray-50 p-4 rounded-lg">
-                                            <p className="text-sm text-gray-600">Total Paycheck</p>
+                                    <div className="grid grid-cols-3 gap-2 mb-3">
+                                        <div className="bg-gray-50 p-2 md:p-4 rounded-lg">
+                                            <p className="text-sm text-gray-600">Paycheck</p>
                                             <p className="text-2xl font-bold text-gray-900">
                                                 ${budget.amount.toLocaleString()}
                                             </p>
                                         </div>
-                                        <div className="bg-gray-50 p-4 rounded-lg">
-                                            <p className="text-sm text-gray-600">Amount Spent</p>
+                                        <div className="bg-gray-50 p-2 md:p-4 rounded-lg">
+                                            <p className="text-sm text-gray-600">Spent</p>
                                             <p className="text-2xl font-bold text-gray-900">
                                                 ${totalSpent.toLocaleString()}
                                             </p>
                                         </div>
-                                        <div className="bg-gray-50 p-4 rounded-lg">
-                                            <p className="text-sm text-gray-600">Remaining Amount</p>
+                                        <div className="bg-gray-50 p-2 md:p-4 rounded-lg">
+                                            <p className="text-sm text-gray-600">Remaining</p>
                                             <p className={`text-2xl font-bold ${remainingAmount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                                                 ${remainingAmount.toLocaleString()}
                                             </p>
@@ -484,7 +484,7 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                                     </div>
 
                                     <div className="flex justify-between items-center">
-                                        <h3 className="text-lg font-medium text-gray-900">Expense Items</h3>
+                                    <h3 className="text-lg font-medium text-gray-900">Expense Items</h3>
                                         <button
                                             onClick={handleAddItemClick}
                                             disabled={isAddingItem || isSaving}
@@ -573,7 +573,8 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                                                                             <Loader2
                                                                                 className="h-6 w-6 stroke-[1.5] animate-spin"/>
                                                                         ) : (
-                                                                            <Paperclip className="h-6 w-6 stroke-[1.5]"/>
+                                                                            <Paperclip
+                                                                                className="h-6 w-6 stroke-[1.5]"/>
                                                                         )}
                                                                     </button>
                                                                 </div>
@@ -599,7 +600,7 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                                                                                 className="absolute -bottom-2 -right-2 bg-red-100 hover:bg-red-200 text-red-600 rounded-full p-1.5 shadow-sm"
                                                                                 title="Remove attachment"
                                                                             >
-                                                                                <Trash2 className="h-3.5 w-3.5"/>
+                                                                                <XCircle className="h-3.5 w-3.5"/>
                                                                             </button>
                                                                         </div>
                                                                     </div>
@@ -660,7 +661,8 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                                                                             <Loader2
                                                                                 className="h-6 w-6 stroke-[1.5] animate-spin"/>
                                                                         ) : (
-                                                                            <Paperclip className="h-6 w-6 stroke-[1.5]"/>
+                                                                            <Paperclip
+                                                                                className="h-6 w-6 stroke-[1.5]"/>
                                                                         )}
                                                                     </button>
                                                                 </div>
@@ -686,7 +688,7 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                                                                                 className="absolute -bottom-2 -right-2 bg-red-100 hover:bg-red-200 text-red-600 rounded-full p-1.5 shadow-sm"
                                                                                 title="Remove attachment"
                                                                             >
-                                                                                <Trash2 className="h-3.5 w-3.5"/>
+                                                                                <XCircle className="h-3.5 w-3.5"/>
                                                                             </button>
                                                                         </div>
                                                                     </div>
@@ -760,8 +762,8 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
 
             {/* Delete Confirmation Modal */}
             {deleteItemTransitions((style, item) =>
-                    item && deletingItemId && (
-                        <>
+                item && deletingItemId && (
+                    <>
                             {deleteItemBackdropTransition((backdropStyle, show) =>
                                     show && (
                                         <animated.div
