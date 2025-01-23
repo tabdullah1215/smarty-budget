@@ -495,7 +495,7 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                                             ) : (
                                                 <PlusCircle className="h-6 w-6 mr-2 stroke-[1.5]"/>
                                             )}
-                                            Record Expense
+                                            Record Expense!!
                                         </button>
                                     </div>
                                 </div>
