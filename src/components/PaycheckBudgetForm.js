@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTransition, animated } from '@react-spring/web';
 import { X, Loader2, Calendar, DollarSign } from 'lucide-react';
 import { withMinimumDelay } from '../utils/withDelay';
 import { modalTransitions, backdropTransitions } from '../utils/transitions';
+import { disableScroll, enableScroll } from '../utils/scrollLock';
 
 export const PaycheckBudgetForm = ({
                                        onSave,
@@ -18,6 +19,13 @@ export const PaycheckBudgetForm = ({
 
     const transitions = useTransition(show, modalTransitions);
     const backdropTransition = useTransition(show, backdropTransitions);
+
+    useEffect(() => {
+        disableScroll();
+        return () => {
+            enableScroll();
+        };
+    }, []);
 
     const handleSubmit = async (e) => {
         e.preventDefault();

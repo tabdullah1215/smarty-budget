@@ -1,7 +1,7 @@
 //PaycheckBudgetDetails.js
 import React, {useRef, useState, useMemo, useEffect} from 'react';
 import { useReactToPrint } from 'react-to-print';
-import { Printer, Share2, X, PlusCircle, Loader2, Edit2, Trash2 } from 'lucide-react';
+import { Printer, Share2, X, PlusCircle, Loader2, Edit2, Trash2, Paperclip } from 'lucide-react';
 import { useTransition, animated } from '@react-spring/web';
 import { withMinimumDelay } from '../utils/withDelay';
 import { PaycheckBudgetItemForm } from './PaycheckBudgetItemForm';
@@ -384,6 +384,24 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
         };
     }, []);
 
+    const handleRemoveImage = async (itemId) => {
+        setUploadingImageItemId(itemId);
+        try {
+            await withMinimumDelay(async () => {
+                const updatedItems = budget.items.map(item =>
+                    item.id === itemId ? { ...item, image: null, fileType: null } : item
+                );
+                const updatedBudget = { ...budget, items: updatedItems };
+                await onUpdate(updatedBudget);
+                showToast('success', 'Attachment removed successfully');
+            });
+        } catch (error) {
+            showToast('error', 'Failed to remove attachment');
+        } finally {
+            setUploadingImageItemId(null);
+        }
+    };
+
     return (
         <>
             {backdropTransition((style, item) =>
@@ -556,22 +574,29 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                                                                 </div>
                                                                 {item.image && (
                                                                     <div className="flex justify-center w-full">
-                                                                        <button
-                                                                            onClick={() => {
-                                                                                setSelectedImage(item.image);
-                                                                                setSelectedImageType(item.fileType || 'image/png');
-                                                                            }}
-                                                                            className="group relative"
-                                                                            title="Click to enlarge"
-                                                                        >
-                                                                            <img
-                                                                                src={`data:${item.fileType || 'image/png'};base64,${item.image}`}
-                                                                                alt="Budget Item"
-                                                                                className="w-16 h-16 object-cover rounded-md border-2 border-gray-300 transition-transform duration-200 group-hover:scale-105"
-                                                                            />
-                                                                            <div
-                                                                                className="absolute inset-0 bg-black/0 group-hover:bg-black/10 rounded-md transition-colors duration-200"/>
-                                                                        </button>
+                                                                        <div className="relative">
+                                                                            <button
+                                                                                onClick={() => {
+                                                                                    setSelectedImage(item.image);
+                                                                                    setSelectedImageType(item.fileType || 'image/png');
+                                                                                }}
+                                                                                className="relative"
+                                                                                title="Click to enlarge"
+                                                                            >
+                                                                                <img
+                                                                                    src={`data:${item.fileType || 'image/png'};base64,${item.image}`}
+                                                                                    alt="Budget Item"
+                                                                                    className="w-16 h-16 object-cover rounded-md border-2 border-gray-300"
+                                                                                />
+                                                                            </button>
+                                                                            <button
+                                                                                onClick={() => handleRemoveImage(item.id)}
+                                                                                className="absolute -top-2 -right-2 bg-red-100 hover:bg-red-200 text-red-600 rounded-full p-1.5 shadow-sm"
+                                                                                title="Remove attachment"
+                                                                            >
+                                                                                <Trash2 className="h-3.5 w-3.5" />
+                                                                            </button>
+                                                                        </div>
                                                                     </div>
                                                                 )}
                                                             </div>
@@ -636,22 +661,29 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                                                                 </div>
                                                                 {item.image && (
                                                                     <div className="flex justify-center w-full">
-                                                                    <button
-                                                                        onClick={() => {
-                                                                            setSelectedImage(item.image);
-                                                                            setSelectedImageType(item.fileType || 'image/png');
-                                                                        }}
-                                                                        className="group relative w-16 h-16"
-                                                                        title="Click to enlarge"
-                                                                    >
-                                                                        <img
-                                                                            src={`data:${item.fileType || 'image/png'};base64,${item.image}`}
-                                                                            alt="Budget Item"
-                                                                            className="w-16 h-16 object-cover rounded-md border-2 border-gray-300 transition-transform duration-200 group-hover:scale-105"
-                                                                        />
-                                                                        <div
-                                                                            className="absolute inset-0 bg-black/0 group-hover:bg-black/10 rounded-md transition-colors duration-200"/>
-                                                                    </button>
+                                                                        <div className="relative">
+                                                                            <button
+                                                                                onClick={() => {
+                                                                                    setSelectedImage(item.image);
+                                                                                    setSelectedImageType(item.fileType || 'image/png');
+                                                                                }}
+                                                                                className="relative"
+                                                                                title="Click to enlarge"
+                                                                            >
+                                                                                <img
+                                                                                    src={`data:${item.fileType || 'image/png'};base64,${item.image}`}
+                                                                                    alt="Budget Item"
+                                                                                    className="w-16 h-16 object-cover rounded-md border-2 border-gray-300"
+                                                                                />
+                                                                            </button>
+                                                                            <button
+                                                                                onClick={() => handleRemoveImage(item.id)}
+                                                                                className="absolute -top-2 -right-2 bg-red-100 text-red-600 rounded-full p-1.5 shadow-sm"
+                                                                                title="Remove attachment"
+                                                                            >
+                                                                                <Trash2 className="h-3.5 w-3.5" />
+                                                                            </button>
+                                                                        </div>
                                                                     </div>
                                                                 )}
                                                             </div>

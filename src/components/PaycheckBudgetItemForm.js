@@ -18,6 +18,7 @@ export const PaycheckBudgetItemForm = ({onSave, onClose, initialItem = null, isS
     const [categories, setCategories] = useState([]);
     const [show, setShow] = useState(true);
     const [showAddCategory, setShowAddCategory] = useState(false);
+    const [isAddingCategory, setIsAddingCategory] = useState(false);
 
     // Replace with the imported transitions
     const transitions = useTransition(show, modalTransitions);
@@ -48,6 +49,16 @@ export const PaycheckBudgetItemForm = ({onSave, onClose, initialItem = null, isS
         setIsCancelling(false);
         onClose();
 
+    };
+
+    const handleAddCategoryClick = async () => {
+        setIsAddingCategory(true);
+        try {
+            await withMinimumDelay(async () => {}, 800);
+            setShowAddCategory(true);
+        } finally {
+            setIsAddingCategory(false);
+        }
     };
 
     const handleSave = async (itemData) => {
@@ -149,12 +160,17 @@ export const PaycheckBudgetItemForm = ({onSave, onClose, initialItem = null, isS
                                             </label>
                                             <button
                                                 type="button"
-                                                onClick={() => setShowAddCategory(true)}
+                                                onClick={handleAddCategoryClick}
+                                                disabled={isAddingCategory}
                                                 className="p-1 text-gray-600 hover:text-gray-900 transition-colors duration-200
-                hover:bg-gray-100 rounded-full"
+        hover:bg-gray-100 rounded-full disabled:opacity-50 disabled:cursor-not-allowed"
                                                 title="Add new category"
                                             >
-                                                <PlusCircle className="h-6 w-6 stroke-[1.5]"/>
+                                                {isAddingCategory ? (
+                                                    <Loader2 className="h-6 w-6 animate-spin stroke-[1.5]"/>
+                                                ) : (
+                                                    <PlusCircle className="h-6 w-6 stroke-[1.5]"/>
+                                                )}
                                             </button>
                                         </div>
                                         <select
