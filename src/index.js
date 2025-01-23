@@ -18,7 +18,7 @@ reportWebVitals();
 
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker
-        .register('/custom-service-worker.js')
+        .register('/custom-service-worker-renamed.js')
         .then((registration) => {
             console.log('Custom service worker registered:', registration.scope);
         })
