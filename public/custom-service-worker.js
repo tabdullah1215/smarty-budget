@@ -30,8 +30,15 @@ self.addEventListener('activate', (event) => {
             );
         })
     );
-    self.clients.claim(); // Immediately take control of all open clients
+
+    // Notify all clients to reload
+    self.clients.claim().then(() => {
+        self.clients.matchAll({ type: 'window' }).then((clients) => {
+            clients.forEach((client) => client.navigate(client.url));
+        });
+    });
 });
+
 
 // Fetch event: Always fetch from the network, fallback to cache if offline
 self.addEventListener('fetch', (event) => {
