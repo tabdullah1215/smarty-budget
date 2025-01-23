@@ -462,11 +462,17 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                                         </div>
                                     </div>
 
-                                    <div className="grid grid-cols-2 gap-4 mb-6">
+                                    <div className="grid grid-cols-3 gap-4 mb-6">
                                         <div className="bg-gray-50 p-4 rounded-lg">
                                             <p className="text-sm text-gray-600">Total Paycheck</p>
                                             <p className="text-2xl font-bold text-gray-900">
                                                 ${budget.amount.toLocaleString()}
+                                            </p>
+                                        </div>
+                                        <div className="bg-gray-50 p-4 rounded-lg">
+                                            <p className="text-sm text-gray-600">Amount Spent</p>
+                                            <p className="text-2xl font-bold text-gray-900">
+                                                ${totalSpent.toLocaleString()}
                                             </p>
                                         </div>
                                         <div className="bg-gray-50 p-4 rounded-lg">
