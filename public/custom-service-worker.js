@@ -1,6 +1,5 @@
-const CACHE_NAME = 'custom-cache-v1'; // Increment the version for each update
+const CACHE_NAME = 'custom-cache-v1'; // Increment for updates
 
-// Install event: Cache critical files only (minimal caching)
 self.addEventListener('install', (event) => {
     console.log('Custom service worker installing...');
     event.waitUntil(
@@ -12,10 +11,9 @@ self.addEventListener('install', (event) => {
             ]);
         })
     );
-    self.skipWaiting(); // Skip waiting and activate immediately
+    self.skipWaiting(); // Skip waiting and move to "activate"
 });
 
-// Activate event: Clean up old caches
 self.addEventListener('activate', (event) => {
     console.log('Custom service worker activating...');
     event.waitUntil(
@@ -31,44 +29,28 @@ self.addEventListener('activate', (event) => {
         })
     );
 
-    // Notify all clients to reload
-    self.clients.claim().then(() => {
-        self.clients.matchAll({ type: 'window' }).then((clients) => {
-            clients.forEach((client) => client.navigate(client.url));
-        });
-    });
+    // Claim clients after activation
+    event.waitUntil(
+        self.clients.claim().then(() => {
+            console.log('Clients claimed by active service worker');
+            self.clients.matchAll({ type: 'window' }).then((clients) => {
+                clients.forEach((client) => {
+                    client.postMessage({ type: 'WORKER_ACTIVATED' });
+                });
+            });
+        })
+    );
 });
 
-
-// Fetch event: Always fetch from the network, fallback to cache if offline
 self.addEventListener('fetch', (event) => {
-    const requestURL = new URL(event.request.url);
-
-    // Handle static assets (main.js, main.css) with dynamic matching
-    if (requestURL.pathname.startsWith('/static/')) {
-        event.respondWith(
-            fetch(event.request)
-                .then((response) => {
-                    // Optionally cache the response
-                    return caches.open(CACHE_NAME).then((cache) => {
-                        cache.put(event.request, response.clone());
-                        return response;
-                    });
-                })
-                .catch(() => {
-                    // If network fails, serve from cache
-                    return caches.match(event.request);
-                })
-        );
-        return;
-    }
-
-    // Default behavior for other requests
     event.respondWith(
         fetch(event.request)
-            .catch(() => {
-                // Fallback to cache if network fails
-                return caches.match(event.request);
+            .then((response) => {
+                return caches.open(CACHE_NAME).then((cache) => {
+                    cache.put(event.request, response.clone());
+                    return response;
+                });
             })
+            .catch(() => caches.match(event.request)) // Fallback to cache
     );
 });
