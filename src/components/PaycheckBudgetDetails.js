@@ -7,7 +7,6 @@ import { withMinimumDelay } from '../utils/withDelay';
 import { PaycheckBudgetItemForm } from './PaycheckBudgetItemForm';
 import { modalTransitions, backdropTransitions } from '../utils/transitions';
 import { useToast } from '../contexts/ToastContext';
-import { Camera } from 'lucide-react';
 import { ImageViewer } from './ImageViewer';
 import { disableScroll, enableScroll } from '../utils/scrollLock';
 
@@ -568,7 +567,7 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                                                                             <Loader2
                                                                                 className="h-6 w-6 stroke-[1.5] animate-spin"/>
                                                                         ) : (
-                                                                            <Camera className="h-6 w-6 stroke-[1.5]"/>
+                                                                            <Paperclip className="h-6 w-6 stroke-[1.5]"/>
                                                                         )}
                                                                     </button>
                                                                 </div>
@@ -591,10 +590,10 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                                                                             </button>
                                                                             <button
                                                                                 onClick={() => handleRemoveImage(item.id)}
-                                                                                className="absolute -top-2 -right-2 bg-red-100 hover:bg-red-200 text-red-600 rounded-full p-1.5 shadow-sm"
+                                                                                className="absolute -bottom-2 -right-2 bg-red-100 hover:bg-red-200 text-red-600 rounded-full p-1.5 shadow-sm"
                                                                                 title="Remove attachment"
                                                                             >
-                                                                                <Trash2 className="h-3.5 w-3.5" />
+                                                                                <Trash2 className="h-3.5 w-3.5"/>
                                                                             </button>
                                                                         </div>
                                                                     </div>
@@ -655,7 +654,7 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                                                                             <Loader2
                                                                                 className="h-6 w-6 stroke-[1.5] animate-spin"/>
                                                                         ) : (
-                                                                            <Camera className="h-6 w-6 stroke-[1.5]"/>
+                                                                            <Paperclip className="h-6 w-6 stroke-[1.5]"/>
                                                                         )}
                                                                     </button>
                                                                 </div>
@@ -678,10 +677,10 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                                                                             </button>
                                                                             <button
                                                                                 onClick={() => handleRemoveImage(item.id)}
-                                                                                className="absolute -top-2 -right-2 bg-red-100 text-red-600 rounded-full p-1.5 shadow-sm"
+                                                                                className="absolute -bottom-2 -right-2 bg-red-100 hover:bg-red-200 text-red-600 rounded-full p-1.5 shadow-sm"
                                                                                 title="Remove attachment"
                                                                             >
-                                                                                <Trash2 className="h-3.5 w-3.5" />
+                                                                                <Trash2 className="h-3.5 w-3.5"/>
                                                                             </button>
                                                                         </div>
                                                                     </div>
