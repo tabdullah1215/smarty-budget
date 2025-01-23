@@ -25,7 +25,7 @@ self.addEventListener('message', (event) => {
 
 // Ensure immediate activation of the service worker
 self.addEventListener('activate', (event) => {
-    event.waitUntil(clients.claim());
+    event.waitUntil(self.clients.claim());
 });
 
 // Any other custom service worker logic can go here.
