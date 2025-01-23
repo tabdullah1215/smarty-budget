@@ -70,13 +70,9 @@ self.addEventListener('message', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-    event.respondWith(
-        fetch(event.request).catch(() => {
-            console.error('Network fetch failed for:', event.request.url);
-            return caches.match(event.request);
-        })
-    );
+    event.respondWith(fetch(event.request));
 });
+
 
 self.addEventListener('activate', (event) => {
     event.waitUntil(
