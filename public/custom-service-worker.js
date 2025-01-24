@@ -16,6 +16,7 @@ self.addEventListener('install', (event) => {
 
 self.addEventListener('activate', (event) => {
     console.log('Custom service worker activating...');
+
     event.waitUntil(
         caches.keys().then((cacheNames) => {
             return Promise.all(
@@ -29,18 +30,20 @@ self.addEventListener('activate', (event) => {
         })
     );
 
-    // Claim clients after activation
     event.waitUntil(
         self.clients.claim().then(() => {
             console.log('Clients claimed by active service worker');
             self.clients.matchAll({ type: 'window' }).then((clients) => {
                 clients.forEach((client) => {
-                    client.postMessage({ type: 'WORKER_ACTIVATED' });
+                    console.log(`Reloading client: ${client.url}`);
+                    // Force a page reload for each controlled client
+                    client.navigate(client.url);
                 });
             });
         })
     );
 });
+
 
 self.addEventListener('fetch', (event) => {
     event.respondWith(
