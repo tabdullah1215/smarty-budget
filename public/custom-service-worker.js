@@ -1,4 +1,4 @@
-const CACHE_NAME = 'custom-cache-v1'; // Increment for updates
+const CACHE_NAME = 'custom-cache-v2'; // Increment for updates
 
 self.addEventListener('install', (event) => {
     console.log('Custom service worker installing...');
