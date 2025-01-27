@@ -98,11 +98,16 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
     });
 
     const { totalSpent, remainingAmount, categoryTotals, monthlyBreakdown } = useMemo(() => {
-        const total = budget.items?.reduce((sum, item) => sum + (item.amount || 0), 0) || 0;
+        // Only count active items in total spent
+        const total = budget.items?.reduce((sum, item) =>
+            sum + (item.isActive ? (item.amount || 0) : 0), 0) || 0;
         const remaining = budget.amount - total;
 
         const byCategory = budget.items?.reduce((acc, item) => {
-            acc[item.category] = (acc[item.category] || 0) + (item.amount || 0);
+            // Only include active items in category totals
+            if (item.isActive) {
+                acc[item.category] = (acc[item.category] || 0) + (item.amount || 0);
+            }
             return acc;
         }, {});
 
@@ -122,7 +127,9 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                 };
             }
 
-            acc[monthYear].total += (item.amount || 0);
+            if (item.isActive) {
+                acc[monthYear].total += (item.amount || 0);
+            }
             acc[monthYear].items.push(item);
 
             return acc;
@@ -142,7 +149,7 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
             totalSpent: total,
             remainingAmount: remaining,
             categoryTotals: byCategory || {},
-            monthlyBreakdown: sortedByMonth
+            monthlyBreakdown: sortedByMonth || {}
         };
     }, [budget.items, budget.amount]);
 
@@ -402,6 +409,44 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
         }
     };
 
+    // Add this function in PaycheckBudgetDetails.js where other handlers are defined
+    const handleToggleActive = async (itemId) => {
+        try {
+            const updatedItems = budget.items.map(item =>
+                item.id === itemId ? { ...item, isActive: !item.isActive } : item
+            );
+            const updatedBudget = { ...budget, items: updatedItems };
+            await onUpdate(updatedBudget);
+            showToast('success', 'Item status updated successfully');
+        } catch (error) {
+            console.error('Error toggling item status:', error);
+            showToast('error', 'Failed to update item status');
+        }
+    };
+
+    const handleMasterCheckboxChange = () => {
+        const shouldActivate = !(masterCheckboxState.isChecked || masterCheckboxState.isIndeterminate);
+
+        const updatedItems = budget.items.map(item => ({
+            ...item,
+            isActive: shouldActivate
+        }));
+
+        const updatedBudget = { ...budget, items: updatedItems };
+        onUpdate(updatedBudget);
+    };
+
+// Replace the useState and useMemo with this:
+    const masterCheckboxState = useMemo(() => {
+        if (!budget.items?.length) return false;
+        const activeItems = budget.items.filter(item => item.isActive);
+
+        return {
+            isChecked: activeItems.length === budget.items.length,
+            isIndeterminate: activeItems.length > 0 && activeItems.length < budget.items.length
+        };
+    }, [budget.items]);
+
     return (
         <>
             {backdropTransition((style, item) =>
@@ -506,16 +551,35 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                                     <div className="relative w-full min-h-0 max-h-[calc(80vh-250px)]">
                                         <table className="min-w-full divide-y divide-gray-200">
                                             <thead>
+                                            {/* Desktop Headers */}
                                             <tr>
-                                                <th className="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                                                <th className="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    <div className="flex items-center space-x-4 w-[140px]"> {/* Added width here */}
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={masterCheckboxState.isChecked}
+                                                            ref={(el) => {
+                                                                if (el) el.indeterminate = masterCheckboxState.isIndeterminate;
+                                                            }}
+                                                            onChange={handleMasterCheckboxChange}
+                                                            className="h-5 w-5 text-blue-600 border-3 border-gray-300 rounded-md
+                    focus:ring-2 focus:ring-blue-500 cursor-pointer
+                    transition-transform duration-200 hover:scale-110 active:scale-100
+                    checked:bg-blue-600 checked:border-transparent"
+                                                        />
+                                                        <span>Category</span>
+                                                    </div>
+                                                </th>
                                                 <th className="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
                                                 <th className="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
                                                 <th className="hidden md:table-cell px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                                                <th className="hidden md:table-cell px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                                                <th className="md:hidden px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Expense
-                                                    Details
-                                                </th>
-                                                <th className="md:hidden px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                                <th className="hidden md:table-cell px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider pr-8">Actions</th>
+                                            </tr>
+
+                                            {/* Mobile Headers */}
+                                            <tr className="md:hidden">
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Budget Item</th>
+                                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider pr-6">Actions</th>
                                             </tr>
                                             </thead>
                                             <tbody className="bg-white divide-y divide-black">
@@ -529,20 +593,33 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                                             {budget.items?.map(item => (
                                                 <React.Fragment key={item.id}>
                                                     {/* Desktop Row */}
-                                                    <tr className="hidden md:table-row">
-                                                        <td className="px-6 py-4 whitespace-nowrap relative">
-                                                            <button
-                                                                onClick={() => handleToggleActive(item.id)}
-                                                                className={`absolute top-2 left-2 p-1 rounded-full
-                        ${item.isActive ? 'text-green-600 hover:text-green-700' : 'text-orange-300 hover:text-orange-400'}`}
-                                                            >
-                                                                <CheckCircle className="h-5 w-5"/>
-                                                            </button>
-                                                            <div className="pl-8">{item.category}</div>
+                                                    <tr className={`hidden md:table-row ${!item.isActive ? 'bg-orange-50' : ''}`}>
+                                                        <td className="px-6 py-4 whitespace-nowrap">
+                                                            <div className="flex items-center space-x-4">
+                                                                <input
+                                                                    type="checkbox"
+                                                                    checked={item.isActive}
+                                                                    onChange={() => handleToggleActive(item.id)}
+                                                                    className="h-5 w-5 text-blue-600 border-3 border-gray-300 rounded-md
+                    focus:ring-2 focus:ring-blue-500 cursor-pointer
+                    transition-transform duration-200 hover:scale-110 active:scale-100
+                    checked:bg-blue-600 checked:border-transparent"
+                                                                />
+                                                                <div className="flex items-center space-x-2">
+                                                                    <span
+                                                                        className="min-w-[70px]">{item.category}</span>
+                                                                    <span
+                                                                        className={`text-orange-600 text-sm font-medium transition-opacity duration-200 ${item.isActive ? 'opacity-0' : 'opacity-100'}`}>
+                    (Pending)
+                </span>
+                                                                </div>
+                                                            </div>
                                                         </td>
                                                         <td className="px-6 py-4 whitespace-nowrap">{item.description}</td>
                                                         <td className="px-6 py-4 whitespace-nowrap">{item.date}</td>
-                                                        <td className="px-6 py-4 whitespace-nowrap text-right">${item.amount.toLocaleString()}</td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-right">
+                                                            ${item.amount.toLocaleString()}
+                                                        </td>
                                                         <td className="px-6 py-4 whitespace-nowrap">
                                                             <div className="flex flex-col items-center space-y-2">
                                                                 <div className="flex justify-center space-x-4">
