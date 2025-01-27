@@ -1,7 +1,7 @@
 //PaycheckBudgetDetails.js
 import React, {useRef, useState, useMemo, useEffect} from 'react';
 import { useReactToPrint } from 'react-to-print';
-import { Printer, Share2, X, PlusCircle, Loader2, Edit2, Trash2, Paperclip, XCircle } from 'lucide-react';
+import { Printer, Share2, X, PlusCircle, Loader2, Edit2, Trash2, Paperclip, XCircle, CheckCircle } from 'lucide-react';
 import { useTransition, animated } from '@react-spring/web';
 import { withMinimumDelay } from '../utils/withDelay';
 import { PaycheckBudgetItemForm } from './PaycheckBudgetItemForm';
@@ -177,6 +177,7 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                     {
                         id: crypto.randomUUID(),
                         ...itemData,
+                        isActive: true,
                         createdAt: new Date().toISOString(),
                         updatedAt: new Date().toISOString()
                     }
@@ -495,7 +496,7 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                                             ) : (
                                                 <PlusCircle className="h-6 w-6 mr-2 stroke-[1.5]"/>
                                             )}
-                                            Record Expense!!!***
+                                            Record Expense!!
                                         </button>
                                     </div>
                                 </div>
@@ -529,7 +530,16 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                                                 <React.Fragment key={item.id}>
                                                     {/* Desktop Row */}
                                                     <tr className="hidden md:table-row">
-                                                        <td className="px-6 py-4 whitespace-nowrap">{item.category}</td>
+                                                        <td className="px-6 py-4 whitespace-nowrap relative">
+                                                            <button
+                                                                onClick={() => handleToggleActive(item.id)}
+                                                                className={`absolute top-2 left-2 p-1 rounded-full
+                        ${item.isActive ? 'text-green-600 hover:text-green-700' : 'text-orange-300 hover:text-orange-400'}`}
+                                                            >
+                                                                <CheckCircle className="h-5 w-5"/>
+                                                            </button>
+                                                            <div className="pl-8">{item.category}</div>
+                                                        </td>
                                                         <td className="px-6 py-4 whitespace-nowrap">{item.description}</td>
                                                         <td className="px-6 py-4 whitespace-nowrap">{item.date}</td>
                                                         <td className="px-6 py-4 whitespace-nowrap text-right">${item.amount.toLocaleString()}</td>
