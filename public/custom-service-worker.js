@@ -1,5 +1,6 @@
 const CACHE_NAME = 'custom-cache-v2'; // Increment for updates
 
+// eslint-disable-next-line no-restricted-globals
 self.addEventListener('install', (event) => {
     console.log('Custom service worker installing...');
     event.waitUntil(
@@ -11,40 +12,39 @@ self.addEventListener('install', (event) => {
             ]);
         })
     );
+    // eslint-disable-next-line no-restricted-globals
     self.skipWaiting(); // Skip waiting and move to "activate"
 });
 
+// eslint-disable-next-line no-restricted-globals
 self.addEventListener('activate', (event) => {
-    console.log('Custom service worker activating...');
-
     event.waitUntil(
-        caches.keys().then((cacheNames) => {
-            return Promise.all(
-                cacheNames.map((cacheName) => {
-                    if (cacheName !== CACHE_NAME) {
-                        console.log('Deleting old cache:', cacheName);
-                        return caches.delete(cacheName);
-                    }
-                })
-            );
-        })
-    );
-
-    event.waitUntil(
-        self.clients.claim().then(() => {
-            console.log('Clients claimed by active service worker');
-            self.clients.matchAll({ type: 'window' }).then((clients) => {
-                clients.forEach((client) => {
-                    console.log(`Reloading client: ${client.url}`);
-                    // Force a page reload for each controlled client
-                    client.navigate(client.url);
-                });
+        Promise.all([
+            // First clear old caches
+            caches.keys().then((cacheNames) => {
+                return Promise.all(
+                    cacheNames.map((cacheName) => {
+                        if (cacheName !== CACHE_NAME) {
+                            return caches.delete(cacheName);
+                        }
+                    })
+                );
+            }),
+            // Then claim clients after activation
+            // eslint-disable-next-line no-restricted-globals
+            self.clients.claim()
+        ]).then(() => {
+            // eslint-disable-next-line no-restricted-globals
+            return self.clients.matchAll({ type: 'window' });
+        }).then((clients) => {
+            clients.forEach((client) => {
+                client.navigate(client.url);
             });
         })
     );
 });
 
-
+// eslint-disable-next-line no-restricted-globals
 self.addEventListener('fetch', (event) => {
     event.respondWith(
         fetch(event.request)

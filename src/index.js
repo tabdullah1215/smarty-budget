@@ -13,16 +13,16 @@ root.render(
     </React.StrictMode>
 );
 
-serviceWorkerRegistration.unregister();
+serviceWorkerRegistration.register();
 reportWebVitals();
 
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker
-        .register('/custom-service-worker.js')
-        .then((registration) => {
-            console.log('Custom service worker registered:', registration.scope);
-        })
-        .catch((error) => {
-            console.error('Custom service worker registration failed:', error);
-        });
-}
+// if ('serviceWorker' in navigator) {
+//     navigator.serviceWorker
+//         .register('/custom-service-worker.js')
+//         .then((registration) => {
+//             console.log('Custom service worker registered:', registration.scope);
+//         })
+//         .catch((error) => {
+//             console.error('Custom service worker registration failed:', error);
+//         });
+// }
