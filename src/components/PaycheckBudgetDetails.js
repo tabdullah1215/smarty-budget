@@ -11,6 +11,7 @@ import {ImageViewer} from './ImageViewer';
 import {disableScroll, enableScroll} from '../utils/scrollLock';
 import PaycheckBudgetDetailsHeader from "./PaycheckBudgetDetailsHeader";
 import PaycheckBudgetItemRow from "./PaycheckBudgetItemRow";
+import PaycheckBudgetTableHeader from "./PaycheckBudgetTableHeader";
 
 const PrintableContent = React.forwardRef(({budget}, ref) => {
     return (
@@ -427,9 +428,7 @@ export const PaycheckBudgetDetails = ({budget, onClose, onUpdate}) => {
         }
     };
 
-    const handleMasterCheckboxChange = () => {
-        const shouldActivate = !(masterCheckboxState.isChecked || masterCheckboxState.isIndeterminate);
-
+    const handleToggleAll = (shouldActivate) => {
         const updatedItems = budget.items.map(item => ({
             ...item,
             isActive: shouldActivate
@@ -438,7 +437,6 @@ export const PaycheckBudgetDetails = ({budget, onClose, onUpdate}) => {
         const updatedBudget = {...budget, items: updatedItems};
         onUpdate(updatedBudget);
 
-        // Add toast message
         showToast(
             'success',
             shouldActivate
@@ -446,17 +444,6 @@ export const PaycheckBudgetDetails = ({budget, onClose, onUpdate}) => {
                 : 'All expense items excluded'
         );
     };
-
-// Replace the useState and useMemo with this:
-    const masterCheckboxState = useMemo(() => {
-        if (!budget.items?.length) return false;
-        const activeItems = budget.items.filter(item => item.isActive);
-
-        return {
-            isChecked: activeItems.length === budget.items.length,
-            isIndeterminate: activeItems.length > 0 && activeItems.length < budget.items.length
-        };
-    }, [budget.items]);
 
     return (
         <>
@@ -495,60 +482,10 @@ export const PaycheckBudgetDetails = ({budget, onClose, onUpdate}) => {
                                     <div className="relative w-full min-h-0 max-h-[calc(80vh-250px)]">
                                         <div className="w-full overflow-x-hidden">
                                             <table className="min-w-full divide-y divide-gray-200">
-                                                <thead>
-                                                {/* Desktop Headers */}
-                                                <tr className="bg-gray-100">
-                                                    <th className="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                        <div
-                                                            className="flex items-center space-x-4 w-[140px]"> {/* Added width here */}
-                                                            <input
-                                                                type="checkbox"
-                                                                checked={masterCheckboxState.isChecked}
-                                                                ref={(el) => {
-                                                                    if (el) el.indeterminate = masterCheckboxState.isIndeterminate;
-                                                                }}
-                                                                onChange={handleMasterCheckboxChange}
-                                                                className="h-5 w-5 text-blue-600 border-3 border-gray-300 rounded-md
-                    focus:ring-2 focus:ring-blue-500 cursor-pointer
-                    transition-transform duration-200 hover:scale-110 active:scale-100
-                    checked:bg-blue-600 checked:border-transparent"
-                                                            />
-                                                            <span>Category</span>
-                                                        </div>
-                                                    </th>
-                                                    <th className="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
-                                                    <th className="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                                                    <th className="hidden md:table-cell px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                                                    <th className="hidden md:table-cell px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider pr-8">Actions</th>
-                                                </tr>
-
-                                                {/* Mobile Headers */}
-                                                <tr className="md:hidden bg-gray-100">
-                                                    <th className="px-2 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                        <div className="flex items-center space-x-3">
-                                                            <div className="flex-shrink-0">
-                                                                <input
-                                                                    type="checkbox"
-                                                                    checked={masterCheckboxState.isChecked}
-                                                                    ref={(el) => {
-                                                                        if (el) el.indeterminate = masterCheckboxState.isIndeterminate;
-                                                                    }}
-                                                                    onChange={handleMasterCheckboxChange}
-                                                                    className="h-5 w-5 text-blue-600 border-3 border-gray-300 rounded-md
-    focus:ring-2 focus:ring-blue-500 cursor-pointer
-    active:scale-150
-    checked:bg-blue-600 checked:border-transparent
-    scale-100 transform transition-transform duration-300"
-                                                                />
-                                                            </div>
-                                                            <span>Budget Item</span>
-                                                        </div>
-                                                    </th>
-                                                    <th className="px-2 sm:px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider pr-4 sm:pr-8">
-                                                        Actions
-                                                    </th>
-                                                </tr>
-                                                </thead>
+                                                <PaycheckBudgetTableHeader
+                                                    items={budget.items}
+                                                    onToggleAll={handleToggleAll}
+                                                />
                                                 <tbody className="bg-white divide-y divide-black">
                                                 {budget.items?.length === 0 && (
                                                     <tr>
