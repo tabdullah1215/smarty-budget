@@ -1,16 +1,16 @@
 //PaycheckBudgetDetails.js
 import React, {useRef, useState, useMemo, useEffect} from 'react';
-import { useReactToPrint } from 'react-to-print';
-import { Printer, Share2, X, PlusCircle, Loader2, Edit2, Trash2, Paperclip, XCircle, CheckCircle } from 'lucide-react';
-import { useTransition, animated } from '@react-spring/web';
-import { withMinimumDelay } from '../utils/withDelay';
-import { PaycheckBudgetItemForm } from './PaycheckBudgetItemForm';
-import { modalTransitions, backdropTransitions } from '../utils/transitions';
-import { useToast } from '../contexts/ToastContext';
-import { ImageViewer } from './ImageViewer';
-import { disableScroll, enableScroll } from '../utils/scrollLock';
+import {useReactToPrint} from 'react-to-print';
+import {Printer, Share2, X, PlusCircle, Loader2, Edit2, Trash2, Paperclip, XCircle, CheckCircle} from 'lucide-react';
+import {useTransition, animated} from '@react-spring/web';
+import {withMinimumDelay} from '../utils/withDelay';
+import {PaycheckBudgetItemForm} from './PaycheckBudgetItemForm';
+import {modalTransitions, backdropTransitions} from '../utils/transitions';
+import {useToast} from '../contexts/ToastContext';
+import {ImageViewer} from './ImageViewer';
+import {disableScroll, enableScroll} from '../utils/scrollLock';
 
-const PrintableContent = React.forwardRef(({ budget }, ref) => {
+const PrintableContent = React.forwardRef(({budget}, ref) => {
     return (
         <div ref={ref} className="print-content">
             <div className="p-8">
@@ -47,7 +47,7 @@ const PrintableContent = React.forwardRef(({ budget }, ref) => {
 
 PrintableContent.displayName = 'PrintableContent';
 
-export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
+export const PaycheckBudgetDetails = ({budget, onClose, onUpdate}) => {
     const [showForm, setShowForm] = useState(false);
     const [editingItem, setEditingItem] = useState(null);
     const [isClosing, setIsClosing] = useState(false);
@@ -57,7 +57,7 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
     const [isPrinting, setIsPrinting] = useState(false);
     const [isSharing, setIsSharing] = useState(false);
     const [show, setShow] = useState(true);
-    const { showToast } = useToast();
+    const {showToast} = useToast();
     const [selectedImage, setSelectedImage] = useState(null);
     const [selectedImageType, setSelectedImageType] = useState(null);
 
@@ -97,7 +97,7 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
         }
     });
 
-    const { totalSpent, remainingAmount, categoryTotals, monthlyBreakdown } = useMemo(() => {
+    const {totalSpent, remainingAmount, categoryTotals, monthlyBreakdown} = useMemo(() => {
         // Only count active items in total spent
         const total = budget.items?.reduce((sum, item) =>
             sum + (item.isActive ? (item.amount || 0) : 0), 0) || 0;
@@ -298,7 +298,8 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                     showToast('success', 'Expense item deleted successfully');
                     setShowDeleteItemModal(false);
                 });
-                await withMinimumDelay(async () => {});
+                await withMinimumDelay(async () => {
+                });
                 setDeletingItemId(null);
             } catch (error) {
                 console.error('Error deleting item:', error);
@@ -323,62 +324,62 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
         }
     }
     const handleImageUpload = async (itemId) => {
-            setUploadingImageItemId(itemId);
-            try {
-                await withMinimumDelay(async () => {
-                    const input = document.createElement('input');
-                    input.type = 'file';
-                    input.accept = 'image/*';
+        setUploadingImageItemId(itemId);
+        try {
+            await withMinimumDelay(async () => {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = 'image/*';
 
-                    // Create a promise that resolves when either file is selected or dialog is closed
-                    const fileSelection = new Promise((resolve) => {
-                        // Handle file selection
-                        input.onchange = () => {
-                            resolve(input.files[0] || null);
-                        };
+                // Create a promise that resolves when either file is selected or dialog is closed
+                const fileSelection = new Promise((resolve) => {
+                    // Handle file selection
+                    input.onchange = () => {
+                        resolve(input.files[0] || null);
+                    };
 
-                        // Handle dialog close/cancel
-                        window.addEventListener('focus', function onFocus() {
-                            // Small delay to ensure we get the file if one was selected
-                            setTimeout(() => {
-                                if (!input.files.length) {
-                                    resolve(null);
-                                }
-                                window.removeEventListener('focus', onFocus);
-                            }, 300);
-                        });
+                    // Handle dialog close/cancel
+                    window.addEventListener('focus', function onFocus() {
+                        // Small delay to ensure we get the file if one was selected
+                        setTimeout(() => {
+                            if (!input.files.length) {
+                                resolve(null);
+                            }
+                            window.removeEventListener('focus', onFocus);
+                        }, 300);
                     });
+                });
 
-                    input.click();
+                input.click();
 
-                    const file = await fileSelection;
-                    if (!file) {
-                        setUploadingImageItemId(null);  // Clear loading state if cancelled
-                        return;
-                    }
+                const file = await fileSelection;
+                if (!file) {
+                    setUploadingImageItemId(null);  // Clear loading state if cancelled
+                    return;
+                }
 
-                    const reader = new FileReader();
-                    reader.onloadend = () => {
-                        const base64Data = reader.result.split(',')[1];
-                        const fileType = file.type;
-                        const updatedItems = budget.items.map(item =>
-                            item.id === itemId ? { ...item, image: base64Data, fileType: fileType } : item
-                        );
-                        const updatedBudget = { ...budget, items: updatedItems };
-                        onUpdate(updatedBudget);
-                        showToast('success', 'Image uploaded successfully');
-                        setUploadingImageItemId(null);
-                    };
-                    reader.onerror = () => {
-                        showToast('error', 'Failed to upload image. Please try again.');
-                        setUploadingImageItemId(null);
-                    };
-                    reader.readAsDataURL(file);
-                }, 800);
-            } catch (error) {
-                setUploadingImageItemId(null);
-                console.error('Error uploading image:', error);
-            }
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    const base64Data = reader.result.split(',')[1];
+                    const fileType = file.type;
+                    const updatedItems = budget.items.map(item =>
+                        item.id === itemId ? {...item, image: base64Data, fileType: fileType} : item
+                    );
+                    const updatedBudget = {...budget, items: updatedItems};
+                    onUpdate(updatedBudget);
+                    showToast('success', 'Image uploaded successfully');
+                    setUploadingImageItemId(null);
+                };
+                reader.onerror = () => {
+                    showToast('error', 'Failed to upload image. Please try again.');
+                    setUploadingImageItemId(null);
+                };
+                reader.readAsDataURL(file);
+            }, 800);
+        } catch (error) {
+            setUploadingImageItemId(null);
+            console.error('Error uploading image:', error);
+        }
     };
 
     useEffect(() => {
@@ -396,9 +397,9 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
         try {
             await withMinimumDelay(async () => {
                 const updatedItems = budget.items.map(item =>
-                    item.id === itemId ? { ...item, image: null, fileType: null } : item
+                    item.id === itemId ? {...item, image: null, fileType: null} : item
                 );
-                const updatedBudget = { ...budget, items: updatedItems };
+                const updatedBudget = {...budget, items: updatedItems};
                 await onUpdate(updatedBudget);
                 showToast('success', 'Attachment removed successfully');
             });
@@ -413,9 +414,9 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
     const handleToggleActive = async (itemId) => {
         try {
             const updatedItems = budget.items.map(item =>
-                item.id === itemId ? { ...item, isActive: !item.isActive } : item
+                item.id === itemId ? {...item, isActive: !item.isActive} : item
             );
-            const updatedBudget = { ...budget, items: updatedItems };
+            const updatedBudget = {...budget, items: updatedItems};
             await onUpdate(updatedBudget);
             showToast('success', 'Item status updated successfully');
         } catch (error) {
@@ -432,8 +433,16 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
             isActive: shouldActivate
         }));
 
-        const updatedBudget = { ...budget, items: updatedItems };
+        const updatedBudget = {...budget, items: updatedItems};
         onUpdate(updatedBudget);
+
+        // Add toast message
+        showToast(
+            'success',
+            shouldActivate
+                ? 'All expense items included'
+                : 'All expense items excluded'
+        );
     };
 
 // Replace the useState and useMemo with this:
@@ -530,7 +539,7 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                                     </div>
 
                                     <div className="flex justify-between items-center">
-                                    <h3 className="text-lg font-medium text-gray-900">Expense Items</h3>
+                                        <h3 className="text-lg font-medium text-gray-900">Expense Items</h3>
                                         <button
                                             onClick={handleAddItemClick}
                                             disabled={isAddingItem || isSaving}
@@ -547,246 +556,293 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
                                 </div>
 
                                 {/* Scrollable Content */}
-                                <div className="flex-1 overflow-y-auto px-5">
+                                <div className="flex-1 overflow-y-auto overflow-x-hidden px-2 sm:px-5">
                                     <div className="relative w-full min-h-0 max-h-[calc(80vh-250px)]">
-                                        <table className="min-w-full divide-y divide-gray-200">
-                                            <thead>
-                                            {/* Desktop Headers */}
-                                            <tr>
-                                                <th className="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    <div className="flex items-center space-x-4 w-[140px]"> {/* Added width here */}
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={masterCheckboxState.isChecked}
-                                                            ref={(el) => {
-                                                                if (el) el.indeterminate = masterCheckboxState.isIndeterminate;
-                                                            }}
-                                                            onChange={handleMasterCheckboxChange}
-                                                            className="h-5 w-5 text-blue-600 border-3 border-gray-300 rounded-md
+                                        <div className="w-full overflow-x-hidden">
+                                            <table className="min-w-full divide-y divide-gray-200">
+                                                <thead>
+                                                {/* Desktop Headers */}
+                                                <tr className="bg-gray-100">
+                                                    <th className="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                        <div
+                                                            className="flex items-center space-x-4 w-[140px]"> {/* Added width here */}
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={masterCheckboxState.isChecked}
+                                                                ref={(el) => {
+                                                                    if (el) el.indeterminate = masterCheckboxState.isIndeterminate;
+                                                                }}
+                                                                onChange={handleMasterCheckboxChange}
+                                                                className="h-5 w-5 text-blue-600 border-3 border-gray-300 rounded-md
                     focus:ring-2 focus:ring-blue-500 cursor-pointer
                     transition-transform duration-200 hover:scale-110 active:scale-100
                     checked:bg-blue-600 checked:border-transparent"
-                                                        />
-                                                        <span>Category</span>
-                                                    </div>
-                                                </th>
-                                                <th className="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
-                                                <th className="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                                                <th className="hidden md:table-cell px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                                                <th className="hidden md:table-cell px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider pr-8">Actions</th>
-                                            </tr>
-
-                                            {/* Mobile Headers */}
-                                            <tr className="md:hidden">
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Budget Item</th>
-                                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider pr-6">Actions</th>
-                                            </tr>
-                                            </thead>
-                                            <tbody className="bg-white divide-y divide-black">
-                                            {budget.items?.length === 0 && (
-                                                <tr>
-                                                    <td colSpan="5" className="px-6 py-4 text-center text-gray-500">
-                                                        No expense items recorded yet
-                                                    </td>
+                                                            />
+                                                            <span>Category</span>
+                                                        </div>
+                                                    </th>
+                                                    <th className="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                                                    <th className="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                                    <th className="hidden md:table-cell px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                                                    <th className="hidden md:table-cell px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider pr-8">Actions</th>
                                                 </tr>
-                                            )}
-                                            {budget.items?.map(item => (
-                                                <React.Fragment key={item.id}>
-                                                    {/* Desktop Row */}
-                                                    <tr className={`hidden md:table-row ${!item.isActive ? 'bg-orange-50' : ''}`}>
-                                                        <td className="px-6 py-4 whitespace-nowrap">
-                                                            <div className="flex items-center space-x-4">
+
+                                                {/* Mobile Headers */}
+                                                <tr className="md:hidden bg-gray-100">
+                                                    <th className="px-2 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                        <div className="flex items-center space-x-3">
+                                                            <div className="flex-shrink-0">
                                                                 <input
                                                                     type="checkbox"
-                                                                    checked={item.isActive}
-                                                                    onChange={() => handleToggleActive(item.id)}
+                                                                    checked={masterCheckboxState.isChecked}
+                                                                    ref={(el) => {
+                                                                        if (el) el.indeterminate = masterCheckboxState.isIndeterminate;
+                                                                    }}
+                                                                    onChange={handleMasterCheckboxChange}
                                                                     className="h-5 w-5 text-blue-600 border-3 border-gray-300 rounded-md
+    focus:ring-2 focus:ring-blue-500 cursor-pointer
+    active:scale-150
+    checked:bg-blue-600 checked:border-transparent
+    scale-100 transform transition-transform duration-300"
+                                                                />
+                                                            </div>
+                                                            <span>Budget Item</span>
+                                                        </div>
+                                                    </th>
+                                                    <th className="px-2 sm:px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider pr-4 sm:pr-8">
+                                                        Actions
+                                                    </th>
+                                                </tr>
+                                                </thead>
+                                                <tbody className="bg-white divide-y divide-black">
+                                                {budget.items?.length === 0 && (
+                                                    <tr>
+                                                        <td colSpan="5" className="px-6 py-4 text-center text-gray-500">
+                                                            No expense items recorded yet
+                                                        </td>
+                                                    </tr>
+                                                )}
+                                                {budget.items?.map(item => (
+                                                    <React.Fragment key={item.id}>
+                                                        {/* Desktop Row */}
+                                                        <tr className={`hidden md:table-row ${!item.isActive ? 'bg-orange-50' : ''}`}>
+                                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                                <div className="flex items-center space-x-4">
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        checked={item.isActive}
+                                                                        onChange={() => handleToggleActive(item.id)}
+                                                                        className="h-5 w-5 text-blue-600 border-3 border-gray-300 rounded-md
                     focus:ring-2 focus:ring-blue-500 cursor-pointer
                     transition-transform duration-200 hover:scale-110 active:scale-100
                     checked:bg-blue-600 checked:border-transparent"
-                                                                />
-                                                                <div className="flex items-center space-x-2">
+                                                                    />
+                                                                    <div className="flex items-center space-x-2">
                                                                     <span
                                                                         className="min-w-[70px]">{item.category}</span>
-                                                                    <span
-                                                                        className={`text-orange-600 text-sm font-medium transition-opacity duration-200 ${item.isActive ? 'opacity-0' : 'opacity-100'}`}>
+                                                                        <span
+                                                                            className={`text-orange-600 text-sm font-medium transition-opacity duration-200 ${item.isActive ? 'opacity-0' : 'opacity-100'}`}>
                     (Pending)
                 </span>
-                                                                </div>
-                                                            </div>
-                                                        </td>
-                                                        <td className="px-6 py-4 whitespace-nowrap">{item.description}</td>
-                                                        <td className="px-6 py-4 whitespace-nowrap">{item.date}</td>
-                                                        <td className="px-6 py-4 whitespace-nowrap text-right">
-                                                            ${item.amount.toLocaleString()}
-                                                        </td>
-                                                        <td className="px-6 py-4 whitespace-nowrap">
-                                                            <div className="flex flex-col items-center space-y-2">
-                                                                <div className="flex justify-center space-x-4">
-                                                                    <button
-                                                                        onClick={() => handleEditItem(item)}
-                                                                        disabled={editingItemId === item.id || isSaving}
-                                                                        className="text-blue-600 hover:text-blue-800 transition-colors duration-200
-        disabled:opacity-50 disabled:cursor-not-allowed"
-                                                                        title="Edit item"
-                                                                    >
-                                                                        {editingItemId === item.id ? (
-                                                                            <Loader2
-                                                                                className="h-6 w-6 stroke-[1.5] animate-spin"/>
-                                                                        ) : (
-                                                                            <Edit2 className="h-6 w-6 stroke-[1.5]"/>
-                                                                        )}
-                                                                    </button>
-                                                                    <button
-                                                                        onClick={() => handleDeleteItem(item.id)}
-                                                                        disabled={deletingButtonId === item.id}
-                                                                        className="text-red-600 hover:text-red-800 transition-colors duration-200"
-                                                                        title="Delete item"
-                                                                    >
-                                                                        {deletingButtonId === item.id ? (
-                                                                            <Loader2 className="h-6 w-6 animate-spin"/>
-                                                                        ) : (
-                                                                            <Trash2 className="h-6 w-6 stroke-[1.5]"/>
-                                                                        )}
-                                                                    </button>
-                                                                    <button
-                                                                        onClick={() => handleImageUpload(item.id)}
-                                                                        disabled={uploadingImageItemId === item.id || isSaving}
-                                                                        className="text-gray-600 hover:text-gray-800 transition-colors duration-200
-        disabled:opacity-50 disabled:cursor-not-allowed"
-                                                                        title={item.image ? "Update image" : "Add image"}
-                                                                    >
-                                                                        {uploadingImageItemId === item.id ? (
-                                                                            <Loader2
-                                                                                className="h-6 w-6 stroke-[1.5] animate-spin"/>
-                                                                        ) : (
-                                                                            <Paperclip
-                                                                                className="h-6 w-6 stroke-[1.5]"/>
-                                                                        )}
-                                                                    </button>
-                                                                </div>
-                                                                {item.image && (
-                                                                    <div className="flex justify-center w-full">
-                                                                        <div className="relative">
-                                                                            <button
-                                                                                onClick={() => {
-                                                                                    setSelectedImage(item.image);
-                                                                                    setSelectedImageType(item.fileType || 'image/png');
-                                                                                }}
-                                                                                className="relative"
-                                                                                title="Click to enlarge"
-                                                                            >
-                                                                                <img
-                                                                                    src={`data:${item.fileType || 'image/png'};base64,${item.image}`}
-                                                                                    alt="Budget Item"
-                                                                                    className="w-16 h-16 object-cover rounded-md border-2 border-gray-300"
-                                                                                />
-                                                                            </button>
-                                                                            <button
-                                                                                onClick={() => handleRemoveImage(item.id)}
-                                                                                className="absolute -bottom-2 -right-2 bg-red-100 hover:bg-red-200 text-red-600 rounded-full p-1.5 shadow-sm"
-                                                                                title="Remove attachment"
-                                                                            >
-                                                                                <XCircle className="h-3.5 w-3.5"/>
-                                                                            </button>
-                                                                        </div>
                                                                     </div>
-                                                                )}
-                                                            </div>
-                                                        </td>
-                                                    </tr>
+                                                                </div>
+                                                            </td>
+                                                            <td className="px-6 py-4 whitespace-nowrap">{item.description}</td>
+                                                            <td className="px-6 py-4 whitespace-nowrap">{item.date}</td>
+                                                            <td className="px-6 py-4 whitespace-nowrap text-right">
+                                                                ${item.amount.toLocaleString()}
+                                                            </td>
+                                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                                <div className="flex flex-col items-center space-y-2">
+                                                                    <div className="flex justify-center space-x-4">
+                                                                        <button
+                                                                            onClick={() => handleEditItem(item)}
+                                                                            disabled={editingItemId === item.id || isSaving}
+                                                                            className="text-blue-600 hover:text-blue-800 transition-colors duration-200
+        disabled:opacity-50 disabled:cursor-not-allowed"
+                                                                            title="Edit item"
+                                                                        >
+                                                                            {editingItemId === item.id ? (
+                                                                                <Loader2
+                                                                                    className="h-6 w-6 stroke-[1.5] animate-spin"/>
+                                                                            ) : (
+                                                                                <Edit2 className="h-6 w-6 stroke-[1.5]"/>
+                                                                            )}
+                                                                        </button>
+                                                                        <button
+                                                                            onClick={() => handleDeleteItem(item.id)}
+                                                                            disabled={deletingButtonId === item.id}
+                                                                            className="text-red-600 hover:text-red-800 transition-colors duration-200"
+                                                                            title="Delete item"
+                                                                        >
+                                                                            {deletingButtonId === item.id ? (
+                                                                                <Loader2 className="h-6 w-6 animate-spin"/>
+                                                                            ) : (
+                                                                                <Trash2 className="h-6 w-6 stroke-[1.5]"/>
+                                                                            )}
+                                                                        </button>
+                                                                        <button
+                                                                            onClick={() => handleImageUpload(item.id)}
+                                                                            disabled={uploadingImageItemId === item.id || isSaving}
+                                                                            className="text-gray-600 hover:text-gray-800 transition-colors duration-200
+        disabled:opacity-50 disabled:cursor-not-allowed"
+                                                                            title={item.image ? "Update image" : "Add image"}
+                                                                        >
+                                                                            {uploadingImageItemId === item.id ? (
+                                                                                <Loader2
+                                                                                    className="h-6 w-6 stroke-[1.5] animate-spin"/>
+                                                                            ) : (
+                                                                                <Paperclip
+                                                                                    className="h-6 w-6 stroke-[1.5]"/>
+                                                                            )}
+                                                                        </button>
+                                                                    </div>
+                                                                    {item.image && (
+                                                                        <div className="flex justify-center w-full">
+                                                                            <div className="relative">
+                                                                                <button
+                                                                                    onClick={() => {
+                                                                                        setSelectedImage(item.image);
+                                                                                        setSelectedImageType(item.fileType || 'image/png');
+                                                                                    }}
+                                                                                    className="relative"
+                                                                                    title="Click to enlarge"
+                                                                                >
+                                                                                    <img
+                                                                                        src={`data:${item.fileType || 'image/png'};base64,${item.image}`}
+                                                                                        alt="Budget Item"
+                                                                                        className="w-16 h-16 object-cover rounded-md border-2 border-gray-300"
+                                                                                    />
+                                                                                </button>
+                                                                                <button
+                                                                                    onClick={() => handleRemoveImage(item.id)}
+                                                                                    className="absolute -bottom-2 -right-2 bg-red-100 hover:bg-red-200 text-red-600 rounded-full p-1.5 shadow-sm"
+                                                                                    title="Remove attachment"
+                                                                                >
+                                                                                    <XCircle className="h-3.5 w-3.5"/>
+                                                                                </button>
+                                                                            </div>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            </td>
+                                                        </tr>
 
-                                                    {/* Mobile Row */}
-                                                    <tr className="md:hidden">
-                                                        <td className="px-6 py-4">
-                                                            <div className="flex flex-col space-y-1">
-                                                                <span
-                                                                    className="font-medium text-gray-900">{item.category}</span>
-                                                                <span
-                                                                    className="text-gray-600">{item.description}</span>
-                                                                <span
-                                                                    className="text-gray-500 text-sm">{item.date}</span>
-                                                                <span
-                                                                    className="font-medium text-gray-900">${item.amount.toLocaleString()}</span>
-                                                            </div>
-                                                        </td>
-                                                        <td className="px-6 py-4">
-                                                            <div className="flex flex-col items-center space-y-2">
-                                                                <div className="flex justify-center space-x-2">
-                                                                    <button
-                                                                        onClick={() => handleEditItem(item)}
-                                                                        disabled={editingItemId === item.id || isSaving}
-                                                                        className="text-blue-600 hover:text-blue-800 transition-colors duration-200"
-                                                                        title="Edit item"
-                                                                    >
-                                                                        {editingItemId === item.id ? (
-                                                                            <Loader2
-                                                                                className="h-6 w-6 stroke-[1.5] animate-spin"/>
-                                                                        ) : (
-                                                                            <Edit2 className="h-6 w-6 stroke-[1.5]"/>
-                                                                        )}
-                                                                    </button>
-                                                                    <button
-                                                                        onClick={() => handleDeleteItem(item.id)}
-                                                                        disabled={deletingButtonId === item.id}
-                                                                        className="text-red-600 hover:text-red-800 transition-colors duration-200"
-                                                                        title="Delete item"
-                                                                    >
-                                                                        {deletingButtonId === item.id ? (
-                                                                            <Loader2 className="h-5 w-5 animate-spin"/>
-                                                                        ) : (
-                                                                            <Trash2 className="h-5 w-5"/>
-                                                                        )}
-                                                                    </button>
-                                                                    <button
-                                                                        onClick={() => handleImageUpload(item.id)}
-                                                                        disabled={uploadingImageItemId === item.id || isSaving}
-                                                                        className="text-gray-600 hover:text-gray-800 transition-colors duration-200"
-                                                                        title={item.image ? "Update image" : "Add image"}
-                                                                    >
-                                                                        {uploadingImageItemId === item.id ? (
-                                                                            <Loader2
-                                                                                className="h-6 w-6 stroke-[1.5] animate-spin"/>
-                                                                        ) : (
-                                                                            <Paperclip
-                                                                                className="h-6 w-6 stroke-[1.5]"/>
-                                                                        )}
-                                                                    </button>
-                                                                </div>
-                                                                {item.image && (
-                                                                    <div className="flex justify-center w-full">
-                                                                        <div className="relative">
-                                                                            <button
-                                                                                onClick={() => {
-                                                                                    setSelectedImage(item.image);
-                                                                                    setSelectedImageType(item.fileType || 'image/png');
-                                                                                }}
-                                                                                className="relative"
-                                                                                title="Click to enlarge"
-                                                                            >
-                                                                                <img
-                                                                                    src={`data:${item.fileType || 'image/png'};base64,${item.image}`}
-                                                                                    alt="Budget Item"
-                                                                                    className="w-16 h-16 object-cover rounded-md border-2 border-gray-300"
-                                                                                />
-                                                                            </button>
-                                                                            <button
-                                                                                onClick={() => handleRemoveImage(item.id)}
-                                                                                className="absolute -bottom-2 -right-2 bg-red-100 hover:bg-red-200 text-red-600 rounded-full p-1.5 shadow-sm"
-                                                                                title="Remove attachment"
-                                                                            >
-                                                                                <XCircle className="h-3.5 w-3.5"/>
-                                                                            </button>
-                                                                        </div>
+                                                        {/* Mobile Row */}
+                                                        <tr className={`md:hidden ${!item.isActive ? 'bg-orange-50' : ''}`}>
+                                                            <td className="px-2 sm:px-6 py-4">
+                                                                <div className="flex space-x-3">
+                                                                    {/* Checkbox column */}
+                                                                    <div className="flex-shrink-0 pt-1">
+                                                                        <input
+                                                                            type="checkbox"
+                                                                            checked={item.isActive}
+                                                                            onChange={() => handleToggleActive(item.id)}
+                                                                            className="h-5 w-5 text-blue-600 border-3 border-gray-300 rounded-md
+    focus:ring-2 focus:ring-blue-500 cursor-pointer
+    active:scale-150
+    checked:bg-blue-600 checked:border-transparent
+    scale-100 transform transition-transform duration-300"
+                                                                        />
                                                                     </div>
-                                                                )}
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                </React.Fragment>
-                                            ))}
-                                            </tbody>
-                                        </table>
+                                                                    {/* Content column */}
+                                                                    <div className="flex-1 flex flex-col space-y-1">
+                                                                        <div className="flex items-center">
+                                                                        <span
+                                                                            className="font-medium text-gray-900">{item.category}</span>
+                                                                            <span className={`ml-2 text-orange-600 text-sm font-medium transition-opacity duration-200 
+                    ${item.isActive ? 'opacity-0' : 'opacity-100'}`}>
+                    (Pending)
+                </span>
+                                                                        </div>
+                                                                        <span
+                                                                            className="text-gray-600">{item.description}</span>
+                                                                        <span
+                                                                            className="text-gray-500 text-sm">{item.date}</span>
+                                                                        <span
+                                                                            className="font-medium text-gray-900">${item.amount.toLocaleString()}</span>
+                                                                    </div>
+                                                                </div>
+                                                            </td>
+                                                            <td className="px-2 sm:px-6 py-4 pr-4 sm:pr-8">  {/* Updated padding here */}
+                                                                <div
+                                                                    className="flex flex-col items-center space-y-2 pr-2 sm:pr-4">  {/* Added right padding here */}
+                                                                    <div className="flex justify-center space-x-2">
+                                                                        <button
+                                                                            onClick={() => handleEditItem(item)}
+                                                                            disabled={editingItemId === item.id || isSaving}
+                                                                            className="text-blue-600 hover:text-blue-800 transition-colors duration-200"
+                                                                            title="Edit item"
+                                                                        >
+                                                                            {editingItemId === item.id ? (
+                                                                                <Loader2
+                                                                                    className="h-6 w-6 stroke-[1.5] animate-spin"/>
+                                                                            ) : (
+                                                                                <Edit2 className="h-6 w-6 stroke-[1.5]"/>
+                                                                            )}
+                                                                        </button>
+                                                                        <button
+                                                                            onClick={() => handleDeleteItem(item.id)}
+                                                                            disabled={deletingButtonId === item.id}
+                                                                            className="text-red-600 hover:text-red-800 transition-colors duration-200"
+                                                                            title="Delete item"
+                                                                        >
+                                                                            {deletingButtonId === item.id ? (
+                                                                                <Loader2 className="h-5 w-5 animate-spin"/>
+                                                                            ) : (
+                                                                                <Trash2 className="h-5 w-5"/>
+                                                                            )}
+                                                                        </button>
+                                                                        <button
+                                                                            onClick={() => handleImageUpload(item.id)}
+                                                                            disabled={uploadingImageItemId === item.id || isSaving}
+                                                                            className="text-gray-600 hover:text-gray-800 transition-colors duration-200"
+                                                                            title={item.image ? "Update image" : "Add image"}
+                                                                        >
+                                                                            {uploadingImageItemId === item.id ? (
+                                                                                <Loader2
+                                                                                    className="h-6 w-6 stroke-[1.5] animate-spin"/>
+                                                                            ) : (
+                                                                                <Paperclip
+                                                                                    className="h-6 w-6 stroke-[1.5]"/>
+                                                                            )}
+                                                                        </button>
+                                                                    </div>
+                                                                    {item.image && (
+                                                                        <div className="flex justify-center w-full">
+                                                                            <div className="relative">
+                                                                                <button
+                                                                                    onClick={() => {
+                                                                                        setSelectedImage(item.image);
+                                                                                        setSelectedImageType(item.fileType || 'image/png');
+                                                                                    }}
+                                                                                    className="relative"
+                                                                                    title="Click to enlarge"
+                                                                                >
+                                                                                    <img
+                                                                                        src={`data:${item.fileType || 'image/png'};base64,${item.image}`}
+                                                                                        alt="Budget Item"
+                                                                                        className="w-16 h-16 object-cover rounded-md border-2 border-gray-300"
+                                                                                    />
+                                                                                </button>
+                                                                                <button
+                                                                                    onClick={() => handleRemoveImage(item.id)}
+                                                                                    className="absolute -bottom-2 -right-2 bg-red-100 hover:bg-red-200 text-red-600 rounded-full p-1.5 shadow-sm"
+                                                                                    title="Remove attachment"
+                                                                                >
+                                                                                    <XCircle className="h-3.5 w-3.5"/>
+                                                                                </button>
+                                                                            </div>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    </React.Fragment>
+                                                ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -849,8 +905,8 @@ export const PaycheckBudgetDetails = ({ budget, onClose, onUpdate }) => {
 
             {/* Delete Confirmation Modal */}
             {deleteItemTransitions((style, item) =>
-                item && deletingItemId && (
-                    <>
+                    item && deletingItemId && (
+                        <>
                             {deleteItemBackdropTransition((backdropStyle, show) =>
                                     show && (
                                         <animated.div
