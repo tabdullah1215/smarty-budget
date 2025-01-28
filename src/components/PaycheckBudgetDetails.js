@@ -12,6 +12,7 @@ import {disableScroll, enableScroll} from '../utils/scrollLock';
 import PaycheckBudgetDetailsHeader from "./PaycheckBudgetDetailsHeader";
 import PaycheckBudgetItemRow from "./PaycheckBudgetItemRow";
 import PaycheckBudgetTableHeader from "./PaycheckBudgetTableHeader";
+import DeleteConfirmationModal from "./DeleteConfirmationModal";
 
 const PrintableContent = React.forwardRef(({budget}, ref) => {
     return (
@@ -67,8 +68,6 @@ export const PaycheckBudgetDetails = ({budget, onClose, onUpdate}) => {
     // Delete confirmation states
     const [showDeleteItemModal, setShowDeleteItemModal] = useState(false);
     const [deletingItemId, setDeletingItemId] = useState(null);
-    const [isItemDeleting, setIsItemDeleting] = useState(false);
-    const [isItemCancelling, setIsItemCancelling] = useState(false);
     const [deletingButtonId, setDeletingButtonId] = useState(null);
     const [editingItemId, setEditingItemId] = useState(null);
     const [uploadingImageItemId, setUploadingImageItemId] = useState(null);
@@ -76,8 +75,6 @@ export const PaycheckBudgetDetails = ({budget, onClose, onUpdate}) => {
 // Transitions
     const transitions = useTransition(show, modalTransitions);
     const backdropTransition = useTransition(show, backdropTransitions);
-    const deleteItemTransitions = useTransition(showDeleteItemModal, modalTransitions);
-    const deleteItemBackdropTransition = useTransition(showDeleteItemModal, backdropTransitions);
 
     const handlePrint = useReactToPrint({
         contentRef: componentRef,
@@ -279,40 +276,25 @@ export const PaycheckBudgetDetails = ({budget, onClose, onUpdate}) => {
         }
     };
 
-    const handleCancelItemDelete = async () => {
-        setIsItemCancelling(true);
-        await withMinimumDelay(async () => {});
+    const handleCancelItemDelete = () => {
         setShowDeleteItemModal(false);
-        await withMinimumDelay(async () => {});
         setDeletingItemId(null);
-        setIsItemCancelling(false);
     };
-
     const confirmItemDelete = async () => {
-        if (deletingItemId) {
-            setIsItemDeleting(true);
-            try {
-                await withMinimumDelay(async () => {
-                    const updatedBudget = {
-                        ...budget,
-                        items: budget.items.filter(item => item.id !== deletingItemId)
-                    };
-                    await onUpdate(updatedBudget);
-                    showToast('success', 'Expense item deleted successfully');
-                    setShowDeleteItemModal(false);
-                });
-                await withMinimumDelay(async () => {
-                });
-                setDeletingItemId(null);
-            } catch (error) {
-                console.error('Error deleting item:', error);
-                showToast('error', 'Failed to delete expense item. Please try again.');
-            } finally {
-                setIsItemDeleting(false);
-            }
+        try {
+            const updatedBudget = {
+                ...budget,
+                items: budget.items.filter(item => item.id !== deletingItemId)
+            };
+            await onUpdate(updatedBudget);
+            showToast('success', 'Expense item deleted successfully');
+            setShowDeleteItemModal(false);
+            setDeletingItemId(null);
+        } catch (error) {
+            console.error('Error deleting item:', error);
+            showToast('error', 'Failed to delete expense item. Please try again.');
         }
     };
-
     const handleDeleteItem = async (itemId) => {
         setDeletingButtonId(itemId);
         try {
@@ -577,58 +559,13 @@ export const PaycheckBudgetDetails = ({budget, onClose, onUpdate}) => {
             )}
 
             {/* Delete Confirmation Modal */}
-            {deleteItemTransitions((style, item) =>
-                    item && deletingItemId && (
-                        <>
-                            {deleteItemBackdropTransition((backdropStyle, show) =>
-                                    show && (
-                                        <animated.div
-                                            style={backdropStyle}
-                                            className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50"
-                                        />
-                                    )
-                            )}
-                            <animated.div
-                                style={style}
-                                className="fixed inset-0 z-50 flex items-center justify-center px-4"
-                            >
-                                <div className="relative mx-auto p-5 border w-[90%] max-w-lg shadow-lg rounded-md bg-white">
-                                    <div className="mt-3 text-center">
-                                        <h3 className="text-lg leading-6 font-medium text-gray-900">Delete Expense Item</h3>
-                                        <div className="mt-2 px-7 py-3">
-                                            <p className="text-sm text-gray-500">
-                                                Are you sure you want to delete this expense item? This action cannot be undone.
-                                            </p>
-                                        </div>
-                                        <div className="flex justify-center space-x-4 mt-4">
-                                            <button
-                                                onClick={handleCancelItemDelete}
-                                                disabled={isItemCancelling || isItemDeleting}
-                                                className="px-4 py-2 bg-gray-100 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                                            >
-                                                {isItemCancelling ? (
-                                                    <Loader2 className="h-4 w-4 animate-spin"/>
-                                                ) : (
-                                                    'Cancel'
-                                                )}
-                                            </button>
-                                            <button
-                                                onClick={confirmItemDelete}
-                                                disabled={isItemDeleting}
-                                                className="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                                            >
-                                                {isItemDeleting ? (
-                                                    <Loader2 className="h-4 w-4 mr-2 animate-spin"/>
-                                                ) : null}
-                                                Delete
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </animated.div>
-                        </>
-                    )
-            )}
+            <DeleteConfirmationModal
+                isOpen={showDeleteItemModal && !!deletingItemId}
+                onClose={handleCancelItemDelete}
+                onConfirm={confirmItemDelete}
+                title="Delete Expense Item"
+                message="Are you sure you want to delete this expense item? This action cannot be undone."
+            />
         </>
     );
 };
