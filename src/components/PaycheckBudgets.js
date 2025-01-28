@@ -10,6 +10,7 @@ import { withMinimumDelay } from '../utils/withDelay';
 import authService from '../services/authService';
 import { useToast } from '../contexts/ToastContext';
 import { modalTransitions, backdropTransitions } from '../utils/transitions';
+import DeleteConfirmationModal from "./DeleteConfirmationModal";
 
 export const PaycheckBudgets = () => {
     const [isCreating, setIsCreating] = useState(false);
@@ -26,9 +27,6 @@ export const PaycheckBudgets = () => {
     const userInfo = authService.getUserInfo();
     const { showToast } = useToast();
     const { paycheckBudgets, createPaycheckBudget, updatePaycheckBudget, deletePaycheckBudget, isLoading } = usePaycheckBudgets();
-
-    const transitions = useTransition(showDeleteModal, modalTransitions);
-    const backdropTransition = useTransition(showDeleteModal, backdropTransitions);
 
     const sortedBudgets = useMemo(() =>
             [...paycheckBudgets].sort((a, b) => new Date(b.date) - new Date(a.date)),
@@ -76,14 +74,10 @@ export const PaycheckBudgets = () => {
         setDeletingBudgetId(budgetId);
         setShowDeleteModal(true);
     };
-
-    const handleCancelDelete = async () => {
-        setIsCancelling(true);
-        await withMinimumDelay(async () => {});
+// In PaycheckBudgets.js
+    const handleCancelDelete = () => {
         setShowDeleteModal(false);
-        await withMinimumDelay(async () => {});
         setDeletingBudgetId(null);
-        setIsCancelling(false);
     };
 
     const confirmDelete = async () => {
@@ -307,65 +301,13 @@ export const PaycheckBudgets = () => {
                 />
             )}
 
-            {transitions((style, item) =>
-                    item && deletingBudgetId && (
-                        <>
-                            {backdropTransition((backdropStyle, show) =>
-                                    show && (
-                                        <animated.div
-                                            style={backdropStyle}
-                                            className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50"
-                                        />
-                                    )
-                            )}
-                            <animated.div
-                                style={style}
-                                className="fixed inset-0 z-50 flex items-center justify-center px-4"
-                            >
-                                <div className="relative mx-auto p-5 border w-[90%] max-w-lg shadow-lg rounded-md bg-white">
-                                    <div className="mt-3 text-center">
-                                        <h3 className="text-lg leading-6 font-medium text-gray-900">Delete Budget</h3>
-                                        <div className="mt-2 px-7 py-3">
-                                            <p className="text-sm text-gray-500">
-                                                Are you sure you want to delete this budget? This action cannot be undone.
-                                            </p>
-                                        </div>
-                                        <div className="flex justify-center space-x-4 mt-4">
-                                            <button
-                                                onClick={handleCancelDelete}
-                                                disabled={isCancelling || isDeleting}
-                                                className="px-4 py-2 bg-gray-100 text-gray-700 border border-gray-300
-                                                rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2
-                                                focus:ring-gray-500 transition-all duration-200
-                                                disabled:opacity-50 disabled:cursor-not-allowed"
-                                            >
-                                                {isCancelling ? (
-                                                    <Loader2 className="h-4 w-4 animate-spin"/>
-                                                ) : (
-                                                    'Cancel'
-                                                )}
-                                            </button>
-
-                                            <button
-                                                onClick={confirmDelete}
-                                                disabled={isDeleting}
-                                                className="inline-flex items-center px-4 py-2 bg-red-600
-                                                text-white rounded-md hover:bg-red-700
-                                                transition-all duration-200
-                                                disabled:opacity-50 disabled:cursor-not-allowed"
-                                            >
-                                                {isDeleting ? (
-                                                    <Loader2 className="h-4 w-4 mr-2 animate-spin"/>
-                                                ) : null}
-                                                Delete
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </animated.div>
-                        </>
-                    )
-            )}
+            <DeleteConfirmationModal
+                isOpen={showDeleteModal && !!deletingBudgetId}
+                onClose={handleCancelDelete}
+                onConfirm={confirmDelete}
+                title="Delete Budget"
+                message="Are you sure you want to delete this budget? This action cannot be undone."
+            />
         </div>
     );
 };
