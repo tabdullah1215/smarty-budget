@@ -394,8 +394,6 @@ export const PaycheckBudgetDetails = ({budget, onClose, onUpdate}) => {
             setUploadingImageItemId(null);
         }
     };
-
-    // Add this function in PaycheckBudgetDetails.js where other handlers are defined
     const handleToggleActive = async (itemId) => {
         try {
             const updatedItems = budget.items.map(item =>

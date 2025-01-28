@@ -1,16 +1,16 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useTransition, animated, useSprings, animated as a } from '@react-spring/web';
+import { useTransition, useSprings } from '@react-spring/web';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Loader2, FileText, Trash2 } from 'lucide-react';
+import { Plus, Loader2 } from 'lucide-react';
 import { Header } from './Header';
 import { PaycheckBudgetForm } from './PaycheckBudgetForm';
 import { PaycheckBudgetDetails } from './PaycheckBudgetDetails';
 import { usePaycheckBudgets } from '../hooks/usePaycheckBudget';
 import { withMinimumDelay } from '../utils/withDelay';
-import authService from '../services/authService';
 import { useToast } from '../contexts/ToastContext';
-import { modalTransitions, backdropTransitions } from '../utils/transitions';
 import DeleteConfirmationModal from "./DeleteConfirmationModal";
+import { BudgetCard } from './BudgetCard';
+import authService from '../services/authService';
 
 export const PaycheckBudgets = () => {
     const [isCreating, setIsCreating] = useState(false);
@@ -23,6 +23,7 @@ export const PaycheckBudgets = () => {
     const [isCancelling, setIsCancelling] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [fadingBudgetId, setFadingBudgetId] = useState(null);
+
     const navigate = useNavigate();
     const userInfo = authService.getUserInfo();
     const { showToast } = useToast();
@@ -66,7 +67,22 @@ export const PaycheckBudgets = () => {
         }
     };
 
-    const handleDelete = async (e, budgetId) => {
+    const handleOpenBudget = async (budget) => {
+        if (openingBudgetId) return;
+
+        setOpeningBudgetId(budget.id);
+        try {
+            await withMinimumDelay(async () => {
+                setSelectedBudget(budget);
+            });
+        } catch (error) {
+            console.error('Error opening budget:', error);
+        } finally {
+            setOpeningBudgetId(null);
+        }
+    };
+
+    const handleDeleteBudget = async (e, budgetId) => {
         e.stopPropagation();
         setConfirmingDeleteId(budgetId);
         await withMinimumDelay(async () => {});
@@ -74,7 +90,7 @@ export const PaycheckBudgets = () => {
         setDeletingBudgetId(budgetId);
         setShowDeleteModal(true);
     };
-// In PaycheckBudgets.js
+
     const handleCancelDelete = () => {
         setShowDeleteModal(false);
         setDeletingBudgetId(null);
@@ -97,21 +113,6 @@ export const PaycheckBudgets = () => {
             } finally {
                 setIsDeleting(false);
             }
-        }
-    };
-
-    const handleOpenBudget = async (budget) => {
-        if (openingBudgetId) return;
-
-        setOpeningBudgetId(budget.id);
-        try {
-            await withMinimumDelay(async () => {
-                setSelectedBudget(budget);
-            });
-        } catch (error) {
-            console.error('Error opening budget:', error);
-        } finally {
-            setOpeningBudgetId(null);
         }
     };
 
@@ -163,12 +164,7 @@ export const PaycheckBudgets = () => {
                                 <button
                                     onClick={handleCreateClick}
                                     disabled={isCreating}
-                                    className="inline-flex items-center px-4 py-2 border border-transparent
-                                        text-sm font-medium rounded-md shadow-sm text-white bg-blue-600
-                                        hover:bg-blue-700 focus:outline-none focus:ring-2
-                                        focus:ring-offset-2 focus:ring-blue-500
-                                        disabled:opacity-50 disabled:cursor-not-allowed
-                                        transition-all duration-200"
+                                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
                                 >
                                     {isCreating ? (
                                         <>
@@ -187,99 +183,15 @@ export const PaycheckBudgets = () => {
                     ) : (
                         <div className="space-y-4">
                             {sortedBudgets.map((budget, index) => (
-                                <a.div
+                                <BudgetCard
                                     key={budget.id}
+                                    budget={budget}
+                                    onOpenBudget={handleOpenBudget}
+                                    onDeleteBudget={handleDeleteBudget}
+                                    openingBudgetId={openingBudgetId}
+                                    confirmingDeleteId={confirmingDeleteId}
                                     style={fadeAnimations[index]}
-                                    className="bg-white shadow-md rounded-lg p-6 hover:shadow-xl transition-all duration-200"
-                                >
-                                    <div className="flex justify-between items-start">
-                                        <div>
-                                            <h3 className="text-xl font-semibold text-gray-900">{budget.name}</h3>
-                                            <div className="flex flex-row items-center space-x-3 mt-1">
-                                                <div className="bg-gray-200 p-2 rounded-lg">
-                                                    <span className="text-gray-800">Amount: ${budget.amount.toLocaleString()}</span>
-                                                </div>
-                                                {(() => {
-                                                    const totalSpent = budget.items?.reduce((sum, item) => sum + (item.amount || 0), 0) || 0;
-                                                    const remainingAmount = budget.amount - totalSpent;
-
-                                                    return (
-                                                        <>
-                                                            <div className="bg-gray-200 p-2 rounded-lg">
-                                                                <span className="text-gray-800">Remaining: </span>
-                                                                <span
-                                                                    className={`${remainingAmount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                                                    ${remainingAmount.toLocaleString()}
-                                                                </span>
-                                                            </div>
-                                                        </>
-                                                    );
-                                                })()}
-                                            </div>
-                                            <div className="flex justify-between items-center mt-1">
-                                                <p className="text-gray-600">Date: {new Date(budget.date).toLocaleDateString()}</p>
-                                                <div className="w-32 relative">
-                                                    <div className="w-full bg-gray-200 rounded-full h-2">
-                                                        {(() => {
-                                                            const totalSpent = budget.items?.reduce((sum, item) => sum + (item.amount || 0), 0) || 0;
-                                                            const percentageUsed = (totalSpent / budget.amount) * 100;
-                                                            return (
-                                                                <>
-                                                                    <div
-                                                                        className="h-2 rounded-full transition-all duration-300"
-                                                                        style={{
-                                                                            width: `${Math.min(percentageUsed, 100)}%`,
-                                                                            backgroundColor: percentageUsed > 100
-                                                                                ? '#EF4444'
-                                                                                : percentageUsed > 90
-                                                                                    ? '#F59E0B'
-                                                                                    : '#10B981'
-                                                                        }}
-                                                                    ></div>
-                                                                    <span
-                                                                        className="absolute -bottom-4 right-0 text-xs text-gray-500">
-                                                                        {percentageUsed.toFixed(1)}%
-                                                                    </span>
-                                                                </>
-                                                            );
-                                                        })()}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="flex space-x-4">
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    if (!openingBudgetId) handleOpenBudget(budget);
-                                                }}
-                                                disabled={openingBudgetId === budget.id || confirmingDeleteId === budget.id}
-                                                className="text-indigo-600 hover:text-indigo-800 transition-colors duration-200
-                                                disabled:opacity-50 disabled:cursor-not-allowed"
-                                                title="View details"
-                                            >
-                                                {openingBudgetId === budget.id ? (
-                                                    <Loader2 className="h-7 w-7 animate-spin"/>
-                                                ) : (
-                                                    <FileText className="h-7 w-7"/>
-                                                )}
-                                            </button>
-                                            <button
-                                                onClick={(e) => !confirmingDeleteId && handleDelete(e, budget.id)}
-                                                disabled={confirmingDeleteId === budget.id || openingBudgetId === budget.id}
-                                                className="text-red-600 hover:text-red-800 transition-colors duration-200
-                                                disabled:opacity-50 disabled:cursor-not-allowed"
-                                                title="Delete budget"
-                                            >
-                                                {confirmingDeleteId === budget.id ? (
-                                                    <Loader2 className="h-7 w-7 animate-spin"/>
-                                                ) : (
-                                                    <Trash2 className="h-7 w-7"/>
-                                                )}
-                                            </button>
-                                        </div>
-                                    </div>
-                                </a.div>
+                                />
                             ))}
                         </div>
                     )}
