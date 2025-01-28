@@ -1,7 +1,7 @@
 //PaycheckBudgetDetails.js
 import React, {useRef, useState, useMemo, useEffect} from 'react';
 import {useReactToPrint} from 'react-to-print';
-import {Printer, Share2, X, PlusCircle, Loader2, Edit2, Trash2, Paperclip, XCircle, CheckCircle} from 'lucide-react';
+import {Loader2, Edit2, Trash2, Paperclip, XCircle} from 'lucide-react';
 import {useTransition, animated} from '@react-spring/web';
 import {withMinimumDelay} from '../utils/withDelay';
 import {PaycheckBudgetItemForm} from './PaycheckBudgetItemForm';
@@ -9,6 +9,7 @@ import {modalTransitions, backdropTransitions} from '../utils/transitions';
 import {useToast} from '../contexts/ToastContext';
 import {ImageViewer} from './ImageViewer';
 import {disableScroll, enableScroll} from '../utils/scrollLock';
+import PaycheckBudgetDetailsHeader from "./PaycheckBudgetDetailsHeader";
 
 const PrintableContent = React.forwardRef(({budget}, ref) => {
     return (
@@ -474,87 +475,20 @@ export const PaycheckBudgetDetails = ({budget, onClose, onUpdate}) => {
                         >
                             <div className="w-[95%] max-w-4xl bg-white rounded-lg shadow-xl max-h-[80vh] flex flex-col">
                                 {/* Header Section */}
-                                <div className="p-4 border-b border-black">
-                                    <div className="flex justify-between items-center mb-3">
-                                        <h2 className="text-lg md:text-2xl font-bold text-gray-900">{budget.name}</h2>
-                                        <div className="flex space-x-1.5">
-                                            <button
-                                                onClick={handlePrintClick}
-                                                disabled={isPrinting || isSaving}
-                                                className="inline-flex items-center p-2 border border-transparent rounded-md text-gray-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                                                title="Print budget"
-                                            >
-                                                {isPrinting ? (
-                                                    <Loader2 className="h-7 w-7 animate-spin"/>
-                                                ) : (
-                                                    <Printer className="h-7 w-7"/>
-                                                )}
-                                            </button>
-                                            <button
-                                                onClick={handleShare}
-                                                disabled={isSharing || isSaving}
-                                                className="inline-flex items-center p-2 border border-transparent rounded-md text-gray-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                                                title="Share budget"
-                                            >
-                                                {isSharing ? (
-                                                    <Loader2 className="h-7 w-7 animate-spin"/>
-                                                ) : (
-                                                    <Share2 className="h-7 w-7"/>
-                                                )}
-                                            </button>
-                                            <button
-                                                onClick={handleClose}
-                                                disabled={isClosing || isSaving}
-                                                className="inline-flex items-center p-2 border border-transparent rounded-md text-gray-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                                                title="Close budget"
-                                            >
-                                                {isClosing ? (
-                                                    <Loader2 className="h-7 w-7 animate-spin"/>
-                                                ) : (
-                                                    <X className="h-7 w-7"/>
-                                                )}
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-3 gap-2 mb-3">
-                                        <div className="bg-gray-50 p-2 md:p-4 rounded-lg">
-                                            <p className="text-sm text-gray-600">Paycheck</p>
-                                            <p className="text-2xl font-bold text-gray-900">
-                                                ${budget.amount.toLocaleString()}
-                                            </p>
-                                        </div>
-                                        <div className="bg-gray-50 p-2 md:p-4 rounded-lg">
-                                            <p className="text-sm text-gray-600">Spent</p>
-                                            <p className="text-2xl font-bold text-gray-900">
-                                                ${totalSpent.toLocaleString()}
-                                            </p>
-                                        </div>
-                                        <div className="bg-gray-50 p-2 md:p-4 rounded-lg">
-                                            <p className="text-sm text-gray-600">Remaining</p>
-                                            <p className={`text-2xl font-bold ${remainingAmount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                                ${remainingAmount.toLocaleString()}
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex justify-between items-center">
-                                        <h3 className="text-lg font-medium text-gray-900">Expense Items</h3>
-                                        <button
-                                            onClick={handleAddItemClick}
-                                            disabled={isAddingItem || isSaving}
-                                            className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                                        >
-                                            {isAddingItem ? (
-                                                <Loader2 className="h-6 w-6 mr-2 animate-spin stroke-[1.5]"/>
-                                            ) : (
-                                                <PlusCircle className="h-6 w-6 mr-2 stroke-[1.5]"/>
-                                            )}
-                                            Record Expense!!
-                                        </button>
-                                    </div>
-                                </div>
-
+                                <PaycheckBudgetDetailsHeader
+                                    budget={budget}
+                                    totalSpent={totalSpent}
+                                    remainingAmount={remainingAmount}
+                                    onPrint={handlePrintClick}
+                                    onShare={handleShare}
+                                    onClose={handleClose}
+                                    isPrinting={isPrinting}
+                                    isSharing={isSharing}
+                                    isClosing={isClosing}
+                                    isSaving={isSaving}
+                                    handleAddItemClick={handleAddItemClick}
+                                    isAddingItem={isAddingItem}
+                                />
                                 {/* Scrollable Content */}
                                 <div className="flex-1 overflow-y-auto overflow-x-hidden px-2 sm:px-5">
                                     <div className="relative w-full min-h-0 max-h-[calc(80vh-250px)]">
