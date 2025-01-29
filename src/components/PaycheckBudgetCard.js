@@ -9,7 +9,9 @@ export const PaycheckBudgetCard = ({
                                onDeleteBudget,
                                openingBudgetId,
                                confirmingDeleteId,
-                               style  // For spring animations from parent
+                               style,
+    onSelect,
+    isSelected
                            }) => {
     // Calculate totals and percentages
     const totalSpent = budget.items?.reduce((sum, item) => sum + (item.amount || 0), 0) || 0;
@@ -21,6 +23,16 @@ export const PaycheckBudgetCard = ({
             style={style}
             className="bg-white shadow-md rounded-lg p-6 hover:shadow-xl transition-all duration-200"
         >
+            {/* Checkbox for selecting budget */}
+            <div className="absolute top-2 left-2">
+                <input
+                    type="checkbox"
+                    checked={isSelected}
+                    onChange={(e) => onSelect(budget.id, e.target.checked)}
+                    className="h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                />
+            </div>
+
             <div className="flex justify-between items-start">
                 <div>
                     <h3 className="text-xl font-semibold text-gray-900">{budget.name}</h3>

@@ -21,6 +21,7 @@ export const PaycheckBudgets = () => {
     const [openingBudgetId, setOpeningBudgetId] = useState(null);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [fadingBudgetId, setFadingBudgetId] = useState(null);
+    const [selectedBudgets, setSelectedBudgets] = useState([]);
 
     const navigate = useNavigate();
     const userInfo = authService.getUserInfo();
@@ -130,12 +131,33 @@ export const PaycheckBudgets = () => {
         }
     };
 
+    const handleSelectBudget = (budgetId, isSelected) => {
+        setSelectedBudgets((prev) => {
+            const updatedSelection = isSelected ? [...prev, budgetId] : prev.filter((id) => id !== budgetId);
+            console.log("Updated selected budgets:", updatedSelection); // ✅ LOG HERE
+            return updatedSelection;
+        });
+    };
+
+    const isBudgetSelected = (budgetId) => selectedBudgets.includes(budgetId);
+
+    const handleGenerateReport = () => {
+        console.log("Generating report for selected budgets:", selectedBudgets);
+    };
+
+    useEffect(() => {
+        console.log("Currently selected budgets:", selectedBudgets); // ✅ LOG HERE
+    }, [selectedBudgets]);
+
+
     return (
         <div className="min-h-screen bg-gray-200">
             <Header
                 showCreateButton
                 onCreateClick={handleCreateClick}
                 isCreatingBudget={isCreating}
+                selectedBudgets={selectedBudgets || []}
+                onGenerateReport={handleGenerateReport}
             />
 
             <div className="pt-72 md:pt-36 px-4 sm:px-6 lg:px-8">
@@ -186,6 +208,8 @@ export const PaycheckBudgets = () => {
                                     openingBudgetId={openingBudgetId}
                                     confirmingDeleteId={confirmingDeleteId}
                                     style={fadeAnimations[index]}
+                                    onSelect={handleSelectBudget}
+                                    isSelected={isBudgetSelected(budget.id)}
                                 />
                             ))}
                         </div>

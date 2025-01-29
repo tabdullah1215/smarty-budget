@@ -4,8 +4,10 @@ import { useLogin } from '../hooks/useLogin';
 import authService from '../services/authService';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {withMinimumDelay} from "../utils/withDelay";
+import { Printer } from 'lucide-react';
 
-export const Header = ({ showCreateButton = false, onCreateClick, isCreatingBudget = false }) => {
+export const Header = ({ showCreateButton = false, onCreateClick, isCreatingBudget = false,
+                           onGenerateReport = () => {}, selectedBudgets = [] }) => {
     const { handleLogout } = useLogin();
     const [isLoggingOut, setIsLoggingOut] = React.useState(false);
     const userInfo = authService.getUserInfo();
@@ -52,7 +54,7 @@ export const Header = ({ showCreateButton = false, onCreateClick, isCreatingBudg
     return (
         <div className="fixed top-0 left-0 right-0 bg-white z-10 shadow-lg">
             <div className="max-w-7xl mx-auto py-2 px-4 sm:px-6 lg:px-8">
-                <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+                <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-2">
                     <div className="flex flex-col md:flex-row md:items-center gap-4">
                         <div className="flex items-center gap-4">
                             {showBackButton ? (
@@ -64,7 +66,7 @@ export const Header = ({ showCreateButton = false, onCreateClick, isCreatingBudg
                                 </button>
                             ) : (
                                 <div className="w-6"/>
-                                )}
+                            )}
                             <h1 className="text-3xl font-bold text-gray-900">Smarty Budget Tracker</h1>
                         </div>
                         <span className="text-sm text-gray-600">{userInfo?.sub}</span>
@@ -96,7 +98,7 @@ export const Header = ({ showCreateButton = false, onCreateClick, isCreatingBudg
                             >
                                 {isCreatingBudget ? (
                                     <>
-                                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                        <Loader2 className="h-4 w-4 mr-2 animate-spin"/>
                                         Creating...
                                     </>
                                 ) : (
@@ -105,11 +107,21 @@ export const Header = ({ showCreateButton = false, onCreateClick, isCreatingBudg
                             </button>
                         )}
                     </div>
-                    {!isHomePage && (
-                        <div className="text-center">
-                            <h2 className="text-lg text-gray-600">{getBudgetType()}</h2>
-                        </div>
-                    )}
+                    <div className="z-10 flex items-center justify-between">
+                        <div className="w-10"/>
+                        {!isHomePage && (
+                            <div className="text-center">
+                                <h2 className="text-lg text-gray-600">{getBudgetType()}</h2>
+                            </div>
+                        )}
+                        <button
+                            onClick={onGenerateReport}
+                            disabled={selectedBudgets.length === 0}
+                            className="p-2 bg-blue-600 text-white rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            <Printer className="h-6 w-6"/>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
