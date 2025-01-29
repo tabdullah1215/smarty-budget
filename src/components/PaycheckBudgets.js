@@ -11,6 +11,7 @@ import { useToast } from '../contexts/ToastContext';
 import DeleteConfirmationModal from "./DeleteConfirmationModal";
 import { PaycheckBudgetCard } from './PaycheckBudgetCard';
 import authService from '../services/authService';
+import PaycheckBudgetReport from "./PaycheckBudgetReport";
 
 export const PaycheckBudgets = () => {
     const [isCreating, setIsCreating] = useState(false);
@@ -22,6 +23,8 @@ export const PaycheckBudgets = () => {
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [fadingBudgetId, setFadingBudgetId] = useState(null);
     const [selectedBudgets, setSelectedBudgets] = useState([]);
+    const [showReport, setShowReport] = useState(false);
+    const [isPrinting, setIsPrinting] = useState(false);
 
     const navigate = useNavigate();
     const userInfo = authService.getUserInfo();
@@ -142,7 +145,22 @@ export const PaycheckBudgets = () => {
     const isBudgetSelected = (budgetId) => selectedBudgets.includes(budgetId);
 
     const handleGenerateReport = () => {
-        console.log("Generating report for selected budgets:", selectedBudgets);
+        if (selectedBudgets.length === 0) {
+            showToast('error', 'Please select at least one budget to generate a report');
+            return;
+        }
+
+        // Get full budget objects and ensure data is valid
+        const selectedBudgetObjects = sortedBudgets.filter(budget =>
+            selectedBudgets.includes(budget.id)
+        );
+
+        if (!selectedBudgetObjects.length) {
+            showToast('error', 'Selected budgets could not be found');
+            return;
+        }
+
+        setShowReport(true);
     };
 
     useEffect(() => {
@@ -239,6 +257,17 @@ export const PaycheckBudgets = () => {
                 title="Delete Budget"
                 message="Are you sure you want to delete this budget? This action cannot be undone."
             />
+
+            {showReport && (
+                <PaycheckBudgetReport
+                    selectedBudgets={sortedBudgets.filter(budget =>
+                        selectedBudgets.includes(budget.id)
+                    )}
+                    onClose={() => setShowReport(false)}
+                    onPrint={setIsPrinting}
+                    isPrinting={isPrinting}
+                />
+            )}
         </div>
     );
 };

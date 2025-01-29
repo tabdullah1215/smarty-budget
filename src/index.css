@@ -15,3 +15,71 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+/* Add these styles at the end of your index.css file */
+
+/* Print-specific styles */
+@media print {
+  /* Hide elements with no-print class */
+  .no-print {
+    display: none !important;
+  }
+
+  /* Show elements with print-only class */
+  .print-only {
+    display: block !important;
+  }
+
+  /* Ensure colors and backgrounds print correctly */
+  body {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
+  /* Set page layout for printing */
+  @page {
+    size: portrait;
+    margin: 20mm;
+  }
+
+  /* Ensure charts and graphics print properly */
+  .recharts-wrapper {
+    page-break-inside: avoid;
+  }
+
+  /* Force background colors to print */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
+  /* Ensure text remains readable */
+  text {
+    fill: black !important;
+  }
+
+  /* Improve table printing */
+  table {
+    page-break-inside: auto;
+  }
+
+  tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+
+  /* Ensure proper margin and padding in print */
+  .print-content {
+    margin: 0;
+    padding: 20px;
+  }
+}
+
+/* Optional: Add a print preview indicator in the browser */
+@media screen {
+  .print-only {
+    display: none;
+  }
+}
