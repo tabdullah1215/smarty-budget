@@ -9,7 +9,7 @@ import { usePaycheckBudgets } from '../hooks/usePaycheckBudget';
 import { withMinimumDelay } from '../utils/withDelay';
 import { useToast } from '../contexts/ToastContext';
 import DeleteConfirmationModal from "./DeleteConfirmationModal";
-import { BudgetCard } from './BudgetCard';
+import { PaycheckBudgetCard } from './PaycheckBudgetCard';
 import authService from '../services/authService';
 
 export const PaycheckBudgets = () => {
@@ -17,10 +17,8 @@ export const PaycheckBudgets = () => {
     const [showNewBudgetForm, setShowNewBudgetForm] = useState(false);
     const [selectedBudget, setSelectedBudget] = useState(null);
     const [deletingBudgetId, setDeletingBudgetId] = useState(null);
-    const [isDeleting, setIsDeleting] = useState(false);
     const [confirmingDeleteId, setConfirmingDeleteId] = useState(null);
     const [openingBudgetId, setOpeningBudgetId] = useState(null);
-    const [isCancelling, setIsCancelling] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [fadingBudgetId, setFadingBudgetId] = useState(null);
 
@@ -98,7 +96,6 @@ export const PaycheckBudgets = () => {
 
     const confirmDelete = async () => {
         if (deletingBudgetId) {
-            setIsDeleting(true);
             try {
                 setFadingBudgetId(deletingBudgetId);
                 await withMinimumDelay(async () => {
@@ -110,8 +107,6 @@ export const PaycheckBudgets = () => {
             } catch (error) {
                 console.error('Error deleting budget:', error);
                 setFadingBudgetId(null);
-            } finally {
-                setIsDeleting(false);
             }
         }
     };
@@ -183,7 +178,7 @@ export const PaycheckBudgets = () => {
                     ) : (
                         <div className="space-y-4">
                             {sortedBudgets.map((budget, index) => (
-                                <BudgetCard
+                                <PaycheckBudgetCard
                                     key={budget.id}
                                     budget={budget}
                                     onOpenBudget={handleOpenBudget}

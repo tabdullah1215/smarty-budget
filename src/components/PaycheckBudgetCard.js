@@ -1,9 +1,9 @@
-// BudgetCard.js
+// PaycheckBudgetCard.js
 import React from 'react';
 import { FileText, Trash2, Loader2 } from 'lucide-react';
 import { animated } from '@react-spring/web';
 
-export const BudgetCard = ({
+export const PaycheckBudgetCard = ({
                                budget,
                                onOpenBudget,
                                onDeleteBudget,
