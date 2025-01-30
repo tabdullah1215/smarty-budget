@@ -1,20 +1,24 @@
 import React from 'react';
-import { Loader2, ArrowLeft, LogOut, X } from 'lucide-react';
+import { Loader2, ArrowLeft, LogOut, FileDown } from 'lucide-react';
 import { useLogin } from '../hooks/useLogin';
 import authService from '../services/authService';
 import { useNavigate, useLocation } from 'react-router-dom';
-import {withMinimumDelay} from "../utils/withDelay";
-import { Printer } from 'lucide-react';
+import { withMinimumDelay } from "../utils/withDelay";
 
-export const Header = ({ showCreateButton = false, onCreateClick, isCreatingBudget = false,
-                           onGenerateReport = () => {}, selectedBudgets = [] }) => {
+export const Header = ({
+                           showCreateButton = false,
+                           onCreateClick,
+                           isCreatingBudget = false,
+                           onGenerateReport = () => {},
+                           selectedBudgets = []
+                       }) => {
     const { handleLogout } = useLogin();
     const [isLoggingOut, setIsLoggingOut] = React.useState(false);
     const userInfo = authService.getUserInfo();
     const navigate = useNavigate();
     const location = useLocation();
     const showBackButton = location.pathname !== '/dashboard';
-    const isHomePage = location.pathname === '/';
+    const isHomePage = location.pathname === '/' || location.pathname === '/dashboard';
 
     const onLogout = async () => {
         setIsLoggingOut(true);
@@ -25,7 +29,7 @@ export const Header = ({ showCreateButton = false, onCreateClick, isCreatingBudg
                     logoutIcon.classList.add('animate-spin');
                 }
                 await handleLogout();
-            }, 2000); // 2 second delay with animation
+            }, 2000);
         } catch (error) {
             console.error('Logout failed:', error);
         } finally {
@@ -43,7 +47,7 @@ export const Header = ({ showCreateButton = false, onCreateClick, isCreatingBudg
 
     const getBudgetType = () => {
         const path = location.pathname;
-        if (path === '/' || path === 'dashboard') return ''; // Home page - no budget type
+        if (path === '/' || path === '/dashboard') return '';
         if (path.includes('paycheck')) return 'Paycheck Budgets';
         if (path.includes('business')) return 'Business Trip Budgets';
         if (path.includes('savings')) return 'Savings Budgets';
@@ -55,8 +59,9 @@ export const Header = ({ showCreateButton = false, onCreateClick, isCreatingBudg
         <div className="fixed top-0 left-0 right-0 bg-white z-10 shadow-lg">
             <div className="max-w-7xl mx-auto py-2 px-4 sm:px-6 lg:px-8">
                 <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-2">
+                    {/* Title and User Info */}
                     <div className="flex flex-col md:flex-row md:items-center gap-4">
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center justify-between md:justify-start gap-4 w-full md:w-auto">
                             {showBackButton ? (
                                 <button
                                     onClick={handleBack}
@@ -67,16 +72,21 @@ export const Header = ({ showCreateButton = false, onCreateClick, isCreatingBudg
                             ) : (
                                 <div className="w-6"/>
                             )}
-                            <h1 className="text-3xl font-bold text-gray-900">Smarty Budget Tracker</h1>
+                            <h1 className="text-3xl font-bold text-gray-900 text-center md:text-left flex-grow md:flex-grow-0">
+                                Smarty Budget Tracker
+                            </h1>
                         </div>
-                        <span className="text-sm text-gray-600">{userInfo?.sub}</span>
+                        <span className="text-sm text-gray-600 text-center md:text-left">{userInfo?.sub}</span>
                     </div>
+
+                    {/* Action Buttons */}
                     <div className="flex flex-col md:flex-row gap-4">
                         <button
                             onClick={onLogout}
                             disabled={isLoggingOut}
                             className="inline-flex items-center justify-center px-4 py-2
-                                        bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-blue-300 transition-all duration-300"
+                                bg-blue-500 text-white rounded hover:bg-blue-600
+                                disabled:bg-blue-300 transition-all duration-300"
                         >
                             {isLoggingOut ? (
                                 <Loader2 className="logout-icon h-5 w-5 mr-2 animate-spin"/>
@@ -89,12 +99,12 @@ export const Header = ({ showCreateButton = false, onCreateClick, isCreatingBudg
                             <button
                                 onClick={onCreateClick}
                                 disabled={isCreatingBudget}
-                                className="inline-flex items-center justify-center px-4 py-2 border border-transparent
-            text-sm font-medium rounded-md shadow-sm text-white
-            bg-indigo-600 hover:bg-indigo-700
-            focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500
-            transition-all duration-200
-            disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="inline-flex items-center justify-center px-4 py-2
+                                    border border-transparent text-sm font-medium rounded-md
+                                    shadow-sm text-white bg-indigo-600 hover:bg-indigo-700
+                                    focus:outline-none focus:ring-2 focus:ring-offset-2
+                                    focus:ring-indigo-500 transition-all duration-200
+                                    disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {isCreatingBudget ? (
                                     <>
@@ -107,6 +117,8 @@ export const Header = ({ showCreateButton = false, onCreateClick, isCreatingBudg
                             </button>
                         )}
                     </div>
+
+                    {/* Budget Type and Print Button */}
                     <div className="z-10 flex items-center justify-between">
                         <div className="w-10"/>
                         {!isHomePage && (
@@ -114,13 +126,16 @@ export const Header = ({ showCreateButton = false, onCreateClick, isCreatingBudg
                                 <h2 className="text-lg text-gray-600">{getBudgetType()}</h2>
                             </div>
                         )}
-                        <button
-                            onClick={onGenerateReport}
-                            disabled={selectedBudgets.length === 0}
-                            className="p-2 bg-blue-600 text-white rounded disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            <Printer className="h-6 w-6"/>
-                        </button>
+                        {!isHomePage && (
+                            <button
+                                onClick={onGenerateReport}
+                                disabled={selectedBudgets.length === 0}
+                                className="p-2 bg-blue-600 text-white rounded
+                                    disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                <FileDown className="h-6 w-6"/>
+                            </button>
+                        )}
                     </div>
                 </div>
             </div>
