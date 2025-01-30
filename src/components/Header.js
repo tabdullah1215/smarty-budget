@@ -119,10 +119,11 @@ export const Header = ({
                     </div>
 
                     {/* Budget Type and Print Button */}
-                    <div className="z-10 flex items-center justify-between">
+                    {/* Budget Type and Print Button */}
+                    <div className="z-10 flex items-center justify-between md:gap-8">
                         <div className="w-10"/>
                         {!isHomePage && (
-                            <div className="text-center">
+                            <div className="text-center md:flex-grow">
                                 <h2 className="text-lg text-gray-600">{getBudgetType()}</h2>
                             </div>
                         )}
@@ -142,7 +143,7 @@ export const Header = ({
                                 }}
                                 disabled={selectedBudgets.length === 0}
                                 className="p-2 bg-blue-600 text-white rounded
-                                    disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 <FileDown
                                     className="h-6 w-6 report-button transition-transform duration-200"
