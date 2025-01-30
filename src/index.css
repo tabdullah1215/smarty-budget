@@ -75,6 +75,42 @@ code {
     margin: 0;
     padding: 20px;
   }
+
+  #report-content {
+    page-break-inside: auto;
+  }
+
+  .paycheck-section {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+
+  .category-analysis {
+    page-break-before: always;
+    page-break-inside: avoid;
+  }
+
+  .overall-analysis {
+    page-break-before: always;
+    page-break-inside: avoid;
+  }
+
+  table {
+    page-break-inside: auto;
+  }
+
+  tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+
+  thead {
+    display: table-header-group;
+  }
+
+  tfoot {
+    display: table-footer-group;
+  }
 }
 
 /* Optional: Add a print preview indicator in the browser */

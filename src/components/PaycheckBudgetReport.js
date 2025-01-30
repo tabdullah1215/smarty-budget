@@ -1,10 +1,9 @@
 import React, { useMemo } from 'react';
 import { Printer, X, Loader2 } from 'lucide-react';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 import _ from 'lodash';
 import { useToast } from '../contexts/ToastContext';
 import authService from '../services/authService';
+import handlePrint from '../utils/enhancedReportGenerator';
 import {
     ResponsiveContainer,
     BarChart,
@@ -26,7 +25,6 @@ const PaycheckBudgetReport = ({ selectedBudgets, onClose, isPrinting, onPrint })
     const userInfo = authService.getUserInfo(); // Get user info
 
     const reportData = useMemo(() => {
-        // Process individual paycheck data
         const paycheckDetails = selectedBudgets.map(budget => {
             const activeItems = budget.items.filter(item => item.isActive);
             const totalSpent = activeItems.reduce((sum, item) => sum + item.amount, 0);
@@ -43,7 +41,6 @@ const PaycheckBudgetReport = ({ selectedBudgets, onClose, isPrinting, onPrint })
             };
         }).sort((a, b) => new Date(b.date) - new Date(a.date));
 
-        // Calculate category totals across all paychecks
         const allItems = paycheckDetails.flatMap(paycheck => paycheck.items);
         const categoryTotals = _(allItems)
             .groupBy('category')
@@ -55,7 +52,6 @@ const PaycheckBudgetReport = ({ selectedBudgets, onClose, isPrinting, onPrint })
             .orderBy(['total'], ['desc'])
             .value();
 
-        // Calculate monthly spending trends
         const monthlySpending = _(allItems)
             .groupBy(item => {
                 const date = new Date(item.date);
@@ -68,7 +64,6 @@ const PaycheckBudgetReport = ({ selectedBudgets, onClose, isPrinting, onPrint })
             .orderBy(['month'], ['asc'])
             .value();
 
-        // Overall totals
         const totalIncome = _.sumBy(paycheckDetails, 'amount');
         const totalSpent = _.sumBy(paycheckDetails, 'totalSpent');
         const netSavings = totalIncome - totalSpent;
@@ -87,37 +82,13 @@ const PaycheckBudgetReport = ({ selectedBudgets, onClose, isPrinting, onPrint })
         };
     }, [selectedBudgets]);
 
-    const handlePrint = async () => {
-        onPrint(true);
-        try {
-            const content = document.getElementById('report-content');
-            if (!content) return;
-
-            const canvas = await html2canvas(content, {
-                scale: 2,
-                useCORS: true,
-                logging: false
-            });
-
-            const imgData = canvas.toDataURL('image/png');
-            const pdf = new jsPDF({
-                orientation: 'portrait',
-                unit: 'mm',
-                format: 'a4'
-            });
-
-            const imgWidth = 210; // A4 width in mm
-            const imgHeight = canvas.height * imgWidth / canvas.width;
-
-            pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
-            pdf.save('budget-report.pdf');
-
-        } catch (error) {
-            console.error('Error generating PDF:', error);
-            showToast('error', 'Failed to generate PDF report');
-        } finally {
-            onPrint(false);
+    const handlePrintReport = async () => {
+        const content = document.getElementById('report-content');
+        if (!content) {
+            showToast('error', 'Report content not found');
+            return;
         }
+        await handlePrint(content, onPrint, showToast);
     };
 
     return (
@@ -128,18 +99,18 @@ const PaycheckBudgetReport = ({ selectedBudgets, onClose, isPrinting, onPrint })
                     <h1 className="text-2xl font-bold text-gray-900">Budget Report</h1>
                     <div className="flex space-x-4">
                         <button
-                            onClick={handlePrint}
+                            onClick={handlePrintReport}
                             disabled={isPrinting}
                             className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
                         >
                             {isPrinting ? (
                                 <>
-                                    <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                                    <Loader2 className="h-5 w-5 mr-2 animate-spin"/>
                                     Generating PDF...
                                 </>
                             ) : (
                                 <>
-                                    <Printer className="h-5 w-5 mr-2" />
+                                    <Printer className="h-5 w-5 mr-2"/>
                                     Download PDF
                                 </>
                             )}
@@ -149,16 +120,25 @@ const PaycheckBudgetReport = ({ selectedBudgets, onClose, isPrinting, onPrint })
                             disabled={isPrinting}
                             className="p-2 text-gray-500 hover:text-gray-700 rounded-full hover:bg-gray-100"
                         >
-                            <X className="h-6 w-6" />
+                            <X className="h-6 w-6"/>
                         </button>
                     </div>
                 </div>
             </div>
 
             {/* Report Content */}
-            <div id="report-content" className="p-8">
+            <div
+                id="report-content"
+                className="p-8"
+                style={{
+                    backgroundColor: 'white',
+                    minHeight: '297mm', // A4 height
+                    width: '210mm',    // A4 width
+                    margin: '0 auto'
+                }}
+            >
                 {/* Part 1: Report Header */}
-                <div className="mb-12">
+                <div className=" report-header mb-12">
                     <h1 className="text-3xl font-bold text-gray-900 mb-4">Budget Analysis Report</h1>
                     <div className="mb-6 p-4 bg-gray-50 rounded-lg">
                         <div className="grid grid-cols-2 gap-4">
@@ -176,7 +156,7 @@ const PaycheckBudgetReport = ({ selectedBudgets, onClose, isPrinting, onPrint })
                 </div>
 
                 {/* Part 2: Individual Paycheck Details */}
-                <div className="mb-12">
+                <div className="paycheck-section mb-12">
                     <h2 className="text-2xl font-bold text-gray-900 mb-6">Paycheck Details</h2>
                     {reportData.paycheckDetails.map((paycheck, index) => (
                         <div key={paycheck.id} className="mb-8 bg-white rounded-lg shadow-md p-6">
@@ -233,7 +213,7 @@ const PaycheckBudgetReport = ({ selectedBudgets, onClose, isPrinting, onPrint })
                 </div>
 
                 {/* Part 3: Category Analysis */}
-                <div className="mb-12">
+                <div className="category-analysis mb-12">
                     <h2 className="text-2xl font-bold text-gray-900 mb-6">Category Analysis</h2>
                     <div className="grid grid-cols-2 gap-8">
                         {/* Category Grid */}
@@ -278,7 +258,7 @@ const PaycheckBudgetReport = ({ selectedBudgets, onClose, isPrinting, onPrint })
                 </div>
 
                 {/* Part 4: Overall Analysis */}
-                <div>
+                <div className="overall-analysis">
                     <h2 className="text-2xl font-bold text-gray-900 mb-6">Overall Analysis</h2>
 
                     {/* Summary Stats */}
@@ -336,7 +316,7 @@ const PaycheckBudgetReport = ({ selectedBudgets, onClose, isPrinting, onPrint })
                 </div>
 
                 {/* Report Footer */}
-                <div className="mt-12 pt-6 border-t border-gray-200 text-sm text-gray-500">
+                <div className="report-footer mt-12 pt-6 border-t border-gray-200 text-sm text-gray-500">
                     <p>Report generated on {new Date().toLocaleString()}</p>
                     <p>Analysis based on {reportData.paycheckDetails.length} paychecks</p>
                 </div>
