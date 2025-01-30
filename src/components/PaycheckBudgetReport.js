@@ -5,6 +5,7 @@ import { useToast } from '../contexts/ToastContext';
 import authService from '../services/authService';
 import handlePrint from '../utils/enhancedReportGenerator';
 import {withMinimumDelay} from '../utils/withDelay';
+import ReportImageGallery from './ReportImageGallery';
 import {
     ResponsiveContainer,
     BarChart,
@@ -344,6 +345,7 @@ const PaycheckBudgetReport = ({ selectedBudgets, onClose, isPrinting, onPrint })
                         </div>
                     </div>
                 </div>
+                <ReportImageGallery budgets={selectedBudgets} />
 
                 {/* Report Footer */}
                 <div className="report-footer mt-12 pt-6 border-t border-gray-200 text-sm text-gray-500">
