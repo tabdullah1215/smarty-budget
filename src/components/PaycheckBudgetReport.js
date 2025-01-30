@@ -1,9 +1,10 @@
 import React, { useMemo } from 'react';
-import { Printer, X, Loader2 } from 'lucide-react';
+import { Printer, X, Loader2, FileDown } from 'lucide-react';
 import _ from 'lodash';
 import { useToast } from '../contexts/ToastContext';
 import authService from '../services/authService';
 import handlePrint from '../utils/enhancedReportGenerator';
+import {withMinimumDelay} from '../utils/withDelay';
 import {
     ResponsiveContainer,
     BarChart,
@@ -99,9 +100,25 @@ const PaycheckBudgetReport = ({ selectedBudgets, onClose, isPrinting, onPrint })
                     <h1 className="text-2xl font-bold text-gray-900">Budget Report</h1>
                     <div className="flex space-x-4">
                         <button
-                            onClick={handlePrintReport}
+                            onClick={async () => {
+                                try {
+                                    onPrint(true);
+                                    await withMinimumDelay(async () => {
+                                        const content = document.getElementById('report-content');
+                                        if (!content) {
+                                            showToast('error', 'Report content not found');
+                                            return;
+                                        }
+                                        await handlePrint(content, onPrint, showToast);
+                                    }, 2000);
+                                } finally {
+                                    onPrint(false);
+                                }
+                            }}
                             disabled={isPrinting}
-                            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md
+                    hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed
+                    transition-all duration-200"
                         >
                             {isPrinting ? (
                                 <>
@@ -110,17 +127,30 @@ const PaycheckBudgetReport = ({ selectedBudgets, onClose, isPrinting, onPrint })
                                 </>
                             ) : (
                                 <>
-                                    <Printer className="h-5 w-5 mr-2"/>
+                                    <FileDown className="h-5 w-5 mr-2"/>
                                     Download PDF
                                 </>
                             )}
                         </button>
                         <button
-                            onClick={onClose}
+                            onClick={async () => {
+                                try {
+                                    const button = document.querySelector('.close-report-button');
+                                    if (button) button.classList.add('animate-spin');
+                                    await withMinimumDelay(async () => {
+                                        onClose();
+                                    }, 800);
+                                } finally {
+                                    const button = document.querySelector('.close-report-button');
+                                    if (button) button.classList.remove('animate-spin');
+                                }
+                            }}
                             disabled={isPrinting}
-                            className="p-2 text-gray-500 hover:text-gray-700 rounded-full hover:bg-gray-100"
+                            className="p-2 text-gray-500 hover:text-gray-700 rounded-full
+                    hover:bg-gray-100 transition-all duration-200
+                    disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            <X className="h-6 w-6"/>
+                            <X className="h-6 w-6 close-report-button transition-transform duration-200"/>
                         </button>
                     </div>
                 </div>
@@ -139,7 +169,7 @@ const PaycheckBudgetReport = ({ selectedBudgets, onClose, isPrinting, onPrint })
             >
                 {/* Part 1: Report Header */}
                 <div className=" report-header mb-12">
-                    <h1 className="text-3xl font-bold text-gray-900 mb-4">Budget Analysis Report</h1>
+                    <h1 className="text-3xl font-bold text-gray-900 mb-4">Paycheck Budget Analysis Report</h1>
                     <div className="mb-6 p-4 bg-gray-50 rounded-lg">
                         <div className="grid grid-cols-2 gap-4">
                             <div>

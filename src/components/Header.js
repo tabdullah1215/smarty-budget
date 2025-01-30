@@ -1,5 +1,5 @@
 import React from 'react';
-import { Loader2, ArrowLeft, LogOut, FileDown } from 'lucide-react';
+import { Loader2, ArrowLeft, LogOut, X, FileDown } from 'lucide-react';
 import { useLogin } from '../hooks/useLogin';
 import authService from '../services/authService';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -128,12 +128,26 @@ export const Header = ({
                         )}
                         {!isHomePage && (
                             <button
-                                onClick={onGenerateReport}
+                                onClick={async () => {
+                                    try {
+                                        const button = document.querySelector('.report-button');
+                                        if (button) button.classList.add('animate-spin');
+                                        await withMinimumDelay(async () => {
+                                            await onGenerateReport();
+                                        }, 800);
+                                    } finally {
+                                        const button = document.querySelector('.report-button');
+                                        if (button) button.classList.remove('animate-spin');
+                                    }
+                                }}
                                 disabled={selectedBudgets.length === 0}
                                 className="p-2 bg-blue-600 text-white rounded
                                     disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                <FileDown className="h-6 w-6"/>
+                                <FileDown
+                                    className="h-6 w-6 report-button transition-transform duration-200"
+                                    title="Download PDF Report"
+                                />
                             </button>
                         )}
                     </div>
