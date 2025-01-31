@@ -12,6 +12,7 @@ import DeleteConfirmationModal from "./DeleteConfirmationModal";
 import { PaycheckBudgetCard } from './PaycheckBudgetCard';
 import authService from '../services/authService';
 import PaycheckBudgetReport from "./PaycheckBudgetReport";
+import { downloadCSV } from '../utils/budgetCsvGenerator';
 
 export const PaycheckBudgets = () => {
     const [isCreating, setIsCreating] = useState(false);
@@ -163,6 +164,25 @@ export const PaycheckBudgets = () => {
         setShowReport(true);
     };
 
+    const handleDownloadCsv = () => {
+        if (selectedBudgets.length === 0) {
+            showToast('error', 'Please select at least one budget to generate a CSV');
+            return;
+        }
+
+        // Get full budget objects and ensure data is valid
+        const selectedBudgetObjects = sortedBudgets.filter(budget =>
+            selectedBudgets.includes(budget.id)
+        );
+
+        if (!selectedBudgetObjects.length) {
+            showToast('error', 'Selected budgets could not be found');
+            return;
+        }
+
+        downloadCSV(selectedBudgetObjects);
+    };
+
     useEffect(() => {
         console.log("Currently selected budgets:", selectedBudgets); // ✅ LOG HERE
     }, [selectedBudgets]);
@@ -176,6 +196,7 @@ export const PaycheckBudgets = () => {
                 isCreatingBudget={isCreating}
                 selectedBudgets={selectedBudgets || []}
                 onGenerateReport={handleGenerateReport}
+                onDownloadCsv={handleDownloadCsv}
             />
 
             <div className="pt-72 md:pt-36 px-4 sm:px-6 lg:px-8">

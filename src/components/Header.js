@@ -1,15 +1,18 @@
 import React from 'react';
-import { Loader2, ArrowLeft, LogOut, X, FileDown } from 'lucide-react';
 import { useLogin } from '../hooks/useLogin';
 import authService from '../services/authService';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { withMinimumDelay } from "../utils/withDelay";
+import { Loader2, ArrowLeft, LogOut, X, FileDown, FileSpreadsheet } from 'lucide-react';
+import { downloadCSV } from '../utils/budgetCsvGenerator';
+import {useToast} from '../contexts/ToastContext';
 
 export const Header = ({
                            showCreateButton = false,
                            onCreateClick,
                            isCreatingBudget = false,
                            onGenerateReport = () => {},
+                           onDownloadCsv = () => {},
                            selectedBudgets = []
                        }) => {
     const { handleLogout } = useLogin();
@@ -19,6 +22,7 @@ export const Header = ({
     const location = useLocation();
     const showBackButton = location.pathname !== '/dashboard';
     const isHomePage = location.pathname === '/' || location.pathname === '/dashboard';
+    const { showToast } = useToast();
 
     const onLogout = async () => {
         setIsLoggingOut(true);
@@ -118,8 +122,7 @@ export const Header = ({
                         )}
                     </div>
 
-                    {/* Budget Type and Print Button */}
-                    {/* Budget Type and Print Button */}
+                    {/* Budget Type and Buttons */}
                     <div className="z-10 flex items-center justify-between md:gap-8">
                         <div className="w-10"/>
                         {!isHomePage && (
@@ -128,28 +131,61 @@ export const Header = ({
                             </div>
                         )}
                         {!isHomePage && (
-                            <button
-                                onClick={async () => {
-                                    try {
-                                        const button = document.querySelector('.report-button');
-                                        if (button) button.classList.add('animate-spin');
-                                        await withMinimumDelay(async () => {
-                                            await onGenerateReport();
-                                        }, 800);
-                                    } finally {
-                                        const button = document.querySelector('.report-button');
-                                        if (button) button.classList.remove('animate-spin');
-                                    }
-                                }}
-                                disabled={selectedBudgets.length === 0}
-                                className="p-2 bg-blue-600 text-white rounded
-                disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                <FileDown
-                                    className="h-6 w-6 report-button transition-transform duration-200"
+                            <div className="flex items-center space-x-2">
+                                {/* CSV Export Button */}
+                                {/* CSV Export Button */}
+                                // In Header.js, replace the CSV button onClick with:
+                                <button
+                                    onClick={async () => {
+                                        try {
+                                            const button = document.querySelector('.csv-button');
+                                            if (button) button.classList.add('animate-spin');
+                                            await withMinimumDelay(async () => {
+                                                await onDownloadCsv(); // Add this new prop/handler
+                                            }, 800);
+                                        } catch (error) {
+                                            console.error('Error generating CSV:', error);
+                                            showToast?.('error', 'Failed to generate CSV');
+                                        } finally {
+                                            const button = document.querySelector('.csv-button');
+                                            if (button) button.classList.remove('animate-spin');
+                                        }
+                                    }}
+                                    disabled={selectedBudgets.length === 0}
+                                    className="p-2 bg-green-600 text-white rounded
+        hover:bg-green-700 transition-colors duration-200
+        disabled:opacity-50 disabled:cursor-not-allowed"
+                                    title="Download CSV Report"
+                                >
+                                    <FileSpreadsheet
+                                        className="h-6 w-6 csv-button transition-transform duration-200"
+                                    />
+                                </button>
+                                {/* PDF Report Button */}
+                                <button
+                                    onClick={async () => {
+                                        try {
+                                            const button = document.querySelector('.report-button');
+                                            if (button) button.classList.add('animate-spin');
+                                            await withMinimumDelay(async () => {
+                                                await onGenerateReport();
+                                            }, 800);
+                                        } finally {
+                                            const button = document.querySelector('.report-button');
+                                            if (button) button.classList.remove('animate-spin');
+                                        }
+                                    }}
+                                    disabled={selectedBudgets.length === 0}
+                                    className="p-2 bg-blue-600 text-white rounded
+                    hover:bg-blue-700 transition-colors duration-200
+                    disabled:opacity-50 disabled:cursor-not-allowed"
                                     title="Download PDF Report"
-                                />
-                            </button>
+                                >
+                                    <FileDown
+                                        className="h-6 w-6 report-button transition-transform duration-200"
+                                    />
+                                </button>
+                            </div>
                         )}
                     </div>
                 </div>
