@@ -1,18 +1,18 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { useTransition, useSprings } from '@react-spring/web';
-import { useNavigate } from 'react-router-dom';
-import { Plus, Loader2 } from 'lucide-react';
-import { Header } from './Header';
-import { PaycheckBudgetForm } from './PaycheckBudgetForm';
-import { PaycheckBudgetDetails } from './PaycheckBudgetDetails';
-import { usePaycheckBudgets } from '../hooks/usePaycheckBudget';
-import { withMinimumDelay } from '../utils/withDelay';
-import { useToast } from '../contexts/ToastContext';
+import React, {useEffect, useMemo, useState} from 'react';
+import {useSprings} from '@react-spring/web';
+import {useNavigate} from 'react-router-dom';
+import {Loader2, Plus} from 'lucide-react';
+import {Header} from './Header';
+import {PaycheckBudgetForm} from './PaycheckBudgetForm';
+import {PaycheckBudgetDetails} from './PaycheckBudgetDetails';
+import {usePaycheckBudgets} from '../hooks/usePaycheckBudget';
+import {withMinimumDelay} from '../utils/withDelay';
+import {useToast} from '../contexts/ToastContext';
 import DeleteConfirmationModal from "./DeleteConfirmationModal";
-import { PaycheckBudgetCard } from './PaycheckBudgetCard';
+import {PaycheckBudgetCard} from './PaycheckBudgetCard';
 import authService from '../services/authService';
 import PaycheckBudgetReport from "./PaycheckBudgetReport";
-import { downloadCSV } from '../utils/budgetCsvGenerator';
+import {downloadCSV} from '../utils/budgetCsvGenerator';
 
 export const PaycheckBudgets = () => {
     const [isCreating, setIsCreating] = useState(false);
@@ -137,9 +137,7 @@ export const PaycheckBudgets = () => {
 
     const handleSelectBudget = (budgetId, isSelected) => {
         setSelectedBudgets((prev) => {
-            const updatedSelection = isSelected ? [...prev, budgetId] : prev.filter((id) => id !== budgetId);
-            console.log("Updated selected budgets:", updatedSelection); // ✅ LOG HERE
-            return updatedSelection;
+            return isSelected ? [...prev, budgetId] : prev.filter((id) => id !== budgetId);
         });
     };
 
@@ -182,11 +180,6 @@ export const PaycheckBudgets = () => {
 
         downloadCSV(selectedBudgetObjects);
     };
-
-    useEffect(() => {
-        console.log("Currently selected budgets:", selectedBudgets); // ✅ LOG HERE
-    }, [selectedBudgets]);
-
 
     return (
         <div className="min-h-screen bg-gray-200">

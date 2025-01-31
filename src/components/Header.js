@@ -4,7 +4,6 @@ import authService from '../services/authService';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { withMinimumDelay } from "../utils/withDelay";
 import { Loader2, ArrowLeft, LogOut, X, FileDown, FileSpreadsheet } from 'lucide-react';
-import { downloadCSV } from '../utils/budgetCsvGenerator';
 import {useToast} from '../contexts/ToastContext';
 
 export const Header = ({
@@ -123,45 +122,76 @@ export const Header = ({
                     </div>
 
                     {/* Budget Type and Buttons */}
+                    {/* Budget Type and Buttons */}
                     <div className="z-10 flex items-center justify-between md:gap-8">
-                        <div className="w-10"/>
+                        {/* W-10 div visible only in desktop */}
+                        <div className="hidden md:block w-10"/>
+
+                        {/* CSV button visible only in mobile, at the start */}
                         {!isHomePage && (
-                            <div className="text-center md:flex-grow">
-                                <h2 className="text-lg text-gray-600">{getBudgetType()}</h2>
-                            </div>
-                        )}
-                        {!isHomePage && (
-                            <div className="flex items-center space-x-2">
-                                {/* CSV Export Button */}
-                                {/* CSV Export Button */}
-                                // In Header.js, replace the CSV button onClick with:
+                            <div className="md:hidden">
                                 <button
                                     onClick={async () => {
                                         try {
-                                            const button = document.querySelector('.csv-button');
+                                            const button = document.querySelector('.csv-button-mobile');
                                             if (button) button.classList.add('animate-spin');
                                             await withMinimumDelay(async () => {
-                                                await onDownloadCsv(); // Add this new prop/handler
+                                                await onDownloadCsv();
                                             }, 800);
-                                        } catch (error) {
-                                            console.error('Error generating CSV:', error);
-                                            showToast?.('error', 'Failed to generate CSV');
                                         } finally {
-                                            const button = document.querySelector('.csv-button');
+                                            const button = document.querySelector('.csv-button-mobile');
                                             if (button) button.classList.remove('animate-spin');
                                         }
                                     }}
                                     disabled={selectedBudgets.length === 0}
                                     className="p-2 bg-green-600 text-white rounded
-        hover:bg-green-700 transition-colors duration-200
-        disabled:opacity-50 disabled:cursor-not-allowed"
+                    hover:bg-green-700 transition-colors duration-200
+                    disabled:opacity-50 disabled:cursor-not-allowed"
                                     title="Download CSV Report"
                                 >
                                     <FileSpreadsheet
-                                        className="h-6 w-6 csv-button transition-transform duration-200"
+                                        className="h-6 w-6 csv-button-mobile transition-transform duration-200"
                                     />
                                 </button>
-                                {/* PDF Report Button */}
+                            </div>
+                        )}
+
+                        {/* Budget Type - visible in both mobile and desktop */}
+                        {!isHomePage && (
+                            <div className="text-center md:flex-grow">
+                                <h2 className="text-lg text-gray-600">{getBudgetType()}</h2>
+                            </div>
+                        )}
+
+                        {/* Container for desktop CSV button and PDF button */}
+                        {!isHomePage && (
+                            <div className="flex items-center space-x-2">
+                                {/* CSV button visible only in desktop */}
+                                <button
+                                    onClick={async () => {
+                                        try {
+                                            const button = document.querySelector('.csv-button-desktop');
+                                            if (button) button.classList.add('animate-spin');
+                                            await withMinimumDelay(async () => {
+                                                await onDownloadCsv();
+                                            }, 800);
+                                        } finally {
+                                            const button = document.querySelector('.csv-button-desktop');
+                                            if (button) button.classList.remove('animate-spin');
+                                        }
+                                    }}
+                                    disabled={selectedBudgets.length === 0}
+                                    className="hidden md:inline-flex p-2 bg-green-600 text-white rounded
+                    hover:bg-green-700 transition-colors duration-200
+                    disabled:opacity-50 disabled:cursor-not-allowed"
+                                    title="Download CSV Report"
+                                >
+                                    <FileSpreadsheet
+                                        className="h-6 w-6 csv-button-desktop transition-transform duration-200"
+                                    />
+                                </button>
+
+                                {/* PDF Report Button - visible in both mobile and desktop */}
                                 <button
                                     onClick={async () => {
                                         try {
