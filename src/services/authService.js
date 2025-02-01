@@ -68,7 +68,7 @@ const authService = {
     async login(email, password) {
         try {
             const response = await axios.post(
-                `${API_ENDPOINT}/create-distributor`,
+                `${API_ENDPOINT}/app-manager`,
                 {
                     appId: APP_ID,
                     email,

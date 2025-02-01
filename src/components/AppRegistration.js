@@ -46,7 +46,7 @@ export function AppRegistration() {
             }
 
             const response = await axios.post(
-                `${API_ENDPOINT}/create-distributor`,
+                `${API_ENDPOINT}/app-manager`,
                 payload,
                 {
                     params: { action: 'verifyAppPurchase' },
