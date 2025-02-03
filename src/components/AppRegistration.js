@@ -13,6 +13,7 @@ export function AppRegistration() {
     const navigate = useNavigate();
     const [permanentMessage, setPermanentMessage] = useState({ type: '', content: '' });
 
+    const API_KEY = process.env.REACT_APP_KEY_1;
     const handleSubmit = async (e) => {
         e.preventDefault();
         setPermanentMessage({ type: '', content: '' });
@@ -50,7 +51,10 @@ export function AppRegistration() {
                 payload,
                 {
                     params: { action: 'verifyAppPurchase' },
-                    headers: { 'Content-Type': 'application/json' }
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Api-Key': API_KEY
+                    }
                 }
             );
 

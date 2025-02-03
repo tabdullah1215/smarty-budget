@@ -4,6 +4,7 @@ import { jwtDecode } from 'jwt-decode';
 import { API_ENDPOINT, APP_ID } from '../config';
 
 const TOKEN_KEY = 'budget_auth_token';
+const API_KEY = process.env.REACT_APP_KEY_1;
 
 // Add interceptor
 axios.interceptors.response.use(
@@ -75,7 +76,8 @@ const authService = {
                     password
                 },
                 {
-                    params: { action: 'appLogin' }
+                    params: { action: 'appLogin' },
+                    headers: { 'X-Api-Key': API_KEY }
                 }
             );
 
