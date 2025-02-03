@@ -456,6 +456,7 @@ export const PaycheckBudgetDetails = ({budget, onClose, onUpdate}) => {
                                     isSaving={isSaving}
                                     handleAddItemClick={handleAddItemClick}
                                     isAddingItem={isAddingItem}
+                                    showPrintShare={false}
                                 />
                                 {/* Scrollable Content */}
                                 <div className="flex-1 overflow-y-auto overflow-x-hidden px-2 sm:px-5">

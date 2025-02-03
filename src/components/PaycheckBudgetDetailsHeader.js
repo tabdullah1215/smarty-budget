@@ -15,37 +15,42 @@ const PaycheckBudgetDetailsHeader = ({
                                   isClosing,
                                   isSaving,
                                   handleAddItemClick,
-                                  isAddingItem
+                                  isAddingItem,
+                                  showPrintShare = false
                               }) => {
     return (
         <div className="p-4 border-b border-black">
             <div className="flex justify-between items-center mb-3">
                 <h2 className="text-lg md:text-2xl font-bold text-gray-900">{budget.name}</h2>
                 <div className="flex space-x-1.5">
-                    <button
-                        onClick={onPrint}
-                        disabled={isPrinting || isSaving}
-                        className="inline-flex items-center p-2 border border-transparent rounded-md text-gray-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                        title="Print budget"
-                    >
-                        {isPrinting ? (
-                            <Loader2 className="h-7 w-7 animate-spin"/>
-                        ) : (
-                            <Printer className="h-7 w-7"/>
-                        )}
-                    </button>
-                    <button
-                        onClick={onShare}
-                        disabled={isSharing || isSaving}
-                        className="inline-flex items-center p-2 border border-transparent rounded-md text-gray-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                        title="Share budget"
-                    >
-                        {isSharing ? (
-                            <Loader2 className="h-7 w-7 animate-spin"/>
-                        ) : (
-                            <Share2 className="h-7 w-7"/>
-                        )}
-                    </button>
+                    <div className={`${showPrintShare ? 'visible' : 'invisible'}`}>
+                        <button
+                            onClick={onPrint}
+                            disabled={isPrinting || isSaving}
+                            className="inline-flex items-center p-2 border border-transparent rounded-md text-gray-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                            title="Print budget"
+                        >
+                            {isPrinting ? (
+                                <Loader2 className="h-7 w-7 animate-spin"/>
+                            ) : (
+                                <Printer className="h-7 w-7"/>
+                            )}
+                        </button>
+                    </div>
+                    <div className={`${showPrintShare ? 'visible' : 'invisible'}`}>
+                        <button
+                            onClick={onShare}
+                            disabled={isSharing || isSaving}
+                            className="inline-flex items-center p-2 border border-transparent rounded-md text-gray-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                            title="Share budget"
+                        >
+                            {isSharing ? (
+                                <Loader2 className="h-7 w-7 animate-spin"/>
+                            ) : (
+                                <Share2 className="h-7 w-7"/>
+                            )}
+                        </button>
+                    </div>
                     <button
                         onClick={onClose}
                         disabled={isClosing || isSaving}
