@@ -3,7 +3,7 @@ import { Printer, X, Loader2, FileDown } from 'lucide-react';
 import _ from 'lodash';
 import { useToast } from '../contexts/ToastContext';
 import authService from '../services/authService';
-import handlePrint from '../utils/enhancedReportGenerator';
+import handlePrint, { handlePdfDownload } from '../utils/enhancedReportGenerator';
 import {withMinimumDelay} from '../utils/withDelay';
 import ReportImageGallery from './ReportImageGallery';
 import {
@@ -110,7 +110,7 @@ const PaycheckBudgetReport = ({ selectedBudgets, onClose, isPrinting, onPrint })
                                             showToast('error', 'Report content not found');
                                             return;
                                         }
-                                        await handlePrint(content, onPrint, showToast);
+                                        await handlePdfDownload(content, onPrint, showToast);
                                     }, 2000);
                                 } finally {
                                     onPrint(false);

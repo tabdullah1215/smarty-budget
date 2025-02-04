@@ -1,7 +1,40 @@
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
-// Force desktop styles for PDF generation
+export const generatePdfBlob = async (content, pdf, pageWidth, pageHeight, totalHeight) => {
+    for (let page = 0; page < Math.ceil(totalHeight / (pageHeight * 3.779527559)); page++) {
+        if (page > 0) {
+            pdf.addPage();
+        }
+
+        const captureHeight = pageHeight * 3.779527559;
+        const yPosition = page * captureHeight;
+
+        content.style.height = `${captureHeight}px`;
+        content.style.top = `-${yPosition}px`;
+
+        const canvas = await html2canvas(content, {
+            scale: 2,
+            logging: false,
+            windowHeight: captureHeight,
+            y: yPosition,
+            height: Math.min(captureHeight, totalHeight - yPosition),
+            useCORS: true,
+            allowTaint: true,
+            backgroundColor: '#ffffff',
+            removeContainer: true,
+            letterRendering: true,
+        });
+
+        const imgData = canvas.toDataURL('image/png');
+        const imgWidth = pageWidth;
+        const imgHeight = (canvas.height * pageWidth) / canvas.width;
+
+        pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight, '', 'FAST');
+    }
+
+    return pdf.output('blob');
+};
 const applyPrintStyles = (element) => {
     // Save original styles
     const originalStyles = {
@@ -156,4 +189,108 @@ const handlePrint = async (content, onPrint, showToast) => {
     }
 };
 
-export default handlePrint;
+const handlePdfDownload = async (content, onPrint, showToast) => {
+    if (!content) return;
+
+    onPrint(true);
+    try {
+        // Set up PDF document
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+
+        // In handlePdfDownload, at the start:
+        const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+
+        // Apply print styles and get cleanup function
+        const cleanup = applyPrintStyles(content);
+
+        // Force layout recalculation
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        // Get total height after layout adjustments
+        const totalHeight = content.scrollHeight;
+
+        // Generate PDF blob using our extracted function
+        const pdfBlob = await generatePdfBlob(content, pdf, pageWidth, pageHeight, totalHeight);
+
+        // Cleanup styles before attempting download
+        cleanup();
+
+        try {
+            if (isSafari || isIOS) {
+                // Use direct blob URL as first attempt for Safari/iOS
+                try {
+                    const blobUrl = URL.createObjectURL(pdfBlob);
+                    window.location.href = blobUrl;
+                    setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
+                    return;
+                } catch (error) {
+                    // Continue with other methods if this fails
+                    console.warn('Safari/iOS direct download failed:', error);
+                }
+            }
+            // First attempt: download attribute with forced click
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(pdfBlob);
+            link.download = 'budget-report.pdf';
+            link.setAttribute('type', 'application/pdf');
+            document.body.appendChild(link);
+
+            const clickEvent = new MouseEvent('click', {
+                view: window,
+                bubbles: true,
+                cancelable: false
+            });
+            link.dispatchEvent(clickEvent);
+
+            // Cleanup
+            setTimeout(() => {
+                URL.revokeObjectURL(link.href);
+                document.body.removeChild(link);
+            }, 100);
+
+        } catch (downloadError) {
+            console.warn('Primary download method failed, trying fallback:', downloadError);
+
+            try {
+                const blobUrl = URL.createObjectURL(pdfBlob);
+                window.location.href = blobUrl;
+
+                // Cleanup
+                setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
+            } catch (fallbackError) {  // ADD THIS CATCH BLOCK HERE
+                console.warn('Fallback download method failed, trying iframe:', fallbackError);
+
+                // Third attempt: Force download using iframe
+                const iframe = document.createElement('iframe');
+                iframe.style.display = 'none';
+                document.body.appendChild(iframe);
+
+                const iframeDoc = iframe.contentWindow.document;
+                const iframeLink = iframeDoc.createElement('a');
+
+                iframeLink.href = URL.createObjectURL(pdfBlob);
+                iframeLink.download = 'budget-report.pdf';
+                iframeLink.click();
+
+                // Cleanup
+                setTimeout(() => {
+                    URL.revokeObjectURL(iframeLink.href);
+                    document.body.removeChild(iframe);
+                }, 100);
+            }
+        }
+
+        showToast('success', 'PDF report generated successfully');
+
+    } catch (error) {
+        console.error('Error generating PDF:', error);
+        showToast('error', 'Failed to generate PDF report');
+    } finally {
+        onPrint(false);
+    }
+};
+
+export { handlePrint as default, handlePdfDownload };
