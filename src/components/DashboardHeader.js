@@ -41,7 +41,7 @@ const DashboardHeader = ({
                     <div className="flex-grow flex flex-col items-center justify-center w-full">
                         {/* Title and Subtitle */}
                         <div className="text-center">
-                            <h2 className="text-lg md:text-xl text-gray-600 font-semibold">{subtitle}</h2>
+                            <h2 className="text-md md:text-xl text-gray-600 font-semibold">{subtitle}</h2>
                             <h1 className="text-xl md:text-2xl font-bold text-gray-800">{title}</h1>
                             {centerContent && (
                                 <div className="mt-2">{centerContent}</div>
