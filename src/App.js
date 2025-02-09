@@ -11,6 +11,7 @@ import { indexdbService } from './services/IndexDBService';
 import { PaycheckBudgets } from "./components/PaycheckBudgets";
 import { Toaster } from 'react-hot-toast';  // Add this import
 import { ToastProvider } from './contexts/ToastContext';  // Add this import
+import { QRCodeSVG } from 'qrcode.react';
 
 // Error Boundary Component
 class ErrorBoundary extends React.Component {
@@ -115,6 +116,15 @@ const ProtectedRoute = ({ children }) => {
 
 function App() {
     const [isStandalone, setIsStandalone] = useState(false);
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    const currentPath = window.location.pathname;
+    const isRegistrationPath = currentPath.includes('/register/');
+    const getQRCodeUrl = () => {
+        if (process.env.REACT_APP_IS_LOCAL === 'true') {
+            return `http://${process.env.REACT_APP_LOCAL_IP}:3000${window.location.pathname}`;
+        }
+        return window.location.href;  // Will use the Amplify URL in production
+    };
 
     useEffect(() => {
         // Initialize authentication state
@@ -138,10 +148,45 @@ function App() {
         return () => mediaQuery.removeListener(listener);
     }, []);
 
-    // Show gateway page if not in standalone mode and on mobile
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    if (isMobile && !isStandalone) {
-        return <PWAGateway />;
+
+    if (!isMobile) {
+        return (
+            <ErrorBoundary>
+                <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
+                    <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-6 text-center">
+                        <img
+                            src="/images/smartyapps-logo.png"
+                            alt="SmartyApps.AI Logo"
+                            className="h-24 mx-auto mb-6"
+                        />
+                        <h1 className="text-2xl font-bold text-gray-800 mb-4">
+                            Mobile App Only
+                        </h1>
+                        <p className="text-gray-600 mb-6">
+                            This app is designed for mobile devices. Scan this QR code with your
+                            phone to continue:
+                        </p>
+                        <div className="qr-code-container mx-auto w-48 h-48 mb-6">
+                            <QRCodeSVG
+                                value={getQRCodeUrl()}
+                                size={192}
+                                level="H"
+                                includeMargin={true}
+                            />
+                        </div>
+                    </div>
+                </div>
+            </ErrorBoundary>
+        );
+    }
+
+    if (!isStandalone && !isRegistrationPath) {
+        const isProtectedRoute = currentPath !== '/login' &&
+            !currentPath.includes('/register/');
+
+        if (isProtectedRoute) {
+            return <PWAGateway />;
+        }
     }
 
     return (
@@ -151,26 +196,27 @@ function App() {
                         <BrowserRouter>
                             <Routes>
                                 {/* Public routes */}
-                                <Route path="/login" element={<Login />} />
+                                <Route path="/login" element={
+                                    isStandalone ? <Login /> : <PWAGateway />
+                                } />
                                 <Route
                                     path="/register/:appId/:linkType/:token"
                                     element={<AppRegistration />}
                                 />
-
-                                {/* Protected routes */}
                                 <Route
                                     path="/dashboard"
                                     element={
                                         <ProtectedRoute>
-                                            <Home />
+                                            {isStandalone ? <Home /> : <PWAGateway />}
                                         </ProtectedRoute>
                                     }
                                 />
+                                // Need to add PWA checks to these routes:
                                 <Route
                                     path="/budgets"
                                     element={
                                         <ProtectedRoute>
-                                            <BudgetContent />
+                                            {isStandalone ? <BudgetContent /> : <PWAGateway />}
                                         </ProtectedRoute>
                                     }
                                 />
@@ -179,7 +225,7 @@ function App() {
                                     path="/paycheck-budgets"
                                     element={
                                         <ProtectedRoute>
-                                            <PaycheckBudgets />
+                                            {isStandalone ? <PaycheckBudgets /> : <PWAGateway />}
                                         </ProtectedRoute>
                                     }
                                 />
