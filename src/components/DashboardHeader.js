@@ -8,7 +8,7 @@ import React from 'react';
 // In DashboardHeader.js, update the component:
 
 const DashboardHeader = ({
-                             subtitle = "App Manager",
+                             subtitle = "DIGITALPHORM BUDGET TRACKER",
                              title,
                              permanentMessage,
                              logoUrl = "/images/smartyapps-logo.png",
