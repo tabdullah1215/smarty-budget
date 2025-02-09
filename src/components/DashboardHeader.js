@@ -11,7 +11,7 @@ const DashboardHeader = ({
                              subtitle = "DIGITALPHORM BUDGET TRACKER",
                              title,
                              permanentMessage,
-                             logoUrl = "/images/smartyapps-logo.png",
+                             logoUrl = "/logo192.png",
                              centerContent
                          }) => {
     // Determine if this is the login page
@@ -31,8 +31,8 @@ const DashboardHeader = ({
                             src={logoUrl}
                             alt="SmartyApps.AI Logo"
                             className={`${isLoginPage
-                                ? 'h-16 md:h-14'     // Smaller logo for login page
-                                : 'h-16 md:h-20'     // Original logo size for other pages
+                                ? 'h-12 md:h-10'     // Smaller logo for login page
+                                : 'h-12 md:h-16'     // Original logo size for other pages
                             }`}
                         />
                     </div>
