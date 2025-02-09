@@ -12,6 +12,7 @@ import { PaycheckBudgets } from "./components/PaycheckBudgets";
 import { Toaster } from 'react-hot-toast';  // Add this import
 import { ToastProvider } from './contexts/ToastContext';  // Add this import
 import { QRCodeSVG } from 'qrcode.react';
+import {isMobileDevice, shouldBypassMobileCheck} from "./utils/helpers";
 
 // Error Boundary Component
 class ErrorBoundary extends React.Component {
@@ -119,6 +120,7 @@ function App() {
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     const currentPath = window.location.pathname;
     const isRegistrationPath = currentPath.includes('/register/');
+    const shouldAllowAccess = isStandalone || shouldBypassMobileCheck();
     const getQRCodeUrl = () => {
         if (process.env.REACT_APP_IS_LOCAL === 'true') {
             return `http://${process.env.REACT_APP_LOCAL_IP}:3000${window.location.pathname}`;
@@ -134,7 +136,8 @@ function App() {
         const checkStandalone = () => {
             const isAppMode = window.matchMedia('(display-mode: standalone)').matches
                 || window.navigator.standalone
-                || document.referrer.includes('android-app://');
+                || document.referrer.includes('android-app://')
+                || shouldBypassMobileCheck(); // Add the bypass check here
             setIsStandalone(isAppMode);
         };
 
@@ -148,8 +151,7 @@ function App() {
         return () => mediaQuery.removeListener(listener);
     }, []);
 
-
-    if (!isMobile) {
+    if (!isMobileDevice() && !shouldBypassMobileCheck()) {
         return (
             <ErrorBoundary>
                 <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
@@ -160,11 +162,11 @@ function App() {
                             className="h-24 mx-auto mb-6"
                         />
                         <h1 className="text-2xl font-bold text-gray-800 mb-4">
-                            Mobile App Only
+                            Welcome to DIGITALPHORM BUDGET TRACKER APP
                         </h1>
                         <p className="text-gray-600 mb-6">
-                            This app is designed for mobile devices. Scan this QR code with your
-                            phone to continue:
+                            To install the DigitalPhorm Budget Tracker App
+                            please scan this QR code with your phone:
                         </p>
                         <div className="qr-code-container mx-auto w-48 h-48 mb-6">
                             <QRCodeSVG
@@ -180,7 +182,7 @@ function App() {
         );
     }
 
-    if (!isStandalone && !isRegistrationPath) {
+    if (!isStandalone && !isRegistrationPath && !shouldBypassMobileCheck()) {
         const isProtectedRoute = currentPath !== '/login' &&
             !currentPath.includes('/register/');
 
@@ -197,7 +199,7 @@ function App() {
                             <Routes>
                                 {/* Public routes */}
                                 <Route path="/login" element={
-                                    isStandalone ? <Login /> : <PWAGateway />
+                                    shouldAllowAccess ? <Login /> : <PWAGateway />
                                 } />
                                 <Route
                                     path="/register/:appId/:linkType/:token"
@@ -207,11 +209,10 @@ function App() {
                                     path="/dashboard"
                                     element={
                                         <ProtectedRoute>
-                                            {isStandalone ? <Home /> : <PWAGateway />}
+                                            {shouldAllowAccess ? <Home /> : <PWAGateway />}
                                         </ProtectedRoute>
                                     }
                                 />
-                                // Need to add PWA checks to these routes:
                                 <Route
                                     path="/budgets"
                                     element={

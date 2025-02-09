@@ -48,3 +48,17 @@ export const budgetTypes = {
         enabled: false    // Not relevant since tile is hidden
     }
 };
+
+export const isLocalhost = () => {
+    return process.env.REACT_APP_IS_LOCAL === 'true' ||
+        window.location.hostname === 'localhost' ||
+        window.location.hostname === '127.0.0.1';
+};
+
+export const isMobileDevice = () => {
+    return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+};
+
+export const shouldBypassMobileCheck = () => {
+    return isLocalhost();
+};

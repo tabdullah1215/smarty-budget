@@ -3,7 +3,8 @@ import {useParams, Navigate} from 'react-router-dom';
 import axios from 'axios';
 import { API_ENDPOINT } from '../config';
 import DashboardHeader from './DashboardHeader';
-import { CheckIcon } from 'lucide-react';  // Add at the top
+import { CheckIcon } from 'lucide-react';
+import {isMobileDevice, shouldBypassMobileCheck} from "../utils/helpers";  // Add at the top
 
 export function AppRegistration() {
     const [email, setEmail] = useState('');
@@ -28,7 +29,7 @@ export function AppRegistration() {
         return () => window.removeEventListener('beforeinstallprompt', handleInstallPrompt);
     }, []);
 
-    if (!isMobile) {
+    if (!isMobileDevice() && !shouldBypassMobileCheck()) {
         return <Navigate to="/" replace />;
     }
     const handleSubmit = async (e) => {
