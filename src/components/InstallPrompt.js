@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Loader2, X } from 'lucide-react';
 import axios from 'axios';
-import { API_ENDPOINT } from '../config';
+import {API_ENDPOINT, APP_ID} from '../config';
 import { useToast } from '../contexts/ToastContext';
 
 export const InstallPrompt = ({ isOpen, onClose, deferredPrompt }) => {
@@ -16,14 +16,17 @@ export const InstallPrompt = ({ isOpen, onClose, deferredPrompt }) => {
         try {
             const response = await axios.post(
                 `${API_ENDPOINT}/app-manager`,
-                { email },
                 {
-                    params: { action: 'verifyCredentials' },
+                    appId: APP_ID,
+                    email
+                },
+                {
+                    params: { action: 'verifyEmail' },
                     headers: { 'X-Api-Key': process.env.REACT_APP_KEY_1 }
                 }
             );
 
-            if (response.data.user) {
+            if (response.data.exists) {
                 setStep('install');
             } else {
                 showToast('error', 'No account found with this email. Please register first.');
@@ -34,7 +37,6 @@ export const InstallPrompt = ({ isOpen, onClose, deferredPrompt }) => {
             setIsVerifying(false);
         }
     };
-
     const handleInstall = async () => {
         if (deferredPrompt) {
             try {
