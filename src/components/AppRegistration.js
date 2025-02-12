@@ -5,6 +5,7 @@ import { API_ENDPOINT } from '../config';
 import DashboardHeader from './DashboardHeader';
 import { CheckIcon } from 'lucide-react';
 import {isMobileDevice, shouldBypassMobileCheck} from "../utils/helpers";  // Add at the top
+import { InstallPrompt } from './InstallPrompt';
 
 export function AppRegistration() {
     const [email, setEmail] = useState('');
@@ -16,6 +17,7 @@ export function AppRegistration() {
     const [registrationComplete, setRegistrationComplete] = useState(false);
     const [deferredPrompt, setDeferredPrompt] = useState(null);
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    const [showInstallPrompt, setShowInstallPrompt] = useState(false);
 
     const API_KEY = process.env.REACT_APP_KEY_1;
 
@@ -227,8 +229,24 @@ export function AppRegistration() {
                             Register
                         </button>
                     </form>
+                    <div className="mt-6 pt-6 border-t border-gray-200">
+                        <p className="text-center text-sm text-gray-600">
+                            Already registered? {' '}
+                            <button
+                                onClick={() => setShowInstallPrompt(true)}
+                                className="text-blue-500 hover:text-blue-700 underline"
+                            >
+                                Click here to install app
+                            </button>
+                        </p>
+                    </div>
                 </div>
             </div>
+            <InstallPrompt
+                isOpen={showInstallPrompt}
+                onClose={() => setShowInstallPrompt(false)}
+                deferredPrompt={deferredPrompt}
+            />
         </div>
     );
 }
