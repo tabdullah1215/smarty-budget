@@ -120,8 +120,8 @@ export function AppRegistration() {
                     title="Registration Successful"
                     subtitle="One Last Step"
                 />
-                <div className="p-8 max-w-md mx-auto pt-72 md:pt-60">
-                    <div className="bg-white rounded-lg shadow-md p-8">
+                <div className="p-4 sm:p-8 max-w-md mx-auto pt-32 md:pt-36">
+                    <div className="bg-white rounded-lg shadow-md p-6 sm:p-8 overflow-hidden">
                         <div className="text-center">
                             <div className="mb-6">
                                 <div className="w-16 h-16 bg-green-100 rounded-full mx-auto flex items-center justify-center">
@@ -132,33 +132,36 @@ export function AppRegistration() {
                                 Registration Complete!
                             </h2>
 
-                            {isIOS ? (
-                                <IOSInstallInstructions />
-                            ) : (
-                                <div className="space-y-4">
-                                    <p className="text-gray-600">
-                                        Click below to install the app on your device:
-                                    </p>
-                                    <button
-                                        onClick={async () => {
-                                            if (deferredPrompt) {
-                                                await deferredPrompt.prompt();
-                                                await deferredPrompt.userChoice;
-                                                setDeferredPrompt(null);
-                                            }
-                                        }}
-                                        className="w-full py-3 px-4 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-300"
-                                    >
-                                        Add to Home Screen
-                                    </button>
-                                </div>
-                            )}
+                            <div className="overflow-y-auto max-h-[60vh]">
+                                {isIOS ? (
+                                    <IOSInstallInstructions />
+                                ) : (
+                                    <div className="space-y-4">
+                                        <p className="text-gray-600">
+                                            Click below to install the app on your device:
+                                        </p>
+                                        <button
+                                            onClick={async () => {
+                                                if (deferredPrompt) {
+                                                    await deferredPrompt.prompt();
+                                                    await deferredPrompt.userChoice;
+                                                    setDeferredPrompt(null);
+                                                }
+                                            }}
+                                            className="w-full py-3 px-4 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-300"
+                                        >
+                                            Add to Home Screen
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         );
     }
+
     return (
         <div className="min-h-screen bg-gray-200">
             <DashboardHeader
