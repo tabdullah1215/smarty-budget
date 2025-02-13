@@ -6,6 +6,7 @@ import DashboardHeader from './DashboardHeader';
 import { CheckIcon } from 'lucide-react';
 import {isMobileDevice, shouldBypassMobileCheck} from "../utils/helpers";  // Add at the top
 import { InstallPrompt } from './InstallPrompt';
+import { IOSInstallInstructions } from './IOSInstallInstructions';
 
 export function AppRegistration() {
     const [email, setEmail] = useState('');
@@ -18,6 +19,7 @@ export function AppRegistration() {
     const [deferredPrompt, setDeferredPrompt] = useState(null);
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     const [showInstallPrompt, setShowInstallPrompt] = useState(false);
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
 
     const API_KEY = process.env.REACT_APP_KEY_1;
 
@@ -110,6 +112,7 @@ export function AppRegistration() {
             setPermanentMessage({ type: 'error', content: errorMessage });
         }
     };
+
     if (registrationComplete) {
         return (
             <div className="min-h-screen bg-gray-200">
@@ -125,45 +128,37 @@ export function AppRegistration() {
                                     <CheckIcon className="h-8 w-8 text-green-500" />
                                 </div>
                             </div>
-                            <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                                You're Ready to Start!
+                            <h2 className="text-2xl font-bold text-gray-900 mb-6">
+                                Registration Complete!
                             </h2>
-                            <p className="text-gray-600 mb-8">
-                                Install the app now to access it from your home screen:
-                            </p>
-                            <ol className="text-left text-gray-600 mb-8 space-y-4">
-                                <li className="flex items-start">
-                                    <span className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 mr-3 mt-0.5">1</span>
-                                    Click 'Add to Home Screen' below
-                                </li>
-                                <li className="flex items-start">
-                                    <span className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 mr-3 mt-0.5">2</span>
-                                    Look for the app icon on your home screen
-                                </li>
-                                <li className="flex items-start">
-                                    <span className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 mr-3 mt-0.5">3</span>
-                                    Open the app and log in to get started
-                                </li>
-                            </ol>
-                            <button
-                                onClick={async () => {
-                                    if (deferredPrompt) {
-                                        await deferredPrompt.prompt();
-                                        await deferredPrompt.userChoice;
-                                        setDeferredPrompt(null);
-                                    }
-                                }}
-                                className="w-full py-3 px-4 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-300"
-                            >
-                                Add to Home Screen
-                            </button>
+
+                            {isIOS ? (
+                                <IOSInstallInstructions />
+                            ) : (
+                                <div className="space-y-4">
+                                    <p className="text-gray-600">
+                                        Click below to install the app on your device:
+                                    </p>
+                                    <button
+                                        onClick={async () => {
+                                            if (deferredPrompt) {
+                                                await deferredPrompt.prompt();
+                                                await deferredPrompt.userChoice;
+                                                setDeferredPrompt(null);
+                                            }
+                                        }}
+                                        className="w-full py-3 px-4 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-300"
+                                    >
+                                        Add to Home Screen
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
             </div>
         );
     }
-
     return (
         <div className="min-h-screen bg-gray-200">
             <DashboardHeader
