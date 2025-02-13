@@ -152,6 +152,12 @@ export function AppRegistration() {
                                         >
                                             Add to Home Screen
                                         </button>
+                                        <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-100">
+                                            <p className="text-blue-700">
+                                                After installation, look for the app icon on your home screen or in your
+                                                app drawer to open the app.
+                                            </p>
+                                        </div>
                                     </div>
                                 )}
                             </div>
