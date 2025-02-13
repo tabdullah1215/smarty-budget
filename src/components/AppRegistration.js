@@ -3,10 +3,11 @@ import {useParams, Navigate} from 'react-router-dom';
 import axios from 'axios';
 import { API_ENDPOINT } from '../config';
 import DashboardHeader from './DashboardHeader';
-import { CheckIcon } from 'lucide-react';
+import {CheckIcon, Loader2} from 'lucide-react';
 import {isMobileDevice, shouldBypassMobileCheck} from "../utils/helpers";  // Add at the top
 import { InstallPrompt } from './InstallPrompt';
 import { IOSInstallInstructions } from './IOSInstallInstructions';
+import {withMinimumDelay} from "../utils/withDelay";
 
 export function AppRegistration() {
     const [email, setEmail] = useState('');
@@ -17,9 +18,9 @@ export function AppRegistration() {
     const [permanentMessage, setPermanentMessage] = useState({ type: '', content: '' });
     const [registrationComplete, setRegistrationComplete] = useState(false);
     const [deferredPrompt, setDeferredPrompt] = useState(null);
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     const [showInstallPrompt, setShowInstallPrompt] = useState(false);
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const [isLoading, setIsLoading] = useState(false);
 
     const API_KEY = process.env.REACT_APP_KEY_1;
 
@@ -39,77 +40,161 @@ export function AppRegistration() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setPermanentMessage({ type: '', content: '' });
+        setIsLoading(true);
 
+        // Client-side validations
         if (password !== confirmPassword) {
             setPermanentMessage({
                 type: 'error',
                 content: 'Passwords do not match'
             });
+            setIsLoading(false);
+            return;
+        }
+
+        // Generic registration validation
+        if (linkType === 'generic' && !orderNumber?.trim()) {
+            setPermanentMessage({
+                type: 'error',
+                content: 'Order number is required for generic registration'
+            });
+            setIsLoading(false);
             return;
         }
 
         try {
-            const payload = {
-                email,
-                password,
-                token,
-                appId,
-                linkType
-            };
-
-            if (linkType === 'generic') {
-                if (!orderNumber) {
-                    setPermanentMessage({
-                        type: 'error',
-                        content: 'Order number is required for generic registration'
-                    });
-                    return;
-                }
-                payload.orderNumber = orderNumber;
-            }
-
-            const response = await axios.post(
-                `${API_ENDPOINT}/app-manager`,
-                payload,
-                {
-                    params: { action: 'verifyAppPurchase' },
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Api-Key': API_KEY
-                    }
-                }
-            );
-
-            if (response.data.status) {
-                console.log('App registration successful:', {
+            await withMinimumDelay(async () => {
+                const payload = {
                     email,
+                    password,
+                    token,
                     appId,
                     linkType,
-                    orderNumber: linkType === 'generic' ? orderNumber : 'N/A'
-                });
+                    ...(linkType === 'generic' && { orderNumber: orderNumber.trim() })
+                };
 
-                // Set registration complete to show installation prompt
-                setRegistrationComplete(true);
+                const response = await axios.post(
+                    `${API_ENDPOINT}/app-manager`,
+                    payload,
+                    {
+                        params: { action: 'verifyAppPurchase' },
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Api-Key': API_KEY
+                        }
+                    }
+                );
 
-                // Store login info to use after installation
-                sessionStorage.setItem('pendingLogin', JSON.stringify({
-                    registration: 'success',
-                    email: email,
-                    message: 'Registration successful! Please log in with your credentials.'
-                }));
+                if (response.data.status) {
+                    console.log('App registration successful:', {
+                        email,
+                        appId,
+                        linkType,
+                        orderNumber: linkType === 'generic' ? orderNumber : 'N/A'
+                    });
 
-                // Navigation to login will happen after user installs and reopens in PWA
-            } else {
-                console.log("Unexpected response:", response.data);
+                    setRegistrationComplete(true);
+                    sessionStorage.setItem('pendingLogin', JSON.stringify({
+                        registration: 'success',
+                        email: email,
+                        message: 'Registration successful! Please log in with your credentials.'
+                    }));
+                } else {
+                    console.log("Unexpected response:", response.data);
+                    throw new Error('Registration failed. Please try again.');
+                }
+            }, 2000);
+        } catch (error) {
+            console.error('App registration failed:', error);
+
+            // Handle specific API error responses
+            if (error.response) {
+                const errorCode = error.response.data?.code;
+                const serverMessage = error.response.data?.message;
+
+                switch (error.response.status) {
+                    case 400:
+                        if (errorCode === 'EMAIL_EXISTS') {
+                            setPermanentMessage({
+                                type: 'error',
+                                content: 'This email is already registered. Please use another email or click "Already registered?" below.'
+                            });
+                        } else if (errorCode === 'INVALID_TOKEN') {
+                            setPermanentMessage({
+                                type: 'error',
+                                content: 'Registration link is invalid or expired. Please request a new registration link.'
+                            });
+                        } else if (errorCode === 'ORDER_EXISTS') {
+                            setPermanentMessage({
+                                type: 'error',
+                                content: 'This order number has already been used. Please check and try again.'
+                            });
+                        } else {
+                            setPermanentMessage({
+                                type: 'error',
+                                content: serverMessage || 'Invalid registration data. Please check your information and try again.'
+                            });
+                        }
+                        break;
+
+                    case 401:
+                        setPermanentMessage({
+                            type: 'error',
+                            content: 'Registration authorization failed. Please request a new registration link.'
+                        });
+                        break;
+
+                    case 403:
+                        setPermanentMessage({
+                            type: 'error',
+                            content: 'Registration is not allowed. Please contact support.'
+                        });
+                        break;
+
+                    case 404:
+                        setPermanentMessage({
+                            type: 'error',
+                            content: 'Registration service not found. Please try again later.'
+                        });
+                        break;
+
+                    case 429:
+                        setPermanentMessage({
+                            type: 'error',
+                            content: 'Too many registration attempts. Please wait a few minutes and try again.'
+                        });
+                        break;
+
+                    case 500:
+                    case 502:
+                    case 503:
+                        setPermanentMessage({
+                            type: 'error',
+                            content: 'Registration service is temporarily unavailable. Please try again later.'
+                        });
+                        break;
+
+                    default:
+                        setPermanentMessage({
+                            type: 'error',
+                            content: serverMessage || 'Registration failed. Please try again.'
+                        });
+                }
+            } else if (error.request) {
+                // Network error (no response received)
                 setPermanentMessage({
                     type: 'error',
-                    content: 'Registration failed. Please try again.'
+                    content: 'Unable to connect to registration service. Please check your internet connection and try again.'
+                });
+            } else {
+                // Something else went wrong
+                setPermanentMessage({
+                    type: 'error',
+                    content: error.message || 'An unexpected error occurred. Please try again.'
                 });
             }
-        } catch (error) {
-            console.log('App registration failed:', error.response?.data?.message || error.message);
-            const errorMessage = error.response?.data?.message || 'An error occurred during registration. Please try again.';
-            setPermanentMessage({ type: 'error', content: errorMessage });
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -228,9 +313,19 @@ export function AppRegistration() {
                         )}
                         <button
                             type="submit"
-                            className="w-full py-2 px-4 bg-blue-500 text-white rounded hover:bg-blue-600"
+                            disabled={isLoading}
+                            className="w-full py-2 px-4 bg-blue-500 text-white rounded hover:bg-blue-600
+        transition-all duration-200 flex items-center justify-center
+        disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            Register
+                            {isLoading ? (
+                                <>
+                                    <Loader2 className="h-5 w-5 mr-2 animate-spin"/>
+                                    Registering...
+                                </>
+                            ) : (
+                                'Register'
+                            )}
                         </button>
                     </form>
                     <div className="mt-6 pt-6 border-t border-gray-200">
@@ -240,7 +335,7 @@ export function AppRegistration() {
                                 onClick={() => setShowInstallPrompt(true)}
                                 className="text-blue-500 hover:text-blue-700 underline"
                             >
-                                Click here to install app
+                            Click here to install app
                             </button>
                         </p>
                     </div>
