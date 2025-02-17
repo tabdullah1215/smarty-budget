@@ -313,7 +313,7 @@ export function AppRegistration() {
     }
 
     return (
-        <div className="max-h-screen bg-gray-200">
+        <div className="min-h-screen bg-gray-200">
             <DashboardHeader
                 title="App Registration"
                 subtitle={`Registration Type: ${linkType}`}
