@@ -248,6 +248,7 @@ export function AppRegistration() {
                 <DashboardHeader
                     title="Registration Successful"
                     subtitle="One Last Step"
+                    permanentMessage={permanentMessage}
                 />
                 {transitions((style, item) =>
                         item && (
