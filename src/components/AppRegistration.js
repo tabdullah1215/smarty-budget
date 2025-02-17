@@ -319,7 +319,7 @@ export function AppRegistration() {
                 subtitle={`Registration Type: ${linkType}`}
                 permanentMessage={permanentMessage}
             />
-            <div className="p-8 max-w-md mx-auto pt-72 md:pt-60">
+            <div className="p-8 max-w-md mx-auto pt-60 md:pt-60">
                 <div className="bg-white rounded-lg shadow-md p-8">
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
