@@ -1,4 +1,4 @@
-// src/App.js
+
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import PWAGateway from './components/PWAGateway';
@@ -14,7 +14,6 @@ import { ToastProvider } from './contexts/ToastContext';  // Add this import
 import { QRCodeSVG } from 'qrcode.react';
 import {isMobileDevice, shouldBypassMobileCheck} from "./utils/helpers";
 
-// Error Boundary Component
 class ErrorBoundary extends React.Component {
     constructor(props) {
         super(props);
@@ -55,7 +54,6 @@ class ErrorBoundary extends React.Component {
     }
 }
 
-// Protected Route Component
 const ProtectedRoute = ({ children }) => {
     const [dbInitialized, setDbInitialized] = useState(false);
     const [dbError, setDbError] = useState(null);
@@ -125,25 +123,22 @@ function App() {
         if (process.env.REACT_APP_IS_LOCAL === 'true') {
             return `http://${process.env.REACT_APP_LOCAL_IP}:3000${window.location.pathname}`;
         }
-        return window.location.href;  // Will use the Amplify URL in production
+        return window.location.href;
     };
 
     useEffect(() => {
-        // Initialize authentication state
         authService.initializeAuth();
 
-        // Check for standalone mode
         const checkStandalone = () => {
             const isAppMode = window.matchMedia('(display-mode: standalone)').matches
                 || window.navigator.standalone
                 || document.referrer.includes('android-app://')
-                || shouldBypassMobileCheck(); // Add the bypass check here
+                || shouldBypassMobileCheck();
             setIsStandalone(isAppMode);
         };
 
         checkStandalone();
 
-        // Listen for display mode changes
         const mediaQuery = window.matchMedia('(display-mode: standalone)');
         const listener = (e) => checkStandalone();
         mediaQuery.addListener(listener);
@@ -197,7 +192,6 @@ function App() {
                     <div className="h-full overflow-hidden">
                         <BrowserRouter>
                             <Routes>
-                                {/* Public routes */}
                                 <Route path="/login" element={
                                     shouldAllowAccess ? <Login /> : <PWAGateway />
                                 } />
@@ -230,8 +224,6 @@ function App() {
                                         </ProtectedRoute>
                                     }
                                 />
-
-                                {/* Root redirect to dashboard */}
                                 <Route
                                     path="/"
                                     element={
@@ -240,8 +232,6 @@ function App() {
                                         </ProtectedRoute>
                                     }
                                 />
-
-                                {/* Catch all redirect to login */}
                                 <Route path="*" element={<Navigate to="/login" replace />} />
                             </Routes>
                         </BrowserRouter>
@@ -249,7 +239,7 @@ function App() {
                             containerStyle={{
                                 top: 20,
                                 right: 20,
-                                zIndex: 10000 // Ensures toasts are above modals
+                                zIndex: 10000
                             }}
                         />
                     </div>

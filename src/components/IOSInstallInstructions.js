@@ -1,17 +1,17 @@
-// IOSInstallInstructions.js
-import React from 'react';
-
 export const IOSInstallInstructions = () => {
     return (
         <div className="space-y-6">
-            <p className="text-gray-600">To install on your iPhone:</p>
-            <ol className="text-left space-y-8 pl-5 list-decimal text-gray-600">
+            <p className="text-gray-600 font-medium">3 Easy Steps to Install on Your iPhone:</p>
+            <ol className="text-left space-y-8 pl-5 list-none text-gray-600">
                 <li className="flex flex-col space-y-3">
-                    <div>
-                        <p>Tap the Share button <span
-                            className="inline-block px-2 py-1 bg-gray-100 rounded">⬆️</span> in Safari</p>
-                        <p className="text-sm text-gray-500 mt-1">Look for it at the bottom center (newer iOS) or top
-                            right (older iOS) of your screen</p>
+                    <div className="flex items-center space-x-3">
+                        <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                            <span className="text-blue-600 font-semibold">1</span>
+                        </div>
+                        <div>
+                            <p>Tap the share button on your browser</p>
+                            <p className="text-sm text-gray-500 mt-1">Look for the square with arrow pointing up</p>
+                        </div>
                     </div>
                     <img
                         src="/images/ios-share-button.png"
@@ -20,9 +20,14 @@ export const IOSInstallInstructions = () => {
                     />
                 </li>
                 <li className="flex flex-col space-y-3">
-                    <div>
-                        <p>Scroll down and tap "Add to Home Screen"</p>
-                        <p className="text-sm text-gray-500 mt-1">You might need to scroll down to find this option</p>
+                    <div className="flex items-center space-x-3">
+                        <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                            <span className="text-blue-600 font-semibold">2</span>
+                        </div>
+                        <div>
+                            <p>Scroll down and tap "Add to Home Screen"</p>
+                            <p className="text-sm text-gray-500 mt-1">You might need to scroll down to find this option</p>
+                        </div>
                     </div>
                     <img
                         src="/images/ios-add-to-home.png"
@@ -31,9 +36,14 @@ export const IOSInstallInstructions = () => {
                     />
                 </li>
                 <li className="flex flex-col space-y-3">
-                    <div>
-                        <p>Tap "Add" in the top right corner</p>
-                        <p className="text-sm text-gray-500 mt-1">You can customize the app name before adding</p>
+                    <div className="flex items-center space-x-3">
+                        <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                            <span className="text-blue-600 font-semibold">3</span>
+                        </div>
+                        <div>
+                            <p>Tap "Add" in the top right corner</p>
+                            <p className="text-sm text-gray-500 mt-1">You can customize the app name before adding</p>
+                        </div>
                     </div>
                     <img
                         src="/images/ios-add-confirm.png"

@@ -11,8 +11,8 @@ export const budgetTypes = {
         icon: 'Calculator',
         color: 'text-purple-600',
         borderColor: 'border-purple-600',
-        visible: false,    // Show the tile
-        enabled: false     // Tile is clickable
+        visible: false,
+        enabled: false
     },
     paycheck: {
         id: 'paycheck',
@@ -22,8 +22,8 @@ export const budgetTypes = {
         icon: 'Wallet',
         color: 'text-blue-600',
         borderColor: 'border-blue-600',
-        visible: true,    // Show the tile
-        enabled: true    // Tile is not clickable (disabled state)
+        visible: true,
+        enabled: true
     },
     business: {
         id: 'business',
@@ -33,8 +33,8 @@ export const budgetTypes = {
         icon: 'Briefcase',
         color: 'text-emerald-800',
         borderColor: 'border-emerald-800',
-        visible: false,   // Don't show the tile at all
-        enabled: false    // Not relevant since tile is hidden
+        visible: false,
+        enabled: false
     },
     savings: {
         id: 'savings',
@@ -44,8 +44,8 @@ export const budgetTypes = {
         icon: 'PiggyBank',
         color: 'text-orange-800',
         borderColor: 'border-orange-800',
-        visible: true,   // Don't show the tile at all
-        enabled: false    // Not relevant since tile is hidden
+        visible: true,
+        enabled: false
     }
 };
 

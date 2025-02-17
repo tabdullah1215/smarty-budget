@@ -11,7 +11,6 @@ export const InstallPrompt = ({ isOpen, onClose, deferredPrompt }) => {
     const [isInstalling, setIsInstalling] = useState(false);
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
 
-    // Use the same transitions as other modals
     const transitions = useTransition(show, modalTransitions);
     const backdropTransition = useTransition(show, backdropTransitions);
 
@@ -46,7 +45,7 @@ export const InstallPrompt = ({ isOpen, onClose, deferredPrompt }) => {
         }
     };
 
-    // Update show state when isOpen changes
+
     React.useEffect(() => {
         if (isOpen) {
             setShow(true);
