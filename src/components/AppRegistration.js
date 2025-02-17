@@ -235,13 +235,10 @@ export function AppRegistration() {
     };
 
 // Update only the registrationComplete return section
+// Update only the registrationComplete return section
     if (registrationComplete) {
         return (
             <>
-                <DashboardHeader
-                    title="Registration Successful"
-                    subtitle="One Last Step"
-                />
                 {backdropTransition((style, item) =>
                         item && (
                             <animated.div
@@ -250,11 +247,15 @@ export function AppRegistration() {
                             />
                         )
                 )}
+                <DashboardHeader
+                    title="Registration Successful"
+                    subtitle="One Last Step"
+                />
                 {transitions((style, item) =>
                         item && (
                             <animated.div
                                 style={style}
-                                className="relative z-40"
+                                className="relative z-40 min-h-screen bg-gray-200"
                             >
                                 <div className="p-4 sm:p-8 max-w-md mx-auto pt-32 md:pt-36">
                                     <div className="bg-white rounded-lg shadow-md p-6 sm:p-8 overflow-hidden">
@@ -311,7 +312,7 @@ export function AppRegistration() {
             </>
         );
     }
-
+    
     return (
         <div className="min-h-screen bg-gray-200">
             <DashboardHeader
