@@ -234,26 +234,27 @@ export function AppRegistration() {
         }
     };
 
+// Update only the registrationComplete return section
     if (registrationComplete) {
         return (
             <>
-                {backdropTransition((style, item) =>
-                        item && (
-                            <animated.div
-                                style={style}
-                                className="fixed inset-0 bg-gray-600 bg-opacity-50 z-40"
-                            />
-                        )
-                )}
                 <DashboardHeader
                     title="Registration Successful"
                     subtitle="One Last Step"
                 />
+                {backdropTransition((style, item) =>
+                        item && (
+                            <animated.div
+                                style={style}
+                                className="fixed inset-0 bg-gray-600 bg-opacity-50 z-30"
+                            />
+                        )
+                )}
                 {transitions((style, item) =>
                         item && (
                             <animated.div
                                 style={style}
-                                className="min-h-screen bg-gray-200"
+                                className="relative z-40"
                             >
                                 <div className="p-4 sm:p-8 max-w-md mx-auto pt-32 md:pt-36">
                                     <div className="bg-white rounded-lg shadow-md p-6 sm:p-8 overflow-hidden">
@@ -279,9 +280,9 @@ export function AppRegistration() {
                                                             onClick={handleInstall}
                                                             disabled={isInstalling}
                                                             className="w-full py-3 px-4 bg-blue-500 text-white rounded-md
-                                                        hover:bg-blue-600 transition duration-300
-                                                        disabled:opacity-50 disabled:cursor-not-allowed
-                                                        inline-flex items-center justify-center"
+                                                    hover:bg-blue-600 transition duration-300
+                                                    disabled:opacity-50 disabled:cursor-not-allowed
+                                                    inline-flex items-center justify-center"
                                                         >
                                                             {isInstalling ? (
                                                                 <>
