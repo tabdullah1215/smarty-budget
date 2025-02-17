@@ -1,4 +1,3 @@
-//PaycheckBudgetDetails.js
 import React, {useRef, useState, useMemo, useEffect} from 'react';
 import {useReactToPrint} from 'react-to-print';
 import {Loader2} from 'lucide-react';
@@ -65,14 +64,12 @@ export const PaycheckBudgetDetails = ({budget, onClose, onUpdate}) => {
     const [selectedImage, setSelectedImage] = useState(null);
     const [selectedImageType, setSelectedImageType] = useState(null);
 
-    // Delete confirmation states
     const [showDeleteItemModal, setShowDeleteItemModal] = useState(false);
     const [deletingItemId, setDeletingItemId] = useState(null);
     const [deletingButtonId, setDeletingButtonId] = useState(null);
     const [editingItemId, setEditingItemId] = useState(null);
     const [uploadingImageItemId, setUploadingImageItemId] = useState(null);
 
-// Transitions
     const transitions = useTransition(show, modalTransitions);
     const backdropTransition = useTransition(show, backdropTransitions);
 
@@ -322,8 +319,6 @@ export const PaycheckBudgetDetails = ({budget, onClose, onUpdate}) => {
                     input.onchange = () => {
                         resolve(input.files[0] || null);
                     };
-
-                    // Handle dialog close/cancel
                     window.addEventListener('focus', function onFocus() {
                         // Small delay to ensure we get the file if one was selected
                         setTimeout(() => {
@@ -368,10 +363,8 @@ export const PaycheckBudgetDetails = ({budget, onClose, onUpdate}) => {
     };
 
     useEffect(() => {
-        // Disable scroll when component mounts
         disableScroll();
 
-        // Re-enable scroll when component unmounts
         return () => {
             enableScroll();
         };
@@ -442,7 +435,6 @@ export const PaycheckBudgetDetails = ({budget, onClose, onUpdate}) => {
                             className="fixed inset-0 z-50 flex items-center justify-center"
                         >
                             <div className="w-[95%] max-w-4xl bg-white rounded-lg shadow-xl max-h-[80vh] flex flex-col">
-                                {/* Header Section */}
                                 <PaycheckBudgetDetailsHeader
                                     budget={budget}
                                     totalSpent={totalSpent}
@@ -458,7 +450,6 @@ export const PaycheckBudgetDetails = ({budget, onClose, onUpdate}) => {
                                     isAddingItem={isAddingItem}
                                     showPrintShare={false}
                                 />
-                                {/* Scrollable Content */}
                                 <div className="flex-1 overflow-y-auto overflow-x-hidden px-2 sm:px-5">
                                     <div className="relative w-full min-h-0 max-h-[calc(80vh-250px)]">
                                         <div className="w-full overflow-x-hidden">
@@ -499,8 +490,6 @@ export const PaycheckBudgetDetails = ({budget, onClose, onUpdate}) => {
                                         </div>
                                     </div>
                                 </div>
-
-                                {/* Footer Section */}
                                 <div className="p-5 border-t">
                                     <div className="flex justify-end">
                                         <button
@@ -515,8 +504,6 @@ export const PaycheckBudgetDetails = ({budget, onClose, onUpdate}) => {
                                         </button>
                                     </div>
                                 </div>
-
-                                {/* Modals */}
                                 {showForm && (
                                     <PaycheckBudgetItemForm
                                         onSave={async (itemData) => {
@@ -556,8 +543,6 @@ export const PaycheckBudgetDetails = ({budget, onClose, onUpdate}) => {
                         </animated.div>
                     )
             )}
-
-            {/* Delete Confirmation Modal */}
             <DeleteConfirmationModal
                 isOpen={showDeleteItemModal && !!deletingItemId}
                 onClose={handleCancelItemDelete}

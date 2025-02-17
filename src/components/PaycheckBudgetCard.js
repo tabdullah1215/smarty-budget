@@ -1,4 +1,3 @@
-// PaycheckBudgetCard.js
 import React from 'react';
 import { FileText, Trash2, Loader2 } from 'lucide-react';
 import { animated } from '@react-spring/web';
@@ -13,7 +12,6 @@ export const PaycheckBudgetCard = ({
     onSelect,
     isSelected
                            }) => {
-    // Calculate totals and percentages
     const totalSpent = budget.items?.reduce((sum, item) => sum + (item.amount || 0), 0) || 0;
     const remainingAmount = budget.amount - totalSpent;
     const percentageUsed = (totalSpent / budget.amount) * 100;
@@ -23,7 +21,6 @@ export const PaycheckBudgetCard = ({
             style={style}
             className="bg-white shadow-md rounded-lg p-6 hover:shadow-xl transition-all duration-200"
         >
-            {/* Checkbox for selecting budget */}
             <div className="absolute top-2 left-2">
                 <input
                     type="checkbox"
@@ -57,10 +54,10 @@ export const PaycheckBudgetCard = ({
                                     style={{
                                         width: `${Math.min(percentageUsed, 100)}%`,
                                         backgroundColor: percentageUsed > 100
-                                            ? '#EF4444'  // Red for over budget
+                                            ? '#EF4444'
                                             : percentageUsed > 90
-                                                ? '#F59E0B'  // Orange for warning
-                                                : '#10B981'  // Green for good
+                                                ? '#F59E0B'
+                                                : '#10B981'
                                     }}
                                 />
                                 <span className="absolute -bottom-4 right-0 text-xs text-gray-500">
