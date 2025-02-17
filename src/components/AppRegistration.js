@@ -8,6 +8,8 @@ import {isMobileDevice, shouldBypassMobileCheck} from "../utils/helpers";  // Ad
 import { InstallPrompt } from './InstallPrompt';
 import { IOSInstallInstructions } from './IOSInstallInstructions';
 import {withMinimumDelay} from "../utils/withDelay";
+import { useTransition, animated } from '@react-spring/web';
+import { modalTransitions, backdropTransitions } from '../utils/transitions';
 
 export function AppRegistration() {
     const [email, setEmail] = useState('');
@@ -21,8 +23,25 @@ export function AppRegistration() {
     const [showInstallPrompt, setShowInstallPrompt] = useState(false);
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
     const [isLoading, setIsLoading] = useState(false);
+    const [showCompleteUI, setShowCompleteUI] = useState(false);
+    const [isInstalling, setIsInstalling] = useState(false);
+
+
+    const transitions = useTransition(showCompleteUI, modalTransitions);
+    const backdropTransition = useTransition(showCompleteUI, backdropTransitions);
 
     const API_KEY = process.env.REACT_APP_KEY_1;
+
+    useEffect(() => {
+        if (registrationComplete) {
+            const animateIn = async () => {
+                await withMinimumDelay(async () => {
+                    setShowCompleteUI(true);
+                }, 500);
+            };
+            animateIn();
+        }
+    }, [registrationComplete]);
 
     useEffect(() => {
         const handleInstallPrompt = (e) => {
@@ -37,6 +56,23 @@ export function AppRegistration() {
     if (!isMobileDevice() && !shouldBypassMobileCheck()) {
         return <Navigate to="/" replace />;
     }
+
+    const handleInstall = async () => {
+        if (!deferredPrompt) return;
+
+        setIsInstalling(true);
+        try {
+            await withMinimumDelay(async () => {
+                await deferredPrompt.prompt();
+                await deferredPrompt.userChoice;
+                setDeferredPrompt(null);
+            }, 800);
+        } catch (error) {
+            console.error('Installation failed:', error);
+        } finally {
+            setIsInstalling(false);
+        }
+    };
     const handleSubmit = async (e) => {
         e.preventDefault();
         setPermanentMessage({ type: '', content: '' });
@@ -200,56 +236,78 @@ export function AppRegistration() {
 
     if (registrationComplete) {
         return (
-            <div className="min-h-screen bg-gray-200">
+            <>
+                {backdropTransition((style, item) =>
+                        item && (
+                            <animated.div
+                                style={style}
+                                className="fixed inset-0 bg-gray-600 bg-opacity-50 z-40"
+                            />
+                        )
+                )}
                 <DashboardHeader
                     title="Registration Successful"
                     subtitle="One Last Step"
                 />
-                <div className="p-4 sm:p-8 max-w-md mx-auto pt-32 md:pt-36">
-                    <div className="bg-white rounded-lg shadow-md p-6 sm:p-8 overflow-hidden">
-                        <div className="text-center">
-                            <div className="mb-6">
-                                <div className="w-16 h-16 bg-green-100 rounded-full mx-auto flex items-center justify-center">
-                                    <CheckIcon className="h-8 w-8 text-green-500" />
-                                </div>
-                            </div>
-                            <h2 className="text-2xl font-bold text-gray-900 mb-6">
-                                Registration Complete!
-                            </h2>
+                {transitions((style, item) =>
+                        item && (
+                            <animated.div
+                                style={style}
+                                className="min-h-screen bg-gray-200"
+                            >
+                                <div className="p-4 sm:p-8 max-w-md mx-auto pt-32 md:pt-36">
+                                    <div className="bg-white rounded-lg shadow-md p-6 sm:p-8 overflow-hidden">
+                                        <div className="text-center">
+                                            <div className="mb-6">
+                                                <div className="w-16 h-16 bg-green-100 rounded-full mx-auto flex items-center justify-center">
+                                                    <CheckIcon className="h-8 w-8 text-green-500" />
+                                                </div>
+                                            </div>
+                                            <h2 className="text-2xl font-bold text-gray-900 mb-6">
+                                                Registration Complete!
+                                            </h2>
 
-                            <div className="overflow-y-auto max-h-[60vh]">
-                                {isIOS ? (
-                                    <IOSInstallInstructions />
-                                ) : (
-                                    <div className="space-y-4">
-                                        <p className="text-gray-600">
-                                            Click below to install the app on your device:
-                                        </p>
-                                        <button
-                                            onClick={async () => {
-                                                if (deferredPrompt) {
-                                                    await deferredPrompt.prompt();
-                                                    await deferredPrompt.userChoice;
-                                                    setDeferredPrompt(null);
-                                                }
-                                            }}
-                                            className="w-full py-3 px-4 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-300"
-                                        >
-                                            Add to Home Screen
-                                        </button>
-                                        <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-100">
-                                            <p className="text-blue-700">
-                                                After installation, look for the app icon on your home screen or in your
-                                                app drawer to open the app.
-                                            </p>
+                                            <div className="overflow-y-auto max-h-[60vh]">
+                                                {isIOS ? (
+                                                    <IOSInstallInstructions />
+                                                ) : (
+                                                    <div className="space-y-4">
+                                                        <p className="text-gray-600">
+                                                            Click below to install the app on your device:
+                                                        </p>
+                                                        <button
+                                                            onClick={handleInstall}
+                                                            disabled={isInstalling}
+                                                            className="w-full py-3 px-4 bg-blue-500 text-white rounded-md
+                                                        hover:bg-blue-600 transition duration-300
+                                                        disabled:opacity-50 disabled:cursor-not-allowed
+                                                        inline-flex items-center justify-center"
+                                                        >
+                                                            {isInstalling ? (
+                                                                <>
+                                                                    <Loader2 className="h-5 w-5 mr-2 animate-spin"/>
+                                                                    Installing...
+                                                                </>
+                                                            ) : (
+                                                                'Add to Home Screen'
+                                                            )}
+                                                        </button>
+                                                        <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-100">
+                                                            <p className="text-blue-700">
+                                                                After installation, look for the app icon on your home screen
+                                                                or in your app drawer to open the app.
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+                                </div>
+                            </animated.div>
+                        )
+                )}
+            </>
         );
     }
 
