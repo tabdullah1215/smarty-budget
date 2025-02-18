@@ -322,7 +322,7 @@ export function AppRegistration() {
             <div className="w-full min-h-[calc(100vh-64px)] flex items-start justify-center">
                 <div className="w-full max-w-md px-4 sm:px-6 lg:px-8">
                     {/* Form container with dynamic top margin */}
-                    <div className="mt-[104px] sm:mt-[92px] transition-all duration-200">
+                    <div className="mt-[116px] sm:mt-[92px] transition-all duration-200">
                         <div className="bg-white rounded-lg shadow-md p-6 sm:p-8">
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
