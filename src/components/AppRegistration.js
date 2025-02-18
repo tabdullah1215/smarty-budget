@@ -319,8 +319,11 @@ export function AppRegistration() {
                 subtitle={`Registration Type: ${linkType}`}
                 permanentMessage={permanentMessage}
             />
-            <div className="pl-8 pr-8 pb-0 max-w-md mx-auto pt-60 md:pt-60">
-                <div className="bg-white rounded-lg shadow-md p-8">
+            <div className="w-full min-h-[calc(100vh-64px)] flex items-start justify-center">
+                <div className="w-full max-w-md px-4 sm:px-6 lg:px-8">
+                    {/* Form container with dynamic top margin */}
+                    <div className="mt-[84px] sm:mt-[92px] transition-all duration-200">
+                        <div className="bg-white rounded-lg shadow-md p-6 sm:p-8">
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
                             <label htmlFor="email" className="block mb-1 text-sm font-medium">Email</label>
@@ -399,6 +402,8 @@ export function AppRegistration() {
                         </p>
                     </div>
                 </div>
+            </div>
+            </div>
             </div>
             <InstallPrompt
                 isOpen={showInstallPrompt}
