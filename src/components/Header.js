@@ -4,7 +4,8 @@ import authService from '../services/authService';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { withMinimumDelay } from "../utils/withDelay";
 import { Loader2, ArrowLeft, LogOut, X, FileDown, FileSpreadsheet } from 'lucide-react';
-import {useToast} from '../contexts/ToastContext';
+import { useToast } from '../contexts/ToastContext';
+import BackupButton from './BackupButton';
 
 export const Header = ({
                            showCreateButton = false,
@@ -73,7 +74,9 @@ export const Header = ({
                                     <ArrowLeft className="h-6 w-6"/>
                                 </button>
                             ) : (
-                                <div className="w-6"/>
+                                <div className="w-6 flex items-center justify-center">
+                                    {isHomePage && <BackupButton />}
+                                </div>
                             )}
                             <h1 className="text-2xl font-bold text-gray-900 text-center md:text-left flex-grow md:flex-grow-0">
                                 DigitalPhorm Budget Tracker
