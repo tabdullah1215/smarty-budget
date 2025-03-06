@@ -311,30 +311,52 @@ export const PaycheckBudgetDetails = ({budget, onClose, onUpdate}) => {
         setUploadingImageItemId(itemId);
         try {
             await withMinimumDelay(async () => {
+                // Create a file input element
                 const input = document.createElement('input');
                 input.type = 'file';
                 input.accept = 'image/*';
 
-                // Create a promise that resolves when either file is selected or dialog is closed
+                // Explicitly append to DOM to ensure it works on all browsers/devices
+                input.style.display = 'none';
+                document.body.appendChild(input);
+
+                // Create a promise that resolves when a file is selected
                 const fileSelection = new Promise((resolve) => {
                     // Handle file selection
                     input.onchange = () => {
-                        resolve(input.files[0] || null);
+                        // Make sure we get the file before resolving
+                        if (input.files && input.files.length > 0) {
+                            const selectedFile = input.files[0];
+                            resolve(selectedFile);
+                        } else {
+                            resolve(null);
+                        }
                     };
-                    window.addEventListener('focus', function onFocus() {
-                        // Small delay to ensure we get the file if one was selected
+
+                    // Handle dialog dismissal
+                    const focusHandler = () => {
+                        // Use a slight delay to ensure onchange had a chance to fire
                         setTimeout(() => {
-                            if (!input.files.length) {
+                            // If no files were selected and input is no longer focused
+                            if (!input.files || input.files.length === 0) {
+                                window.removeEventListener('focus', focusHandler);
                                 resolve(null);
                             }
-                            window.removeEventListener('focus', onFocus);
                         }, 300);
-                    });
+                    };
+
+                    window.addEventListener('focus', focusHandler);
                 });
 
+                // Trigger the file selection dialog
                 input.click();
 
+                // Wait for file selection or dialog dismissal
                 const file = await fileSelection;
+
+                // Clean up the input element
+                document.body.removeChild(input);
+
                 if (!file) {
                     setUploadingImageItemId(null);  // Clear loading state if cancelled
                     return;
@@ -370,31 +392,52 @@ export const PaycheckBudgetDetails = ({budget, onClose, onUpdate}) => {
 
                     // Fallback to original image if compression fails
                     const reader = new FileReader();
-                    reader.onloadend = () => {
-                        const base64Data = reader.result.split(',')[1];
-                        const fileType = file.type;
-                        const updatedItems = budget.items.map(item =>
-                            item.id === itemId ? {...item, image: base64Data, fileType: fileType} : item
-                        );
-                        const updatedBudget = {...budget, items: updatedItems};
-                        onUpdate(updatedBudget);
-                    };
-                    reader.onerror = () => {
-                        showToast('error', 'Failed to upload image. Please try again.');
-                    };
-                    reader.readAsDataURL(file);
-                }
 
-                setUploadingImageItemId(null);
+                    // Create a proper promise for FileReader operation
+                    const readFilePromise = new Promise((resolve, reject) => {
+                        reader.onloadend = (event) => {
+                            if (event.target.readyState === FileReader.DONE) {
+                                resolve(event.target.result);
+                            }
+                        };
+                        reader.onerror = () => {
+                            reject(new Error('Failed to read image file'));
+                        };
+
+                        // Start reading the file as a data URL
+                        reader.readAsDataURL(file);
+                    });
+
+                    try {
+                        const dataUrl = await readFilePromise;
+                        const base64Data = dataUrl.split(',')[1];
+                        const fileType = file.type;
+
+                        const updatedItems = budget.items.map(item =>
+                            item.id === itemId ? {
+                                ...item,
+                                image: base64Data,
+                                fileType: fileType
+                            } : item
+                        );
+
+                        const updatedBudget = {...budget, items: updatedItems};
+                        await onUpdate(updatedBudget);
+
+                    } catch (readError) {
+                        showToast('error', 'Failed to read image file. Please try again.');
+                        console.error('File read error:', readError);
+                    }
+                }
 
             }, 800);
         } catch (error) {
-            setUploadingImageItemId(null);
             console.error('Error uploading image:', error);
             showToast('error', 'Failed to upload image: ' + (error.message || 'Unknown error'));
+        } finally {
+            setUploadingImageItemId(null);
         }
     };
-
 
     useEffect(() => {
         disableScroll();
