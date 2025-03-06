@@ -193,7 +193,7 @@ function App() {
                 <div className="h-full overflow-hidden">
                     <BrowserRouter>
                         <Routes>
-                            {/* Special route handling for standalone mode */}
+                            {/* Special handling for standalone mode - redirects to login if not authenticated */}
                             {isStandalone && !isAuthenticated && !isRegistrationPath && (
                                 <Route path="*" element={<Navigate to="/login" replace />} />
                             )}
@@ -222,7 +222,6 @@ function App() {
                                     </ProtectedRoute>
                                 }
                             />
-
                             <Route
                                 path="/paycheck-budgets"
                                 element={
