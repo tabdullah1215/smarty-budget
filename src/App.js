@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import PWAGateway from './components/PWAGateway';
@@ -119,6 +118,8 @@ function App() {
     const currentPath = window.location.pathname;
     const isRegistrationPath = currentPath.includes('/register/');
     const shouldAllowAccess = isStandalone || shouldBypassMobileCheck();
+    const isAuthenticated = authService.isAuthenticated();
+
     const getQRCodeUrl = () => {
         if (process.env.REACT_APP_IS_LOCAL === 'true') {
             return `http://${process.env.REACT_APP_LOCAL_IP}:3000${window.location.pathname}`;
@@ -189,60 +190,68 @@ function App() {
     return (
         <ErrorBoundary>
             <ToastProvider>
-                    <div className="h-full overflow-hidden">
-                        <BrowserRouter>
-                            <Routes>
-                                <Route path="/login" element={
-                                    shouldAllowAccess ? <Login /> : <PWAGateway />
-                                } />
-                                <Route
-                                    path="/register/:appId/:linkType/:token"
-                                    element={<AppRegistration />}
-                                />
-                                <Route
-                                    path="/dashboard"
-                                    element={
-                                        <ProtectedRoute>
-                                            {shouldAllowAccess ? <Home /> : <PWAGateway />}
-                                        </ProtectedRoute>
-                                    }
-                                />
-                                <Route
-                                    path="/budgets"
-                                    element={
-                                        <ProtectedRoute>
-                                            {isStandalone ? <BudgetContent /> : <PWAGateway />}
-                                        </ProtectedRoute>
-                                    }
-                                />
+                <div className="h-full overflow-hidden">
+                    <BrowserRouter>
+                        <Routes>
+                            {/* Special route handling for standalone mode */}
+                            {isStandalone && !isAuthenticated && !isRegistrationPath && (
+                                <Route path="*" element={<Navigate to="/login" replace />} />
+                            )}
 
-                                <Route
-                                    path="/paycheck-budgets"
-                                    element={
-                                        <ProtectedRoute>
-                                            {isStandalone ? <PaycheckBudgets /> : <PWAGateway />}
-                                        </ProtectedRoute>
-                                    }
-                                />
-                                <Route
-                                    path="/"
-                                    element={
+                            {/* Regular routes */}
+                            <Route path="/login" element={
+                                shouldAllowAccess ? <Login /> : <PWAGateway />
+                            } />
+                            <Route
+                                path="/register/:appId/:linkType/:token"
+                                element={<AppRegistration />}
+                            />
+                            <Route
+                                path="/dashboard"
+                                element={
+                                    <ProtectedRoute>
+                                        {shouldAllowAccess ? <Home /> : <PWAGateway />}
+                                    </ProtectedRoute>
+                                }
+                            />
+                            <Route
+                                path="/budgets"
+                                element={
+                                    <ProtectedRoute>
+                                        {isStandalone ? <BudgetContent /> : <PWAGateway />}
+                                    </ProtectedRoute>
+                                }
+                            />
+
+                            <Route
+                                path="/paycheck-budgets"
+                                element={
+                                    <ProtectedRoute>
+                                        {isStandalone ? <PaycheckBudgets /> : <PWAGateway />}
+                                    </ProtectedRoute>
+                                }
+                            />
+                            <Route
+                                path="/"
+                                element={
+                                    isStandalone && !isAuthenticated ?
+                                        <Navigate to="/login" replace /> :
                                         <ProtectedRoute>
                                             <Navigate to="/dashboard" replace />
                                         </ProtectedRoute>
-                                    }
-                                />
-                                <Route path="*" element={<Navigate to="/login" replace />} />
-                            </Routes>
-                        </BrowserRouter>
-                        <Toaster
-                            containerStyle={{
-                                top: 20,
-                                right: 20,
-                                zIndex: 10000
-                            }}
-                        />
-                    </div>
+                                }
+                            />
+                            <Route path="*" element={<Navigate to="/login" replace />} />
+                        </Routes>
+                    </BrowserRouter>
+                    <Toaster
+                        containerStyle={{
+                            top: 20,
+                            right: 20,
+                            zIndex: 10000
+                        }}
+                    />
+                </div>
             </ToastProvider>
         </ErrorBoundary>
     );
