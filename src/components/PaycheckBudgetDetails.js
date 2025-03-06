@@ -13,6 +13,7 @@ import PaycheckBudgetItemRow from "./PaycheckBudgetItemRow";
 import PaycheckBudgetTableHeader from "./PaycheckBudgetTableHeader";
 import DeleteConfirmationModal from "./DeleteConfirmationModal";
 import { compressImage, formatFileSize } from '../utils/imageCompression';
+import { getStorageEstimate, formatStorageMessage } from '../utils/storageEstimation';
 
 const PrintableContent = React.forwardRef(({budget}, ref) => {
     return (
@@ -311,7 +312,6 @@ export const PaycheckBudgetDetails = ({budget, onClose, onUpdate}) => {
         setUploadingImageItemId(itemId);
         try {
             await withMinimumDelay(async () => {
-                // Create a file input element
                 const input = document.createElement('input');
                 input.type = 'file';
                 input.accept = 'image/*';
@@ -366,12 +366,17 @@ export const PaycheckBudgetDetails = ({budget, onClose, onUpdate}) => {
                     // Compress the image using our utility
                     const compressResult = await compressImage(file);
 
-                    // Show compression statistics in a toast
+                    // Get storage estimate
+                    const storageEstimate = await getStorageEstimate();
+                    const storageMessage = formatStorageMessage(storageEstimate);
+
+                    // Show compression statistics in a toast with storage info
                     showToast(
                         'success',
                         `Image compressed: ${formatFileSize(compressResult.originalSize)} → 
                      ${formatFileSize(compressResult.compressedSize)} 
-                     (${compressResult.compressionRatio}% reduction)`
+                     (${compressResult.compressionRatio}% reduction)
+                     ${storageMessage ? `\n${storageMessage}` : ''}`
                     );
 
                     // Update the budget item with compressed image
