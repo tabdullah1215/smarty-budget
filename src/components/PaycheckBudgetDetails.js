@@ -12,6 +12,7 @@ import PaycheckBudgetDetailsHeader from "./PaycheckBudgetDetailsHeader";
 import PaycheckBudgetItemRow from "./PaycheckBudgetItemRow";
 import PaycheckBudgetTableHeader from "./PaycheckBudgetTableHeader";
 import DeleteConfirmationModal from "./DeleteConfirmationModal";
+import { compressImage, formatFileSize } from '../utils/imageCompression';
 
 const PrintableContent = React.forwardRef(({budget}, ref) => {
     return (
@@ -305,6 +306,7 @@ export const PaycheckBudgetDetails = ({budget, onClose, onUpdate}) => {
             console.error('Error initiating delete:', error);
         }
     }
+
     const handleImageUpload = async (itemId) => {
         setUploadingImageItemId(itemId);
         try {
@@ -338,29 +340,61 @@ export const PaycheckBudgetDetails = ({budget, onClose, onUpdate}) => {
                     return;
                 }
 
-                const reader = new FileReader();
-                reader.onloadend = () => {
-                    const base64Data = reader.result.split(',')[1];
-                    const fileType = file.type;
-                    const updatedItems = budget.items.map(item =>
-                        item.id === itemId ? {...item, image: base64Data, fileType: fileType} : item
+                try {
+                    // Compress the image using our utility
+                    const compressResult = await compressImage(file);
+
+                    // Show compression statistics in a toast
+                    showToast(
+                        'success',
+                        `Image compressed: ${formatFileSize(compressResult.originalSize)} → 
+                     ${formatFileSize(compressResult.compressedSize)} 
+                     (${compressResult.compressionRatio}% reduction)`
                     );
+
+                    // Update the budget item with compressed image
+                    const updatedItems = budget.items.map(item =>
+                        item.id === itemId ? {
+                            ...item,
+                            image: compressResult.data,
+                            fileType: compressResult.fileType
+                        } : item
+                    );
+
                     const updatedBudget = {...budget, items: updatedItems};
-                    onUpdate(updatedBudget);
-                    showToast('success', 'Image uploaded successfully');
-                    setUploadingImageItemId(null);
-                };
-                reader.onerror = () => {
-                    showToast('error', 'Failed to upload image. Please try again.');
-                    setUploadingImageItemId(null);
-                };
-                reader.readAsDataURL(file);
+                    await onUpdate(updatedBudget);
+
+                } catch (compressionError) {
+                    console.error('Error compressing image:', compressionError);
+                    showToast('error', 'Could not compress image. Using original instead.');
+
+                    // Fallback to original image if compression fails
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                        const base64Data = reader.result.split(',')[1];
+                        const fileType = file.type;
+                        const updatedItems = budget.items.map(item =>
+                            item.id === itemId ? {...item, image: base64Data, fileType: fileType} : item
+                        );
+                        const updatedBudget = {...budget, items: updatedItems};
+                        onUpdate(updatedBudget);
+                    };
+                    reader.onerror = () => {
+                        showToast('error', 'Failed to upload image. Please try again.');
+                    };
+                    reader.readAsDataURL(file);
+                }
+
+                setUploadingImageItemId(null);
+
             }, 800);
         } catch (error) {
             setUploadingImageItemId(null);
             console.error('Error uploading image:', error);
+            showToast('error', 'Failed to upload image: ' + (error.message || 'Unknown error'));
         }
     };
+
 
     useEffect(() => {
         disableScroll();
