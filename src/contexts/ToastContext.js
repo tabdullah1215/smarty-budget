@@ -6,6 +6,7 @@ const ToastContext = createContext(null);
 
 export const ToastProvider = ({ children }) => {
     const showToast = (type, message) => {
+
         const toastOptions = {
             position: 'top-right',
             style: {
@@ -15,8 +16,10 @@ export const ToastProvider = ({ children }) => {
                 padding: '16px',
                 borderRadius: '8px',
                 boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                cursor: 'pointer',
             },
             duration: type === 'error' ? Infinity : 3000,
+            onClick: () => toast.dismiss()
         };
 
         if (type === 'error') {
