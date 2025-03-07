@@ -15,10 +15,11 @@ export const APP_ID = 'budget-tracker';
 
 export const DB_CONFIG = {
     name: 'BudgetTrackerDB',
-    version: 4, // Incremented version for new store
+    version: 5, // Incremented version for new store
     stores: {
         budgets: 'budgets',
         paycheckBudgets: 'paycheckBudgets',
         paycheckCategories: 'paycheckCategories',
+        backupInfo: 'backupInfo',
     },
 };

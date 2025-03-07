@@ -38,6 +38,12 @@ class IndexDBService {
                     paycheckStore.createIndex('createdAt', 'createdAt', { unique: false });
                 }
 
+                if (!db.objectStoreNames.contains(DB_CONFIG.stores.backupInfo)) {
+                    const backupStore = db.createObjectStore(DB_CONFIG.stores.backupInfo, { keyPath: 'id' });
+                    backupStore.createIndex('userEmail', 'userEmail', { unique: false });
+                    backupStore.createIndex('timestamp', 'timestamp', { unique: false });
+                }
+
                 // Add the paycheckCategories object store
                 if (!db.objectStoreNames.contains(DB_CONFIG.stores.paycheckCategories)) {
                     const categoriesStore = db.createObjectStore(DB_CONFIG.stores.paycheckCategories, { keyPath: 'id' });

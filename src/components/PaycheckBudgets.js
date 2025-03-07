@@ -6,14 +6,15 @@ import {Header} from './Header';
 import {PaycheckBudgetForm} from './PaycheckBudgetForm';
 import {PaycheckBudgetDetails} from './PaycheckBudgetDetails';
 import {usePaycheckBudgets} from '../hooks/usePaycheckBudget';
-import {withMinimumDelay} from '../utils/withDelay';
+import {withMinimumDelay} from "../utils/withDelay";
 import {useToast} from '../contexts/ToastContext';
 import DeleteConfirmationModal from "./DeleteConfirmationModal";
 import {PaycheckBudgetCard} from './PaycheckBudgetCard';
 import authService from '../services/authService';
 import PaycheckBudgetReport from "./PaycheckBudgetReport";
 import {downloadCSV} from '../utils/budgetCsvGenerator';
-import RestoreButton from './RestoreButton';
+// Import StaticRestoreButton
+import StaticRestoreButton from './StaticRestoreButton';
 
 export const PaycheckBudgets = () => {
     const [isCreating, setIsCreating] = useState(false);
@@ -194,47 +195,46 @@ export const PaycheckBudgets = () => {
                 onDownloadCsv={handleDownloadCsv}
             />
 
-            <div className="pt-72 md:pt-36 px-4 sm:px-6 lg:px-8">
-                <div className="max-w-7xl mx-auto pb-8">
+            {/* Substantially increased padding to ensure content is below header */}
+            <div className="pt-64 md:pt-40 px-4 sm:px-6 lg:px-8">
+                <div className="max-w-4xl mx-auto pb-8">
                     {isLoading ? (
                         <div className="flex justify-center items-center h-32">
                             <Loader2 className="h-8 w-8 animate-spin text-gray-600" />
                         </div>
                     ) : paycheckBudgets.length === 0 ? (
                         <div className="bg-white rounded-lg shadow-md">
-                            <div className="flex flex-col items-center justify-center p-8 text-center">
-                                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
-                                    <Plus className="h-8 w-8 text-blue-600" />
-                                </div>
+                            <div className="flex flex-col items-center justify-center p-5 sm:p-8 text-center">
                                 <h3 className="text-xl font-medium text-gray-900 mb-2">
                                     No Paycheck Budgets Yet
                                 </h3>
-                                <p className="text-gray-500 max-w-sm mb-6">
-                                    Track your income and expenses for each paycheck. Create your first paycheck budget to get started.
+                                <p className="text-gray-500 max-w-sm mb-4">
+                                    Track your income and expenses for each paycheck. Create your first paycheck budget or restore from a backup.
                                 </p>
-                                <div className="space-y-4">
-                                    <button
-                                        onClick={handleCreateClick}
-                                        disabled={isCreating || isRestoring}
-                                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-                                    >
-                                        {isCreating ? (
-                                            <>
-                                                <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                                                Creating...
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Plus className="h-5 w-5 mr-2" />
-                                                Create Paycheck Budget
-                                            </>
-                                        )}
-                                    </button>
 
-                                    <div className="pt-4 border-t border-gray-200 mt-6">
-                                        <p className="text-sm text-gray-600 mb-4">Or restore from a previously created backup:</p>
-                                        <RestoreButton onRestore={() => setIsRestoring(true)} />
-                                    </div>
+                                {/* Create Budget Button */}
+                                <button
+                                    onClick={handleCreateClick}
+                                    disabled={isCreating || isRestoring}
+                                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 mb-6"
+                                >
+                                    {isCreating ? (
+                                        <>
+                                            <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                                            Creating...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Plus className="h-5 w-5 mr-2" />
+                                            Create Paycheck Budget
+                                        </>
+                                    )}
+                                </button>
+
+                                {/* Restore Section without icon */}
+                                <div className="w-full max-w-md pt-4 border-t border-gray-200">
+                                    <p className="text-sm text-gray-600 mb-3">Or restore from a previously created backup:</p>
+                                    <StaticRestoreButton onRestore={() => setIsRestoring(true)} />
                                 </div>
                             </div>
                         </div>

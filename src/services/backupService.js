@@ -3,6 +3,9 @@ import { indexdbService } from './IndexDBService';
 import { DB_CONFIG } from '../config';
 import authService from './authService';
 
+// Define a static backup filename
+export const STATIC_BACKUP_FILENAME = 'budget-tracker-backup.json';
+
 export const backupService = {
     async createBackupObject() {
         const userEmail = authService.getUserInfo()?.sub;
@@ -49,10 +52,10 @@ export const backupService = {
             const blob = new Blob([JSON.stringify(backup)], {type: 'application/json'});
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
-            const date = new Date().toISOString().split('T')[0];
 
+            // Use static filename instead of date-based
             link.href = url;
-            link.download = `budget-backup-${date}.json`;
+            link.download = STATIC_BACKUP_FILENAME;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
@@ -66,6 +69,56 @@ export const backupService = {
             console.error('Error downloading backup:', error);
             throw error;
         }
+    },
+
+    // Get estimated download path based on browser/OS detection
+    getEstimatedDownloadPath() {
+        const os = this.detectOS();
+        const browser = this.detectBrowser();
+
+        let path = "Downloads folder";
+
+        // Estimate download path based on OS and browser
+        if (os === 'Windows') {
+            path = "Downloads folder (usually C:\\Users\\YourName\\Downloads)";
+            if (browser === 'Firefox') {
+                path = "Downloads folder or the location you last saved to in Firefox";
+            }
+        } else if (os === 'Mac') {
+            path = "Downloads folder (~/Downloads)";
+        } else if (os === 'iOS') {
+            path = "Files app > Downloads";
+            if (browser === 'Safari') {
+                path = "Files app > On My iPhone/iPad > Downloads";
+            }
+        } else if (os === 'Android') {
+            path = "Downloads folder or your file browser app";
+            if (browser === 'Chrome') {
+                path = "Files app > Downloads";
+            }
+        }
+
+        return path;
+    },
+
+    // Simple OS detection
+    detectOS() {
+        const userAgent = window.navigator.userAgent;
+        if (userAgent.indexOf("Windows") !== -1) return 'Windows';
+        if (userAgent.indexOf("Mac") !== -1) return 'Mac';
+        if (userAgent.indexOf("iPhone") !== -1 || userAgent.indexOf("iPad") !== -1) return 'iOS';
+        if (userAgent.indexOf("Android") !== -1) return 'Android';
+        return 'Unknown';
+    },
+
+    // Simple browser detection
+    detectBrowser() {
+        const userAgent = window.navigator.userAgent;
+        if (userAgent.indexOf("Chrome") !== -1) return 'Chrome';
+        if (userAgent.indexOf("Firefox") !== -1) return 'Firefox';
+        if (userAgent.indexOf("Safari") !== -1) return 'Safari';
+        if (userAgent.indexOf("Edge") !== -1) return 'Edge';
+        return 'Unknown';
     },
 
     async hasExistingData() {
