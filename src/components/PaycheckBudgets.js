@@ -209,7 +209,7 @@ export const PaycheckBudgets = () => {
                                     No Paycheck Budgets Yet
                                 </h3>
                                 <p className="text-gray-500 max-w-sm mb-4">
-                                    Track your income and expenses for each paycheck. Create your first paycheck budget or restore from a backup.
+                                    Track your income and expenses for each paycheck. Create your first paycheck budget.
                                 </p>
 
                                 {/* Create Budget Button */}

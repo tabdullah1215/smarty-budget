@@ -12,6 +12,8 @@ const BackupButton = () => {
     const [isCreatingBackup, setIsCreatingBackup] = useState(false);
     const { showToast } = useToast();
 
+    const [isCancelling, setIsCancelling] = useState(false);
+
     const transitions = useTransition(showWarning, modalTransitions);
     const backdropTransition = useTransition(showWarning, backdropTransitions);
 
@@ -27,6 +29,15 @@ const BackupButton = () => {
         // Show the modal and stop the spinning icon
         setIsBackingUp(false);
         setShowWarning(true);
+    };
+
+    const handleCancel = async () => {
+        setIsCancelling(true);
+
+        await withMinimumDelay(async () => {}, 800);
+
+        setShowWarning(false);
+        setIsCancelling(false);
     };
 
     const executeBackup = async () => {
@@ -85,15 +96,15 @@ const BackupButton = () => {
                         <animated.div
                             style={style}
                             className="fixed inset-0 bg-gray-600 bg-opacity-50 z-50"
-                            onClick={() => !isCreatingBackup && setShowWarning(false)}
+                            onClick={() => !isCreatingBackup && !isCancelling && handleCancel()}
                         />
                     )
             )}
             {transitions((style, item) =>
-                    item && (
-                        <animated.div
-                            style={style}
-                            className="fixed inset-0 flex items-center justify-center z-50 p-4"
+                item && (
+                    <animated.div
+                        style={style}
+                        className="fixed inset-0 flex items-center justify-center z-50 p-4"
                             onClick={(e) => e.stopPropagation()}
                         >
                             <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
@@ -101,37 +112,45 @@ const BackupButton = () => {
                                     <div className="flex-shrink-0 mr-3">
                                         <AlertTriangle className="h-6 w-6 text-orange-500" />
                                     </div>
-                                    <div>
-                                        <h3 className="text-lg font-medium text-gray-900">Backup Notice</h3>
+                                    <div className="text-center">
+                                        <h3 className="text-lg font-medium text-gray-900">
+                                            Backup Notice
+                                        </h3>
                                         <p className="text-sm text-gray-500 mt-2">
-                                            This will create a backup file named <strong>{STATIC_BACKUP_FILENAME}</strong>.
+                                            This will create a backup file named <br/> <strong>{STATIC_BACKUP_FILENAME}</strong>.
                                         </p>
                                         <p className="text-sm text-gray-500 mt-2">
-                                            If you've previously created a backup, your browser may ask if you want to
-                                            replace the existing file. Please select "Replace" or "Yes" to save your current data.
+                                            If prompted, please select "Replace" or "Yes" to save your current data.
                                         </p>
-                                        <p className="text-sm text-gray-500 mt-2">
+                                        <p className="hidden text-sm text-gray-500 mt-2">
                                             Remember the location where your file is saved, as you'll need it for any future restores.
                                         </p>
                                     </div>
                                 </div>
 
-                                <div className="flex justify-end space-x-3 mt-5">
+                                <div className="flex justify-between space-x-3 mt-5">
                                     <button
-                                        onClick={() => setShowWarning(false)}
-                                        disabled={isCreatingBackup}
-                                        className="px-4 py-2 bg-gray-100 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        onClick={handleCancel}
+                                        disabled={isCreatingBackup || isCancelling}
+                                        className="inline-flex items-center justify-center px-4 py-2 bg-gray-100 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
-                                        Cancel
+                                        {isCancelling ? (
+                                            <>
+                                                <Loader2 className="h-5 w-5 mr-2 animate-spin"/>
+                                                Cancelling...
+                                            </>
+                                        ) : (
+                                            "Cancel"
+                                        )}
                                     </button>
                                     <button
                                         onClick={executeBackup}
-                                        disabled={isCreatingBackup}
+                                        disabled={isCreatingBackup || isCancelling}
                                         className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         {isCreatingBackup ? (
                                             <>
-                                                <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                                                <Loader2 className="h-5 w-5 mr-2 animate-spin"/>
                                                 Creating...
                                             </>
                                         ) : (
@@ -140,7 +159,7 @@ const BackupButton = () => {
                                     </button>
                                 </div>
                             </div>
-                        </animated.div>
+                    </animated.div>
                     )
             )}
         </>

@@ -100,7 +100,7 @@ const StaticRestoreButton = ({ onRestore }) => {
                     <div className="w-full">
                         <h4 className="text-blue-700 font-medium text-sm">Restore from Backup</h4>
                         <p className="text-blue-600 text-xs mt-1">
-                            To restore your data, select your backup file:
+                            To restore your data, click the copy button:
                         </p>
                         <div className="flex items-center mt-1 bg-white rounded-md p-1.5 border border-blue-100">
                             <p className="text-blue-800 font-semibold text-sm mr-2 flex-grow">
@@ -119,9 +119,9 @@ const StaticRestoreButton = ({ onRestore }) => {
                             </button>
                         </div>
                         <p className="text-blue-600 text-xs mt-1.5">
-                            Located in your {downloadPath}
+                            Then click the Restore button below <br/> and search for the file in <br/> {downloadPath}
                         </p>
-                        <p className="text-xs text-blue-700 mt-1">
+                        <p className="hidden text-xs text-blue-700 mt-1">
                             <span className="font-medium">Search tip:</span> Click the copy button to get "{baseFilename}" for searching files like "{baseFilename}(1).json"
                         </p>
                     </div>
@@ -152,7 +152,7 @@ const StaticRestoreButton = ({ onRestore }) => {
             <div className="mt-2 text-center">
                 <button
                     onClick={toggleHelp}
-                    className="text-xs text-blue-600 hover:text-blue-800 hover:underline"
+                    className="underline text-xs text-blue-600 hover:text-blue-800 hover:underline"
                 >
                     {showHelp ? "Hide help" : "Need help finding your backup?"}
                 </button>
