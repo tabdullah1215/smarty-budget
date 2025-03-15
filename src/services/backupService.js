@@ -2,6 +2,7 @@
 import { indexdbService } from './IndexDBService';
 import { DB_CONFIG } from '../config';
 import authService from './authService';
+import { saveAs } from 'file-saver';
 
 // Define a static backup filename
 export const STATIC_BACKUP_FILENAME = 'budget-tracker-backup.json';
@@ -47,19 +48,18 @@ export const backupService = {
 
     async downloadBackup() {
         try {
+            // Create the backup object (your existing code)
             const backup = await this.createBackupObject();
 
+            // Create the Blob
             const blob = new Blob([JSON.stringify(backup)], {type: 'application/json'});
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
 
-            // Use static filename instead of date-based
-            link.href = url;
-            link.download = STATIC_BACKUP_FILENAME;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
+            // Generate filename with date
+            const date = new Date().toISOString().split('T')[0];
+            const filename = `budget-backup-${date}.json`;
+
+            // Use FileSaver instead of manual DOM manipulation
+            saveAs(blob, filename);
 
             // Record backup time for reminder purposes
             localStorage.setItem('lastBackupDate', new Date().toISOString());
