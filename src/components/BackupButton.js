@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Save, Loader2, AlertTriangle } from 'lucide-react';
+import { Save, Loader2, AlertTriangle, Download, X } from 'lucide-react';
 import { withMinimumDelay } from '../utils/withDelay';
 import backupService, { STATIC_BACKUP_FILENAME } from '../services/backupService';
 import { useToast } from '../contexts/ToastContext';
@@ -8,76 +8,55 @@ import { modalTransitions, backdropTransitions } from '../utils/transitions';
 
 const BackupButton = () => {
     const [isBackingUp, setIsBackingUp] = useState(false);
-    const [showWarning, setShowWarning] = useState(false);
-    const [isCreatingBackup, setIsCreatingBackup] = useState(false);
+    const [showBackupModal, setShowBackupModal] = useState(false);
+    const [backupInfo, setBackupInfo] = useState(null);
     const { showToast } = useToast();
-
     const [isCancelling, setIsCancelling] = useState(false);
 
-    const transitions = useTransition(showWarning, modalTransitions);
-    const backdropTransition = useTransition(showWarning, backdropTransitions);
+    const transitions = useTransition(showBackupModal, modalTransitions);
+    const backdropTransition = useTransition(showBackupModal, backdropTransitions);
 
     const handleBackup = async () => {
         if (isBackingUp) return;
 
-        // Start the animation on the main button first
-        setIsBackingUp(true);
-
-        // Show the spinning icon for a moment before showing the modal
-        await withMinimumDelay(async () => {}, 800);
-
-        // Show the modal and stop the spinning icon
-        setIsBackingUp(false);
-        setShowWarning(true);
-    };
-
-    const handleCancel = async () => {
-        setIsCancelling(true);
-
-        await withMinimumDelay(async () => {}, 800);
-
-        setShowWarning(false);
-        setIsCancelling(false);
-    };
-
-    const executeBackup = async () => {
-        // Start the creation animation immediately
-        setIsCreatingBackup(true);
-
-        // Keep the modal visible briefly so user can see the button animation start
-        await withMinimumDelay(async () => {}, 1000);
-
-        // Close the modal but keep the creation state active
-        setShowWarning(false);
-
-        // Show the main backup button spinner
+        // Start the animation on the main button
         setIsBackingUp(true);
 
         try {
-            // Use a longer delay to make sure the animation is visible
             await withMinimumDelay(async () => {
-                await backupService.downloadBackup();
-
-                const downloadPath = backupService.getEstimatedDownloadPath();
-                showToast(
-                    'success',
-                    `Backup saved as "${STATIC_BACKUP_FILENAME}" in your ${downloadPath}`
-                );
-            }, 4000); // Increased to 4 seconds for better visibility
+                // Prepare the backup but don't download automatically
+                const info = await backupService.prepareBackup();
+                setBackupInfo(info);
+                setShowBackupModal(true);
+            }, 1000);
         } catch (error) {
-            console.error('Backup failed:', error);
-            showToast('error', error.message || 'Failed to create backup');
+            console.error('Backup preparation failed:', error);
+            showToast('error', error.message || 'Failed to prepare backup');
         } finally {
             setIsBackingUp(false);
-            setIsCreatingBackup(false);
         }
+    };
+
+    const handleClose = () => {
+        setIsCancelling(true);
+
+        // Give visual feedback before closing
+        withMinimumDelay(async () => {
+            if (backupInfo) {
+                // Clean up the blob URL
+                backupInfo.revokeUrl();
+            }
+            setShowBackupModal(false);
+            setBackupInfo(null);
+            setIsCancelling(false);
+        }, 800);
     };
 
     return (
         <>
             <button
                 onClick={handleBackup}
-                disabled={isBackingUp || isCreatingBackup}
+                disabled={isBackingUp}
                 className="inline-flex items-center justify-center p-2
                     text-gray-600 hover:text-gray-900 transition-all duration-300
                     transform hover:scale-110 active:scale-95"
@@ -90,76 +69,88 @@ const BackupButton = () => {
                 )}
             </button>
 
-            {/* Overwrite Warning Modal */}
+            {/* Download Modal */}
             {backdropTransition((style, item) =>
                     item && (
                         <animated.div
                             style={style}
                             className="fixed inset-0 bg-gray-600 bg-opacity-50 z-50"
-                            onClick={() => !isCreatingBackup && !isCancelling && handleCancel()}
+                            onClick={() => !isCancelling && handleClose()}
                         />
                     )
             )}
             {transitions((style, item) =>
-                item && (
-                    <animated.div
-                        style={style}
-                        className="fixed inset-0 flex items-center justify-center z-50 p-4"
+                    item && backupInfo && (
+                        <animated.div
+                            style={style}
+                            className="fixed inset-0 flex items-center justify-center z-50 p-4"
                             onClick={(e) => e.stopPropagation()}
                         >
                             <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
-                                <div className="flex items-start mb-4">
-                                    <div className="flex-shrink-0 mr-3">
-                                        <AlertTriangle className="h-6 w-6 text-orange-500" />
-                                    </div>
-                                    <div className="text-center">
-                                        <h3 className="text-lg font-medium text-gray-900">
-                                            Backup Notice
-                                        </h3>
-                                        <p className="text-sm text-gray-500 mt-2">
-                                            This will create a backup file named <br/> <strong>{STATIC_BACKUP_FILENAME}</strong>.
-                                        </p>
-                                        <p className="text-sm text-gray-500 mt-2">
-                                            If prompted, please select "Replace" or "Yes" to save your current data.
-                                        </p>
-                                        <p className="hidden text-sm text-gray-500 mt-2">
-                                            Remember the location where your file is saved, as you'll need it for any future restores.
+                                <div className="flex justify-between items-center mb-4">
+                                    <h3 className="text-lg font-medium text-gray-900">
+                                        Download Backup
+                                    </h3>
+                                    <button
+                                        onClick={handleClose}
+                                        disabled={isCancelling}
+                                        className="text-gray-400 hover:text-gray-500 focus:outline-none transition-colors duration-200 disabled:opacity-50"
+                                    >
+                                        {isCancelling ?
+                                            <Loader2 className="h-6 w-6 animate-spin" /> :
+                                            <X className="h-6 w-6" />
+                                        }
+                                    </button>
+                                </div>
+
+                                <div className="mb-6">
+                                    <div className="flex items-start">
+                                        <AlertTriangle className="h-6 w-6 text-yellow-500 mr-3 mt-0.5" />
+                                        <p className="text-gray-600 text-sm">
+                                            Your backup file is ready. Tap the button below to download it.
+                                            <strong> Make sure to remember where it's saved</strong> so you
+                                            can find it if you need to restore later.
                                         </p>
                                     </div>
                                 </div>
 
-                                <div className="flex justify-between space-x-3 mt-5">
-                                    <button
-                                        onClick={handleCancel}
-                                        disabled={isCreatingBackup || isCancelling}
-                                        className="inline-flex items-center justify-center px-4 py-2 bg-gray-100 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                                    >
-                                        {isCancelling ? (
-                                            <>
-                                                <Loader2 className="h-5 w-5 mr-2 animate-spin"/>
-                                                Cancelling...
-                                            </>
-                                        ) : (
-                                            "Cancel"
-                                        )}
-                                    </button>
-                                    <button
-                                        onClick={executeBackup}
-                                        disabled={isCreatingBackup || isCancelling}
-                                        className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                                    >
-                                        {isCreatingBackup ? (
-                                            <>
-                                                <Loader2 className="h-5 w-5 mr-2 animate-spin"/>
-                                                Creating...
-                                            </>
-                                        ) : (
-                                            "Create Backup"
-                                        )}
-                                    </button>
+                                {/* IMPORTANT: This is a real, user-tappable download link */}
+                                <a
+                                    href={backupInfo.url}
+                                    download={backupInfo.filename}
+                                    className="w-full flex items-center justify-center px-4 py-3 bg-blue-600
+                                    text-white rounded-md hover:bg-blue-700 transition-colors duration-200"
+                                    onClick={() => {
+                                        localStorage.setItem('lastBackupDate', new Date().toISOString());
+                                        showToast('success', 'Backup file download started');
+                                        // Don't close modal immediately to ensure download starts
+                                        setTimeout(() => {
+                                            const downloadPath = backupService.getEstimatedDownloadPath();
+                                            showToast('info', `Check ${downloadPath} for your backup file`);
+                                            handleClose();
+                                        }, 1500);
+                                    }}
+                                >
+                                    <Download className="h-5 w-5 mr-2" />
+                                    TAP HERE TO DOWNLOAD
+                                </a>
+
+                                <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                                    <p className="text-xs text-blue-800">
+                                        <strong>Troubleshooting:</strong> If nothing happens when you tap the button above,
+                                        try pressing and holding it, then select "Download link" or "Save link".
+                                    </p>
+                                </div>
+
+                                <div className="mt-3 p-3 bg-gray-50 border border-gray-200 rounded-md">
+                                    <p className="text-xs text-gray-700">
+                                        <strong>Where to find your download:</strong> Check your device's
+                                        Downloads folder, or open your browser settings and look for
+                                        the Downloads option.
+                                    </p>
                                 </div>
                             </div>
-                    </animated.div>
+                        </animated.div>
                     )
             )}
         </>

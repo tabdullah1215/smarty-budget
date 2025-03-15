@@ -2,7 +2,6 @@
 import { indexdbService } from './IndexDBService';
 import { DB_CONFIG } from '../config';
 import authService from './authService';
-import { saveAs } from 'file-saver';
 
 // Define a static backup filename
 export const STATIC_BACKUP_FILENAME = 'budget-tracker-backup.json';
@@ -48,18 +47,19 @@ export const backupService = {
 
     async downloadBackup() {
         try {
-            // Create the backup object (your existing code)
             const backup = await this.createBackupObject();
 
-            // Create the Blob
             const blob = new Blob([JSON.stringify(backup)], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
 
-            // Generate filename with date
-            const date = new Date().toISOString().split('T')[0];
-            const filename = `budget-backup-${date}.json`;
-
-            // Use FileSaver instead of manual DOM manipulation
-            saveAs(blob, filename);
+            // Use static filename instead of date-based
+            link.href = url;
+            link.download = STATIC_BACKUP_FILENAME;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
 
             // Record backup time for reminder purposes
             localStorage.setItem('lastBackupDate', new Date().toISOString());
@@ -99,6 +99,24 @@ export const backupService = {
         }
 
         return path;
+    },
+
+    async prepareBackup() {
+        try {
+            const backup = await this.createBackupObject();
+            const blob = new Blob([JSON.stringify(backup)], {type: 'application/json'});
+            const blobUrl = URL.createObjectURL(blob);
+
+            // Return the info needed for download, but don't auto-download
+            return {
+                url: blobUrl,
+                filename: STATIC_BACKUP_FILENAME,
+                revokeUrl: () => URL.revokeObjectURL(blobUrl)
+            };
+        } catch (error) {
+            console.error('Error preparing backup:', error);
+            throw error;
+        }
     },
 
     // Simple OS detection
