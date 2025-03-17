@@ -1,24 +1,54 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { FileText, Trash2, Loader2 } from 'lucide-react';
-import { animated } from '@react-spring/web';
+import { animated, useSpring } from '@react-spring/web';
 
 export const PaycheckBudgetCard = ({
-                               budget,
-                               onOpenBudget,
-                               onDeleteBudget,
-                               openingBudgetId,
-                               confirmingDeleteId,
-                               style,
-    onSelect,
-    isSelected
-                           }) => {
+                                       budget,
+                                       onOpenBudget,
+                                       onDeleteBudget,
+                                       openingBudgetId,
+                                       confirmingDeleteId,
+                                       style,
+                                       onSelect,
+                                       isSelected,
+                                       isNewlyAdded
+                                   }) => {
     const totalSpent = budget.items?.reduce((sum, item) => sum + (item.amount || 0), 0) || 0;
     const remainingAmount = budget.amount - totalSpent;
     const percentageUsed = (totalSpent / budget.amount) * 100;
 
+    // Add a fade-in animation for newly added budget cards
+    const [hasMounted, setHasMounted] = useState(false);
+
+    // On initial mount, set hasMounted to true after a short delay
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setHasMounted(true);
+        }, 100);
+        return () => clearTimeout(timer);
+    }, []);
+
+    // Create fadeIn animation
+    const fadeInAnimation = useSpring({
+        from: { opacity: 0, transform: 'translateY(20px)' },
+        to: {
+            opacity: hasMounted ? 1 : 0,
+            transform: hasMounted ? 'translateY(0px)' : 'translateY(20px)'
+        },
+        config: {
+            mass: 1,
+            tension: 50,
+            friction: 12,
+            duration: 400
+        }
+    });
+
+    // Combine custom style with fadeIn animation
+    const combinedStyle = style ? { ...style, ...fadeInAnimation } : fadeInAnimation;
+
     return (
         <animated.div
-            style={style}
+            style={combinedStyle}
             className="bg-white shadow-md rounded-lg p-6 hover:shadow-xl transition-all duration-200"
         >
             <div className="absolute top-2 left-2">

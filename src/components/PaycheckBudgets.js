@@ -1,7 +1,7 @@
-import React, {useEffect, useMemo, useState} from 'react';
-import {useSprings} from '@react-spring/web';
+import React, {useEffect, useMemo, useState, useRef} from 'react';
+import {useSprings, useSpring, animated} from '@react-spring/web';
 import {useNavigate} from 'react-router-dom';
-import {Loader2, Plus} from 'lucide-react';
+import {Loader2, Plus, ChevronDown, ChevronRight} from 'lucide-react';
 import {Header} from './Header';
 import {PaycheckBudgetForm} from './PaycheckBudgetForm';
 import {PaycheckBudgetDetails} from './PaycheckBudgetDetails';
@@ -13,7 +13,6 @@ import {PaycheckBudgetCard} from './PaycheckBudgetCard';
 import authService from '../services/authService';
 import PaycheckBudgetReport from "./PaycheckBudgetReport";
 import {downloadCSV} from '../utils/budgetCsvGenerator';
-// Import StaticRestoreButton
 import StaticRestoreButton from './StaticRestoreButton';
 
 export const PaycheckBudgets = () => {
@@ -29,11 +28,52 @@ export const PaycheckBudgets = () => {
     const [showReport, setShowReport] = useState(false);
     const [isPrinting, setIsPrinting] = useState(false);
     const [isRestoring, setIsRestoring] = useState(false);
+    const [showRestoreSection, setShowRestoreSection] = useState(false);
+    const [restoreComplete, setRestoreComplete] = useState(false);
+    // Track when the component is freshly loaded after restore
+    const isRestoredLoad = useRef(false);
 
     const navigate = useNavigate();
     const userInfo = authService.getUserInfo();
     const { showToast } = useToast();
     const { paycheckBudgets, createPaycheckBudget, updatePaycheckBudget, deletePaycheckBudget, isLoading } = usePaycheckBudgets();
+
+    // Container fadeout animation for when restore completes
+    const containerAnimation = useSpring({
+        opacity: restoreComplete ? 0 : 1,
+        transform: restoreComplete ? 'translateY(20px)' : 'translateY(0px)',
+        config: {
+            mass: 5,          // Higher mass for more inertia
+            tension: 10,      // Low tension for slower movement
+            friction: 10,     // Low friction so it moves longer
+            duration: 500    // 3 second minimum duration
+        }
+    });
+
+    // Check localStorage to see if we just did a restore
+    useEffect(() => {
+        const restoredFlag = localStorage.getItem('justRestored');
+        if (restoredFlag === 'true') {
+            // Set our ref to true so we know to animate budgets
+            isRestoredLoad.current = true;
+            // Clear the flag so it only happens once
+            localStorage.removeItem('justRestored');
+        }
+    }, []);
+
+    // Handle page reload after fadeout animation
+    useEffect(() => {
+        if (restoreComplete) {
+            // Set a flag in localStorage that we just did a restore
+            // This will be used after reload to trigger the fade-in
+            localStorage.setItem('justRestored', 'true');
+
+            const timer = setTimeout(() => {
+                window.location.reload();
+            }, 1000); // Slightly longer than animation duration
+            return () => clearTimeout(timer);
+        }
+    }, [restoreComplete]);
 
     const sortedBudgets = useMemo(() =>
             [...paycheckBudgets].sort((a, b) => new Date(b.date) - new Date(a.date)),
@@ -184,6 +224,18 @@ export const PaycheckBudgets = () => {
         downloadCSV(selectedBudgetObjects);
     };
 
+    const toggleRestoreSection = () => {
+        setShowRestoreSection(!showRestoreSection);
+    };
+
+    // This function is called when restore is successfully completed
+    const handleRestoreSuccess = () => {
+        setIsRestoring(true);
+        // Trigger fadeout animation for the entire container
+        setRestoreComplete(true);
+        // Page reload happens in the useEffect
+    };
+
     return (
         <div className="min-h-screen bg-gray-200">
             <Header
@@ -197,7 +249,7 @@ export const PaycheckBudgets = () => {
 
             {/* Substantially increased padding to ensure content is below header */}
             <div className="pt-64 md:pt-40 px-4 sm:px-6 lg:px-8">
-                <div className="max-w-4xl mx-auto pb-8">
+                <animated.div style={containerAnimation} className="max-w-4xl mx-auto pb-8">
                     {isLoading ? (
                         <div className="flex justify-center items-center h-32">
                             <Loader2 className="h-8 w-8 animate-spin text-gray-600" />
@@ -231,10 +283,31 @@ export const PaycheckBudgets = () => {
                                     )}
                                 </button>
 
-                                {/* Restore Section without icon */}
+                                {/* Collapsible Restore Section */}
                                 <div className="w-full max-w-md pt-4 border-t border-gray-200">
-                                    <p className="text-sm text-gray-600 mb-3">Or restore from a previously created backup:</p>
-                                    <StaticRestoreButton onRestore={() => setIsRestoring(true)} />
+                                    <button
+                                        onClick={toggleRestoreSection}
+                                        disabled={isRestoring}
+                                        className="flex items-center justify-center w-full text-sm text-blue-600 hover:text-blue-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        {showRestoreSection ? (
+                                            <>
+                                                <ChevronDown className="h-4 w-4 mr-1" />
+                                                Hide restore options
+                                            </>
+                                        ) : (
+                                            <>
+                                                <ChevronRight className="h-4 w-4 mr-1" />
+                                                Restore from a previously created backup
+                                            </>
+                                        )}
+                                    </button>
+
+                                    {showRestoreSection && (
+                                        <div className="mt-3">
+                                            <StaticRestoreButton onRestore={handleRestoreSuccess} />
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -251,11 +324,13 @@ export const PaycheckBudgets = () => {
                                     style={fadeAnimations[index]}
                                     onSelect={handleSelectBudget}
                                     isSelected={isBudgetSelected(budget.id)}
+                                    // Pass isRestoredLoad.current to indicate these are newly restored budgets
+                                    isNewlyAdded={isRestoredLoad.current}
                                 />
                             ))}
                         </div>
                     )}
-                </div>
+                </animated.div>
             </div>
 
             {showNewBudgetForm && (

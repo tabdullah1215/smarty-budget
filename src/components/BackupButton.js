@@ -1,20 +1,73 @@
-import React, { useState } from 'react';
-import { Save, Loader2, AlertTriangle, Download, X } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Save, Loader2, Download, X } from 'lucide-react';
 import { withMinimumDelay } from '../utils/withDelay';
 import backupService, { STATIC_BACKUP_FILENAME } from '../services/backupService';
 import { useToast } from '../contexts/ToastContext';
 import { useTransition, animated } from '@react-spring/web';
-import { modalTransitions, backdropTransitions } from '../utils/transitions';
 
 const BackupButton = () => {
     const [isBackingUp, setIsBackingUp] = useState(false);
     const [showBackupModal, setShowBackupModal] = useState(false);
     const [backupInfo, setBackupInfo] = useState(null);
-    const { showToast } = useToast();
+    const [isDownloading, setIsDownloading] = useState(false);
     const [isCancelling, setIsCancelling] = useState(false);
+    const [isClosing, setIsClosing] = useState(false); // Closing animation state
+    const { showToast } = useToast();
 
-    const transitions = useTransition(showBackupModal, modalTransitions);
-    const backdropTransition = useTransition(showBackupModal, backdropTransitions);
+    // Custom modal transitions with longer duration
+    const modalTransitions = {
+        from: {
+            opacity: 0,
+            transform: 'translate3d(0,20px,0) scale(0.95)'
+        },
+        enter: {
+            opacity: 1,
+            transform: 'translate3d(0,0px,0) scale(1)',
+            config: {
+                duration: 300
+            }
+        },
+        leave: {
+            opacity: 0,
+            transform: 'translate3d(0,20px,0) scale(0.95)',
+            config: {
+                duration: 800 // Slower fadeout
+            }
+        }
+    };
+
+    // Custom backdrop transitions
+    const backdropTransitions = {
+        from: { opacity: 0 },
+        enter: { opacity: 1 },
+        leave: { opacity: 0, config: { duration: 800 } } // Match modal duration
+    };
+
+    // Use isClosing state to control transitions
+    const transitions = useTransition(showBackupModal && !isClosing, modalTransitions);
+    const backdropTransition = useTransition(showBackupModal && !isClosing, backdropTransitions);
+
+    // Add effect to handle delayed closing
+    useEffect(() => {
+        if (isClosing) {
+            const timer = setTimeout(() => {
+                setShowBackupModal(false);
+                setIsClosing(false);
+
+                // Cleanup URL after animation completes
+                if (backupInfo) {
+                    backupInfo.revokeUrl();
+                    setBackupInfo(null);
+                }
+
+                // Reset all states
+                setIsCancelling(false);
+                setIsDownloading(false);
+            }, 800); // Match the leave animation duration
+
+            return () => clearTimeout(timer);
+        }
+    }, [isClosing, backupInfo]);
 
     const handleBackup = async () => {
         if (isBackingUp) return;
@@ -38,18 +91,31 @@ const BackupButton = () => {
     };
 
     const handleClose = () => {
+        // Don't allow closing if already in process
+        if (isCancelling || isDownloading || isClosing) return;
+
         setIsCancelling(true);
 
-        // Give visual feedback before closing
+        // First set visual state for X button
         withMinimumDelay(async () => {
-            if (backupInfo) {
-                // Clean up the blob URL
-                backupInfo.revokeUrl();
-            }
-            setShowBackupModal(false);
-            setBackupInfo(null);
-            setIsCancelling(false);
-        }, 800);
+            // Then trigger the closing animation
+            setIsClosing(true);
+        }, 300);
+    };
+
+    const handleDownload = () => {
+        // Don't allow download if already in process
+        if (isDownloading || isCancelling || isClosing) return;
+
+        setIsDownloading(true);
+        localStorage.setItem('lastBackupDate', new Date().toISOString());
+        showToast('success', 'Backup file download started');
+
+        // Show downloading state for a minimum time
+        withMinimumDelay(async () => {
+            // Then trigger the closing animation
+            setIsClosing(true);
+        }, 1500);
     };
 
     return (
@@ -75,7 +141,7 @@ const BackupButton = () => {
                         <animated.div
                             style={style}
                             className="fixed inset-0 bg-gray-600 bg-opacity-50 z-50"
-                            onClick={() => !isCancelling && handleClose()}
+                            onClick={() => !isCancelling && !isDownloading && !isClosing && handleClose()}
                         />
                     )
             )}
@@ -93,7 +159,7 @@ const BackupButton = () => {
                                     </h3>
                                     <button
                                         onClick={handleClose}
-                                        disabled={isCancelling}
+                                        disabled={isCancelling || isDownloading || isClosing}
                                         className="text-gray-400 hover:text-gray-500 focus:outline-none transition-colors duration-200 disabled:opacity-50"
                                     >
                                         {isCancelling ?
@@ -103,52 +169,32 @@ const BackupButton = () => {
                                     </button>
                                 </div>
 
-                                <div className="mb-6">
-                                    <div className="flex items-start">
-                                        <AlertTriangle className="h-6 w-6 text-yellow-500 mr-3 mt-0.5" />
-                                        <p className="text-gray-600 text-sm">
-                                            Your backup file is ready. Tap the button below to download it.
-                                            <strong> Make sure to remember where it's saved</strong> so you
-                                            can find it if you need to restore later.
-                                        </p>
-                                    </div>
-                                </div>
+                                <p className="text-gray-600 text-sm mb-4">
+                                    Your backup file is ready. Tap below to download it.
+                                </p>
 
                                 {/* IMPORTANT: This is a real, user-tappable download link */}
                                 <a
-                                    href={backupInfo.url}
-                                    download={backupInfo.filename}
-                                    className="w-full flex items-center justify-center px-4 py-3 bg-blue-600
-                                    text-white rounded-md hover:bg-blue-700 transition-colors duration-200"
-                                    onClick={() => {
-                                        localStorage.setItem('lastBackupDate', new Date().toISOString());
-                                        showToast('success', 'Backup file download started');
-                                        // Don't close modal immediately to ensure download starts
-                                        setTimeout(() => {
-                                            const downloadPath = backupService.getEstimatedDownloadPath();
-                                            showToast('info', `Check ${downloadPath} for your backup file`);
-                                            handleClose();
-                                        }, 1500);
-                                    }}
+                                    href={backupInfo?.url}
+                                    download={backupInfo?.filename}
+                                    className={`w-full flex items-center justify-center px-4 py-3 
+                                    ${isDownloading ? 'bg-blue-500' : 'bg-blue-600 hover:bg-blue-700'} 
+                                    text-white rounded-md transition-colors duration-200
+                                    ${(isDownloading) ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                                    onClick={!isDownloading && !isClosing ? handleDownload : undefined}
                                 >
-                                    <Download className="h-5 w-5 mr-2" />
-                                    TAP HERE TO DOWNLOAD
+                                    {isDownloading ? (
+                                        <>
+                                            <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                                            Downloading...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Download className="h-5 w-5 mr-2" />
+                                            Download Backup
+                                        </>
+                                    )}
                                 </a>
-
-                                <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
-                                    <p className="text-xs text-blue-800">
-                                        <strong>Troubleshooting:</strong> If nothing happens when you tap the button above,
-                                        try pressing and holding it, then select "Download link" or "Save link".
-                                    </p>
-                                </div>
-
-                                <div className="mt-3 p-3 bg-gray-50 border border-gray-200 rounded-md">
-                                    <p className="text-xs text-gray-700">
-                                        <strong>Where to find your download:</strong> Check your device's
-                                        Downloads folder, or open your browser settings and look for
-                                        the Downloads option.
-                                    </p>
-                                </div>
                             </div>
                         </animated.div>
                     )
