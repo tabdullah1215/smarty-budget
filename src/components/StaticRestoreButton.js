@@ -3,6 +3,7 @@ import { Upload, Loader2, HelpCircle, Copy, Check } from 'lucide-react';
 import { withMinimumDelay } from '../utils/withDelay';
 import backupService, { STATIC_BACKUP_FILENAME } from '../services/backupService';
 import { useToast } from '../contexts/ToastContext';
+import { useSpring, animated, config } from '@react-spring/web';
 
 const StaticRestoreButton = ({ onRestore }) => {
     const [isRestoring, setIsRestoring] = useState(false);
@@ -13,6 +14,36 @@ const StaticRestoreButton = ({ onRestore }) => {
 
     // Get the base filename without extension for search
     const baseFilename = STATIC_BACKUP_FILENAME.replace('.json', '');
+
+    // Help panel animation - more pronounced and slower
+    const helpPanelAnimation = useSpring({
+        opacity: showHelp ? 1 : 0,
+        height: showHelp ? 'auto' : 0,
+        transform: showHelp ? 'translateY(0px)' : 'translateY(-30px)',
+        config: {
+            tension: 120,
+            friction: 14,
+            duration: 500
+        }
+    });
+
+    // Help toggle button animation - more exaggerated
+    const helpToggleAnimation = useSpring({
+        scale: showHelp ? 1.12 : 1,
+        color: showHelp ? '#2563EB' : '#3B82F6', // Darker blue when active
+        config: config.wobbly, // Use a preset "wobbly" config for more noticeable animation
+    });
+
+    // Restore button animation - slower and more pronounced
+    const restoreButtonAnimation = useSpring({
+        from: { scale: 0.9, opacity: 0.7 },
+        to: { scale: 1, opacity: 1 },
+        config: {
+            tension: 180,
+            friction: 12,
+            duration: 700
+        }
+    });
 
     // Reset the copied state after 2 seconds
     useEffect(() => {
@@ -37,14 +68,14 @@ const StaticRestoreButton = ({ onRestore }) => {
                 const result = await backupService.importFromFile(file);
                 showToast('success', `Restore successful! ${result.budgetsRestored + result.paycheckBudgetsRestored} budgets restored.`);
 
-                // Call onRestore, which will trigger the fadeout in the parent component
-                if (onRestore) onRestore();
-
-                // Don't reload the page here, let the parent component handle it
-                // Continue showing the spinner for visual feedback
+                // CRITICAL: This calls the parent component's function to handle reload
+                if (onRestore) {
+                    console.log("Calling parent onRestore callback");
+                    onRestore();
+                }
             }, 1000);
 
-            // Keep showing spinner indefinitely - parent will handle page refresh
+            // Leave isRestoring as true - the page will reload anyway
         } catch (error) {
             console.error('Restore failed:', error);
             showToast('error', error.message || 'Failed to restore from backup');
@@ -87,12 +118,16 @@ const StaticRestoreButton = ({ onRestore }) => {
                 className="hidden"
             />
 
-            <button
+            <animated.button
                 onClick={handleRestoreClick}
                 disabled={isRestoring}
+                style={{
+                    transform: restoreButtonAnimation.scale.to(s => `scale(${s})`),
+                    opacity: restoreButtonAnimation.opacity
+                }}
                 className="w-full inline-flex items-center justify-center px-4 py-2 text-blue-600 border-2
                     border-blue-200 rounded-md hover:bg-blue-50 hover:border-blue-300
-                    transition-all duration-200
+                    transition-all duration-300
                     disabled:opacity-50 disabled:cursor-not-allowed"
             >
                 {isRestoring ? (
@@ -106,20 +141,27 @@ const StaticRestoreButton = ({ onRestore }) => {
                         Restore from Backup
                     </>
                 )}
-            </button>
+            </animated.button>
 
             <div className="mt-2 text-center">
-                <button
+                <animated.button
                     onClick={toggleHelp}
                     disabled={isRestoring}
-                    className="underline text-xs text-blue-600 hover:text-blue-800 hover:underline
+                    style={{
+                        transform: helpToggleAnimation.scale.to(s => `scale(${s})`),
+                        color: helpToggleAnimation.color
+                    }}
+                    className="underline text-xs hover:text-blue-800 hover:underline
                                disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     {showHelp ? "Hide help" : "Need help finding your backup?"}
-                </button>
+                </animated.button>
             </div>
 
-            {showHelp && (
+            <animated.div
+                style={helpPanelAnimation}
+                className="overflow-hidden"
+            >
                 <div className="mt-2 p-2 text-xs text-gray-600 bg-gray-50 rounded border border-gray-200">
                     <div className="flex items-center mb-1">
                         <HelpCircle className="h-3 w-3 text-blue-500 mr-1" />
@@ -151,7 +193,7 @@ const StaticRestoreButton = ({ onRestore }) => {
                         It will be usually saved in the Downloads folder.
                     </p>
                 </div>
-            )}
+            </animated.div>
         </div>
     );
 };
