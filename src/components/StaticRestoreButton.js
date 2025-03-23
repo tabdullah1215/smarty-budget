@@ -123,7 +123,7 @@ const StaticRestoreButton = ({ onRestore }) => {
                 <div className="mt-2 p-2 text-xs text-gray-600 bg-gray-50 rounded border border-gray-200">
                     <div className="flex items-center mb-1">
                         <HelpCircle className="h-3 w-3 text-blue-500 mr-1" />
-                        <span className="text-blue-700 font-medium">Troubleshooting:</span>
+                        <span className="text-blue-700 font-medium">Help:</span>
                     </div>
 
                     <div className="flex items-center mt-1 mb-2 bg-white rounded-md p-1.5 border border-blue-100">
@@ -145,12 +145,10 @@ const StaticRestoreButton = ({ onRestore }) => {
                             )}
                         </button>
                     </div>
-
                     <p className="text-xs text-gray-600 mb-1">
-                        <strong>Tip:</strong> Copy the filename and use it to search your device.
-                        The file might be saved with a different name like "{baseFilename}(1).json"
-                        or with a date appended. Your device often adds numbers to avoid overwriting
-                        existing files.
+                        Copy the filename and use it to search your device.<br/>
+                        The file might be saved with a number or date added.<br/>
+                        It will be usually saved in the Downloads folder.
                     </p>
                 </div>
             )}
