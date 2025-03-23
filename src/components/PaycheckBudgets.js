@@ -11,9 +11,7 @@ import {useToast} from '../contexts/ToastContext';
 import DeleteConfirmationModal from "./DeleteConfirmationModal";
 import {PaycheckBudgetCard} from './PaycheckBudgetCard';
 import authService from '../services/authService';
-import PaycheckBudgetReport from "./PaycheckBudgetReport";
 import {downloadCSV} from '../utils/budgetCsvGenerator';
-// Import StaticRestoreButton
 import StaticRestoreButton from './StaticRestoreButton';
 
 export const PaycheckBudgets = () => {
@@ -25,12 +23,9 @@ export const PaycheckBudgets = () => {
     const [openingBudgetId, setOpeningBudgetId] = useState(null);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [fadingBudgetId, setFadingBudgetId] = useState(null);
-    const [selectedBudgets, setSelectedBudgets] = useState([]);
-    const [showReport, setShowReport] = useState(false);
-    const [isPrinting, setIsPrinting] = useState(false);
-    const [isRestoring, setIsRestoring] = useState(false);
-    // New state for toggling restore options
+    const [selectedBudgetIds, setSelectedBudgetIds] = useState([]); // Store just IDs
     const [showRestoreOptions, setShowRestoreOptions] = useState(false);
+    const [isRestoring, setIsRestoring] = useState(false);
 
     const navigate = useNavigate();
     const userInfo = authService.getUserInfo();
@@ -60,6 +55,11 @@ export const PaycheckBudgets = () => {
             [...paycheckBudgets].sort((a, b) => new Date(b.date) - new Date(a.date)),
         [paycheckBudgets]
     );
+
+    // Get the complete budget objects for selected budget IDs
+    const selectedBudgetObjects = useMemo(() => {
+        return sortedBudgets.filter(budget => selectedBudgetIds.includes(budget.id));
+    }, [sortedBudgets, selectedBudgetIds]);
 
     const fadeAnimationProps = {
         from: { opacity: 1, transform: 'translateY(0px)' },
@@ -160,49 +160,26 @@ export const PaycheckBudgets = () => {
     };
 
     const handleSelectBudget = (budgetId, isSelected) => {
-        setSelectedBudgets((prev) => {
+        setSelectedBudgetIds((prev) => {
             return isSelected ? [...prev, budgetId] : prev.filter((id) => id !== budgetId);
         });
     };
 
-    const isBudgetSelected = (budgetId) => selectedBudgets.includes(budgetId);
+    const isBudgetSelected = (budgetId) => selectedBudgetIds.includes(budgetId);
 
-    const handleGenerateReport = () => {
-        if (selectedBudgets.length === 0) {
-            showToast('error', 'Please select at least one budget to generate a report');
-            return;
-        }
-
-        // Get full budget objects and ensure data is valid
-        const selectedBudgetObjects = sortedBudgets.filter(budget =>
-            selectedBudgets.includes(budget.id)
-        );
-
-        if (!selectedBudgetObjects.length) {
-            showToast('error', 'Selected budgets could not be found');
-            return;
-        }
-
-        setShowReport(true);
-    };
-
-    const handleDownloadCsv = () => {
-        if (selectedBudgets.length === 0) {
+    const handleDownloadCsv = async () => {
+        if (selectedBudgetIds.length === 0) {
             showToast('error', 'Please select at least one budget to generate a CSV');
             return;
         }
 
-        // Get full budget objects and ensure data is valid
-        const selectedBudgetObjects = sortedBudgets.filter(budget =>
-            selectedBudgets.includes(budget.id)
-        );
-
-        if (!selectedBudgetObjects.length) {
-            showToast('error', 'Selected budgets could not be found');
-            return;
+        try {
+            await downloadCSV(selectedBudgetObjects);
+            showToast('success', 'CSV downloaded successfully');
+        } catch (error) {
+            console.error('Error downloading CSV:', error);
+            showToast('error', 'Failed to download CSV');
         }
-
-        downloadCSV(selectedBudgetObjects);
     };
 
     // Toggle function for restore options
@@ -210,26 +187,15 @@ export const PaycheckBudgets = () => {
         setShowRestoreOptions(!showRestoreOptions);
     };
 
-    // CRITICAL: This function ensures page reload after successful restore
+    // This function ensures page reload after successful restore
     const handleRestoreSuccess = () => {
-        // Set state to indicate we're in the process of restoring
         setIsRestoring(true);
-
-        // Show a toast notification to inform the user
         showToast('success', 'Restore complete! Refreshing to show your data...');
-
-        // Set a flag in localStorage that we can check after reload
         localStorage.setItem('justRestored', 'true');
-
-        // Log the current time so we can confirm this function was called
         console.log('Restore complete, page will reload in 2 seconds', new Date().toISOString());
 
-        // Set a timeout to delay the reload slightly
         setTimeout(() => {
-            // Log right before reload
             console.log('Executing page reload now', new Date().toISOString());
-
-            // THIS IS THE CRITICAL LINE - it forces a complete page reload
             window.location.reload();
         }, 2000);
     };
@@ -240,12 +206,11 @@ export const PaycheckBudgets = () => {
                 showCreateButton
                 onCreateClick={handleCreateClick}
                 isCreatingBudget={isCreating}
-                selectedBudgets={selectedBudgets || []}
-                onGenerateReport={handleGenerateReport}
+                selectedBudgets={selectedBudgetObjects} // Pass complete budget objects
                 onDownloadCsv={handleDownloadCsv}
             />
 
-            {/* Substantially increased padding to ensure content is below header */}
+            {/* Increased padding to ensure content is below header */}
             <div className="pt-64 md:pt-40 px-4 sm:px-6 lg:px-8">
                 <div className="max-w-4xl mx-auto pb-8">
                     {isLoading ? (
@@ -349,17 +314,8 @@ export const PaycheckBudgets = () => {
                 title="Delete Budget"
                 message="Are you sure you want to delete this budget? This action cannot be undone."
             />
-
-            {showReport && (
-                <PaycheckBudgetReport
-                    selectedBudgets={sortedBudgets.filter(budget =>
-                        selectedBudgets.includes(budget.id)
-                    )}
-                    onClose={() => setShowReport(false)}
-                    onPrint={setIsPrinting}
-                    isPrinting={isPrinting}
-                />
-            )}
         </div>
     );
 };
+
+export default PaycheckBudgets;

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useLogin } from '../hooks/useLogin';
 import authService from '../services/authService';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -6,17 +6,18 @@ import { withMinimumDelay } from "../utils/withDelay";
 import { Loader2, ArrowLeft, LogOut, X, FileDown, FileSpreadsheet } from 'lucide-react';
 import { useToast } from '../contexts/ToastContext';
 import BackupButton from './BackupButton';
+import { generatePdfReport } from '../utils/directPdfGenerator';
 
 export const Header = ({
                            showCreateButton = false,
                            onCreateClick,
                            isCreatingBudget = false,
-                           onGenerateReport = () => {},
                            onDownloadCsv = () => {},
                            selectedBudgets = []
                        }) => {
     const { handleLogout } = useLogin();
     const [isLoggingOut, setIsLoggingOut] = React.useState(false);
+    const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
     const userInfo = authService.getUserInfo();
     const navigate = useNavigate();
     const location = useLocation();
@@ -47,6 +48,45 @@ export const Header = ({
         await withMinimumDelay(async () => {
             await navigate('/dashboard');
         }, 1000);
+    };
+
+    // Direct PDF generation without React components
+    const handleDirectPdfGeneration = async () => {
+        // Validate we have budgets selected
+        if (selectedBudgets.length === 0) {
+            showToast('error', 'Please select at least one budget to generate a report');
+            return;
+        }
+
+        // Don't allow starting another generation if one is in progress
+        if (isGeneratingPdf) {
+            showToast('info', 'PDF generation is already in progress');
+            return;
+        }
+
+        try {
+            // Show visual feedback that the process has started
+            const button = document.querySelector('.report-button');
+            if (button) button.classList.add('animate-spin');
+
+            // Update state to disable the button
+            setIsGeneratingPdf(true);
+
+            // Generate the PDF directly with the selected budgets
+            await generatePdfReport(
+                selectedBudgets,
+                showToast,
+                (isLoading) => setIsGeneratingPdf(isLoading)
+            );
+        } catch (error) {
+            console.error('Error generating PDF:', error);
+            showToast('error', `Failed to generate PDF report: ${error.message || 'Unknown error'}`);
+        } finally {
+            // Always reset state and visual indicators
+            setIsGeneratingPdf(false);
+            const button = document.querySelector('.report-button');
+            if (button) button.classList.remove('animate-spin');
+        }
     };
 
     const getBudgetType = () => {
@@ -118,13 +158,12 @@ export const Header = ({
                                         Creating...
                                     </>
                                 ) : (
-                                    'Create New Budget!!!'
+                                    'Create New Budget'
                                 )}
                             </button>
                         )}
                     </div>
 
-                    {/* Budget Type and Buttons */}
                     {/* Budget Type and Buttons */}
                     <div className="z-10 flex items-center justify-between md:gap-8">
                         {/* W-10 div visible only in desktop */}
@@ -196,27 +235,22 @@ export const Header = ({
 
                                 {/* PDF Report Button - visible in both mobile and desktop */}
                                 <button
-                                    onClick={async () => {
-                                        try {
-                                            const button = document.querySelector('.report-button');
-                                            if (button) button.classList.add('animate-spin');
-                                            await withMinimumDelay(async () => {
-                                                await onGenerateReport();
-                                            }, 800);
-                                        } finally {
-                                            const button = document.querySelector('.report-button');
-                                            if (button) button.classList.remove('animate-spin');
-                                        }
-                                    }}
-                                    disabled={selectedBudgets.length === 0}
+                                    onClick={handleDirectPdfGeneration}
+                                    disabled={selectedBudgets.length === 0 || isGeneratingPdf}
                                     className="p-2 bg-blue-600 text-white rounded
                     hover:bg-blue-700 transition-colors duration-200
                     disabled:opacity-50 disabled:cursor-not-allowed"
                                     title="Download PDF Report"
                                 >
-                                    <FileDown
-                                        className="h-6 w-6 report-button transition-transform duration-200"
-                                    />
+                                    {isGeneratingPdf ? (
+                                        <Loader2
+                                            className="h-6 w-6 report-button animate-spin"
+                                        />
+                                    ) : (
+                                        <FileDown
+                                            className="h-6 w-6 report-button transition-transform duration-200"
+                                        />
+                                    )}
                                 </button>
                             </div>
                         )}
@@ -226,3 +260,5 @@ export const Header = ({
         </div>
     );
 };
+
+export default Header;
