@@ -263,33 +263,81 @@ export const generateReportHtml = (budgets, userInfo) => {
         text-align: center;
       }
       
-      @media print {
-        body {
-          -webkit-print-color-adjust: exact;
-          print-color-adjust: exact;
-        }
-        .paycheck-section {
-          page-break-inside: auto;
-        }
-        .paycheck-card {
-          page-break-inside: avoid;
-          page-break-after: auto;
-        }
-        .category-analysis {
-          page-break-before: always;
-          page-break-inside: avoid;
-        }
-        .overall-analysis {
-          page-break-before: always;
-          page-break-inside: avoid;
-        }
-        .image-gallery {
-          page-break-before: always;
-        }
-        .image-item {
-          page-break-inside: avoid;
-        }
-      }
+     .image-gallery-section {
+      page-break-before: always;
+      page-break-after: auto;
+    }
+    
+    .image-gallery-page {
+      page-break-inside: avoid;
+      page-break-after: auto;
+    }
+    
+    .image-gallery {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+      margin-top: 20px;
+    }
+    
+    .image-item {
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      padding: 15px;
+      break-inside: avoid;
+    }
+    
+.image-gallery-section {
+  page-break-before: always !important;
+  break-before: page !important;
+  display: block !important;
+  position: relative !important;
+}
+
+.image-gallery-section::before {
+  content: "";
+  display: block !important;
+  height: 1px !important;
+  page-break-before: always !important;
+  break-before: page !important;
+}
+      
+@media print {
+  body {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  
+  .image-gallery-section {
+    page-break-before: always !important;
+  }
+  
+  .image-gallery-page {
+    page-break-before: always !important;
+    page-break-inside: avoid !important;
+  }
+  
+  .category-analysis {
+    page-break-before: always !important;
+    page-break-inside: avoid !important;
+  }
+  
+  .overall-analysis {
+    page-break-before: always !important;
+    page-break-inside: avoid !important;
+  }
+  
+  .paycheck-section {
+    page-break-inside: auto;
+  }
+  
+  .paycheck-card {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+}
+      
     </style>
   `;
 
@@ -344,56 +392,86 @@ export const generateReportHtml = (budgets, userInfo) => {
     };
 
     // Generate category analysis HTML with pie chart
+// Modify the generateCategoryAnalysisHtml function in htmlReportGenerator.js
+
     const generateCategoryAnalysisHtml = () => {
         const colors = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#A28DFF', '#FF6B6B', '#4ECDC4', '#45B7D1'];
 
-        // Generate simple HTML/CSS pie chart
+        // Prepare SVG pie chart
         const totalAmount = reportData.categoryTotals.reduce((sum, cat) => sum + cat.total, 0);
         let startAngle = 0;
+        const radius = 100;
+        const centerX = 110;
+        const centerY = 110;
 
+        // Create SVG pie chart paths
         const pieSlices = reportData.categoryTotals.map((category, index) => {
             const percentage = (category.total / totalAmount) * 100;
-            const degrees = (percentage / 100) * 360;
+            const angle = (percentage / 100) * 360;
             const color = colors[index % colors.length];
 
-            const slice = `
-        <div class="pie-slice" style="
-          transform: rotate(${startAngle}deg);
-          clip-path: polygon(50% 50%, 50% 0%, ${percentage > 50 ? '100% 0%, 100% 100%, 0% 100%, 0% 0%, 50% 0%' : `${50 + Math.sin(degrees * Math.PI / 180) * 50}% ${50 - Math.cos(degrees * Math.PI / 180) * 50}%`});
-          background-color: ${color};
-        "></div>
-      `;
+            // Calculate start and end points
+            const endAngle = startAngle + angle;
 
-            startAngle += degrees;
-            return slice;
+            // Convert angles to radians
+            const startAngleRad = (startAngle - 90) * Math.PI / 180;
+            const endAngleRad = (endAngle - 90) * Math.PI / 180;
+
+            // Calculate points
+            const x1 = centerX + radius * Math.cos(startAngleRad);
+            const y1 = centerY + radius * Math.sin(startAngleRad);
+            const x2 = centerX + radius * Math.cos(endAngleRad);
+            const y2 = centerY + radius * Math.sin(endAngleRad);
+
+            // Determine the large-arc-flag
+            const largeArcFlag = angle > 180 ? 1 : 0;
+
+            // Create SVG path
+            const pathData = [
+                `M ${centerX} ${centerY}`,
+                `L ${x1} ${y1}`,
+                `A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2}`,
+                'Z'
+            ].join(' ');
+
+            // Update start angle for next slice
+            startAngle = endAngle;
+
+            return `<path d="${pathData}" fill="${color}" />`;
         }).join('');
 
+        // Create SVG wrapper
+        const svgPieChart = `
+    <svg width="220" height="220" viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg">
+      ${pieSlices}
+    </svg>
+  `;
+
         return `
-      <div class="grid-2">
-        <div class="paycheck-card">
-          <h3>Spending by Category</h3>
-          <div class="category-list">
-            ${reportData.categoryTotals.map((category, index) => `
-              <div class="category-item">
-                <span>
-                  <span style="display: inline-block; width: 12px; height: 12px; background-color: ${colors[index % colors.length]}; margin-right: 8px; border-radius: 2px;"></span>
-                  ${category.category}
-                </span>
-                <span style="font-weight: 600;">${formatCurrency(category.total)}</span>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-        <div class="paycheck-card">
-          <h3>Category Distribution</h3>
-          <div class="pie-chart">
-            ${pieSlices}
-          </div>
+    <div class="grid-2">
+      <div class="paycheck-card">
+        <h3>Spending by Category</h3>
+        <div class="category-list">
+          ${reportData.categoryTotals.map((category, index) => `
+            <div class="category-item">
+              <span>
+                <span style="display: inline-block; width: 12px; height: 12px; background-color: ${colors[index % colors.length]}; margin-right: 8px; border-radius: 2px;"></span>
+                ${category.category}
+              </span>
+              <span style="font-weight: 600;">${formatCurrency(category.total)}</span>
+            </div>
+          `).join('')}
         </div>
       </div>
-    `;
+      <div class="paycheck-card">
+        <h3>Category Distribution</h3>
+        <div class="pie-chart" style="display: flex; justify-content: center; align-items: center;">
+          ${svgPieChart}
+        </div>
+      </div>
+    </div>
+  `;
     };
-
     // Generate overall analysis HTML with bar chart
     const generateOverallAnalysisHtml = () => {
         // Generate a simple bar chart for monthly spending
@@ -448,7 +526,7 @@ export const generateReportHtml = (budgets, userInfo) => {
     `;
     };
 
-    // Generate image gallery HTML for attached images
+// Generate image gallery HTML for attached images with better pagination
     const generateImageGalleryHtml = () => {
         // Get all items with images from all budgets
         const itemsWithImages = [];
@@ -471,30 +549,48 @@ export const generateReportHtml = (budgets, userInfo) => {
             return '';
         }
 
+        // Group images into pages of 4
+        const imagesPerPage = 4;
+        const imagePages = [];
+
+        for (let i = 0; i < itemsWithImages.length; i += imagesPerPage) {
+            imagePages.push(itemsWithImages.slice(i, i + imagesPerPage));
+        }
+
+        // Generate gallery HTML with page breaks
         return `
-      <div class="section">
-        <h2>Attached Receipts & Documents</h2>
-        <div class="image-gallery">
-          ${itemsWithImages.map(item => `
-            <div class="image-item">
-              <div class="image-container">
-                <img class="receipt-image" src="data:${item.fileType || 'image/jpeg'};base64,${item.image}" alt="Receipt for ${item.description}" />
-              </div>
-              <div>
-                <span class="category-tag">${item.category}</span>
-                <p class="image-amount">${formatCurrency(item.amount)}</p>
-                <p style="margin-top: 5px; margin-bottom: 5px;">${item.description || 'No description'}</p>
-                <div class="image-details">
-                  <div>Expense Date: ${formatDate(item.date)}</div>
-                  <div>Paycheck: ${item.budgetName}</div>
-                  <div>Paycheck Date: ${formatDate(item.budgetDate)}</div>
+  <div style="display:block; height:1px; page-break-after:always;"></div>
+
+    <div class="section image-gallery-section">
+      <div style="break-before: page; page-break-before: always;"></div>
+      <h2>Attached Receipts & Documents</h2>
+      
+      ${imagePages.map((imagePage, pageIndex) => `
+        <!-- Image Gallery Page ${pageIndex + 1} -->
+        <div class="image-gallery-page" ${pageIndex > 0 ? 'style="page-break-before: always;"' : ''}>
+          <div class="image-gallery">
+            ${imagePage.map(item => `
+              <div class="image-item">
+                <div class="image-container">
+                  <img class="receipt-image" src="data:${item.fileType || 'image/jpeg'};base64,${item.image}" alt="Receipt for ${item.description}" />
+                </div>
+                <div>
+                  <span class="category-tag">${item.category}</span>
+                  <p class="image-amount">${formatCurrency(item.amount)}</p>
+                  <p style="margin-top: 5px; margin-bottom: 5px;">${item.description || 'No description'}</p>
+                  <div class="image-details">
+                    <div>Expense Date: ${formatDate(item.date)}</div>
+                    <div>Paycheck: ${item.budgetName}</div>
+                    <div>Paycheck Date: ${formatDate(item.budgetDate)}</div>
+                  </div>
                 </div>
               </div>
-            </div>
-          `).join('')}
+            `).join('')}
+          </div>
         </div>
-      </div>
-    `;
+      `).join('')}
+    </div>
+  `;
     };
 
     // Assemble the full HTML document
