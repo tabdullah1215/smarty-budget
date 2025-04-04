@@ -1,7 +1,7 @@
 // src/utils/helpers.js
-
 export const capitalizeFirstLetter = (str) => str.charAt(0).toUpperCase() + str.slice(1);
 
+// Define budget types with their properties
 export const budgetTypes = {
     custom: {
         id: 'custom',
@@ -49,6 +49,19 @@ export const budgetTypes = {
     }
 };
 
+// Define a placeholder budget type for visual balance
+const placeholderBudgetType = {
+    id: 'placeholder',
+    title: 'More Budget Features Coming Soon',
+    description: 'We\'re working on adding more budget management features',
+    route: '#',
+    icon: 'Calculator',
+    color: 'text-gray-600',
+    borderColor: 'border-gray-300',
+    visible: true,
+    enabled: false
+};
+
 export const isLocalhost = () => {
     return process.env.REACT_APP_IS_LOCAL === 'true' ||
         window.location.hostname === 'localhost' ||
@@ -61,4 +74,51 @@ export const isMobileDevice = () => {
 
 export const shouldBypassMobileCheck = () => {
     return isLocalhost();
+};
+
+// Function to get available budget types based on subappId
+export const getAvailableBudgetTypes = (subappId) => {
+    // Default: if no subappId, only show paycheck budget type
+    if (!subappId) {
+        return [{ ...budgetTypes.paycheck, visible: true, enabled: true }];
+    }
+
+    // Direct subappId to budgetType mapping
+    switch (subappId) {
+        case 'paycheck':
+            return [
+                { ...budgetTypes.paycheck, visible: true, enabled: true },
+                placeholderBudgetType
+            ];
+
+        case 'savings':
+            return [
+                { ...budgetTypes.savings, visible: true, enabled: true },
+                placeholderBudgetType
+            ];
+
+        case 'custom':
+            return [
+                { ...budgetTypes.custom, visible: true, enabled: true },
+                placeholderBudgetType
+            ];
+
+        case 'business':
+            return [
+                { ...budgetTypes.business, visible: true, enabled: true },
+                placeholderBudgetType
+            ];
+
+        case 'all':
+            // Enable all budget types when subappId is 'all'
+            return Object.values(budgetTypes).map(type => ({
+                ...type,
+                visible: true,
+                enabled: true
+            }));
+
+        default:
+            // Unknown subappId - fallback to paycheck only
+            return [{ ...budgetTypes.paycheck, visible: true, enabled: true }];
+    }
 };

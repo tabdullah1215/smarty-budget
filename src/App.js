@@ -207,6 +207,10 @@ function App() {
                                 element={<AppRegistration />}
                             />
                             <Route
+                                path="/register/:appId/:subappId/:linkType/:token"
+                                element={<AppRegistration />}
+                            />
+                            <Route
                                 path="/dashboard"
                                 element={
                                     <ProtectedRoute>

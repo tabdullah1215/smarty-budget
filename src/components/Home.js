@@ -1,10 +1,11 @@
 // src/components/Home.js
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Wallet, Briefcase, Calculator, PiggyBank } from 'lucide-react';
 import { Header } from './Header';
 import { withMinimumDelay } from '../utils/withDelay';
-import { budgetTypes } from '../utils/helpers';
+import { getAvailableBudgetTypes } from '../utils/helpers';
+import authService from '../services/authService';
 
 const ICONS = {
     Calculator: Calculator,
@@ -16,9 +17,19 @@ const ICONS = {
 export const Home = () => {
     const navigate = useNavigate();
     const [isNavigating, setIsNavigating] = useState(false);
+    const [availableBudgetTypes, setAvailableBudgetTypes] = useState([]);
+
+    // Get the subappId from auth service
+    const subappId = authService.getSubappId();
+
+    // Load available budget types based on the subappId
+    useEffect(() => {
+        const types = getAvailableBudgetTypes(subappId);
+        setAvailableBudgetTypes(types);
+    }, [subappId]);
 
     const handleTileClick = async (budgetType) => {
-        if (!budgetType.enabled || isNavigating) return;
+        if (!budgetType.enabled || isNavigating || budgetType.id === 'placeholder') return;
 
         setIsNavigating(true);
         const tileElement = document.getElementById(budgetType.id);
@@ -33,15 +44,21 @@ export const Home = () => {
         setIsNavigating(false);
     };
 
-    // Only show visible tiles
-    const visibleBudgetTypes = Object.values(budgetTypes).filter(type => type.visible);
-
     return (
         <div className="min-h-screen bg-gray-200">
             <Header />
             <div className="max-w-2xl mx-auto pt-44 md:pt-32 lg:pt-28 px-4 sm:px-6 lg:px-8">
+                <div className="mb-8 text-center hidden">
+                    <h2 className="text-xl text-gray-700">
+                        {subappId ? `${capitalizeFirstLetter(subappId)} Budget` : 'Budget Tracker'}
+                    </h2>
+                    {subappId === 'all' &&
+                        <p className="text-sm text-gray-500 mt-2">Full access to all budget features</p>
+                    }
+                </div>
+
                 <div className="space-y-4">
-                    {visibleBudgetTypes.map((budgetType) => {
+                    {availableBudgetTypes.map((budgetType) => {
                         const IconComponent = ICONS[budgetType.icon];
 
                         return (
@@ -77,6 +94,12 @@ export const Home = () => {
             </div>
         </div>
     );
+};
+
+// Helper function to capitalize first letter (if not imported from helpers.js)
+const capitalizeFirstLetter = (str) => {
+    if (!str) return '';
+    return str.charAt(0).toUpperCase() + str.slice(1);
 };
 
 export default Home;

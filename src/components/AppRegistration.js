@@ -16,7 +16,7 @@ export function AppRegistration() {
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [orderNumber, setOrderNumber] = useState('');
-    const { appId, linkType, token } = useParams();
+    const { appId, subappId, linkType, token } = useParams();
     const [permanentMessage, setPermanentMessage] = useState({ type: '', content: '' });
     const [registrationComplete, setRegistrationComplete] = useState(false);
     const [deferredPrompt, setDeferredPrompt] = useState(null);
@@ -105,6 +105,7 @@ export function AppRegistration() {
                     password,
                     token,
                     appId,
+                    subappId,
                     linkType,
                     ...(linkType === 'generic' && { orderNumber: orderNumber.trim() })
                 };
@@ -125,6 +126,7 @@ export function AppRegistration() {
                     console.log('App registration successful:', {
                         email,
                         appId,
+                        subappId,
                         linkType,
                         orderNumber: linkType === 'generic' ? orderNumber : 'N/A'
                     });

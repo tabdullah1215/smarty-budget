@@ -66,6 +66,15 @@ const authService = {
         }
     },
 
+    getSubappId() {
+        try {
+            const userInfo = this.getUserInfo();
+            return userInfo?.subappId || 'paycheck'; // Default to paycheck if not specified
+        } catch {
+            return 'paycheck';
+        }
+    },
+
     async login(email, password) {
         try {
             const response = await axios.post(
