@@ -1,7 +1,7 @@
 // src/services/authService.js
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
-import { API_ENDPOINT, APP_ID } from '../config';
+import { API_ENDPOINT, APP_ID, DEFAULT_BUDGET_TYPE } from '../config';
 
 const TOKEN_KEY = 'budget_auth_token';
 const API_KEY = process.env.REACT_APP_KEY_1;
@@ -69,9 +69,9 @@ const authService = {
     getSubappId() {
         try {
             const userInfo = this.getUserInfo();
-            return userInfo?.subappId || 'paycheck'; // Default to paycheck if not specified
+            return userInfo?.subappId || DEFAULT_BUDGET_TYPE; // Use default from config
         } catch {
-            return 'paycheck';
+            return DEFAULT_BUDGET_TYPE; // Use default from config
         }
     },
 

@@ -1,4 +1,6 @@
 // src/utils/helpers.js
+
+import { DEFAULT_BUDGET_TYPE } from '../config';
 export const capitalizeFirstLetter = (str) => str.charAt(0).toUpperCase() + str.slice(1);
 
 // Define budget types with their properties
@@ -78,9 +80,9 @@ export const shouldBypassMobileCheck = () => {
 
 // Function to get available budget types based on subappId
 export const getAvailableBudgetTypes = (subappId) => {
-    // Default: if no subappId, only show paycheck budget type
+
     if (!subappId) {
-        return [{ ...budgetTypes.paycheck, visible: true, enabled: true }];
+        return [{ ...budgetTypes[DEFAULT_BUDGET_TYPE], visible: true, enabled: true }];
     }
 
     // Direct subappId to budgetType mapping
@@ -119,6 +121,6 @@ export const getAvailableBudgetTypes = (subappId) => {
 
         default:
             // Unknown subappId - fallback to paycheck only
-            return [{ ...budgetTypes.paycheck, visible: true, enabled: true }];
+            return [{ ...budgetTypes[DEFAULT_BUDGET_TYPE], visible: true, enabled: true }];
     }
 };
