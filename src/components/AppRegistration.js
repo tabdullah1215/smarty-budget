@@ -55,19 +55,37 @@ export function AppRegistration() {
     }, []);
 
     useEffect(() => {
-        async function fetchSubappName() {
+        async function fetchSubappNameForRegistration() {
             if (subappId) {
                 try {
-                    const name = await authService.getSubappName(subappId);
-                    setSubappName(name);
+                    // Make a direct API call without requiring authentication
+                    const response = await axios.post(
+                        `${API_ENDPOINT}/app-manager`,
+                        {
+                            appId,
+                            subappId
+                        },
+                        {
+                            params: { action: 'getPublicSubappInfo' },
+                            headers: { 'X-Api-Key': API_KEY }
+                        }
+                    );
+
+                    if (response.data && response.data.subappName) {
+                        setSubappName(response.data.subappName);
+                    } else {
+                        // Fallback to capitalized subappId
+                        setSubappName(subappId.charAt(0).toUpperCase() + subappId.slice(1));
+                    }
                 } catch (error) {
                     console.error('Error fetching subapp name:', error);
+                    // Fallback to capitalized subappId
+                    setSubappName(subappId.charAt(0).toUpperCase() + subappId.slice(1));
                 }
             }
         }
-
-        fetchSubappName();
-    }, [subappId]);
+        fetchSubappNameForRegistration();
+    }, [appId, subappId]);
 
     if (!isMobileDevice() && !shouldBypassMobileCheck()) {
         return <Navigate to="/" replace />;
@@ -334,7 +352,7 @@ export function AppRegistration() {
         <div className="min-h-screen bg-gray-200">
             <DashboardHeader
                 title="App Registration"
-                subtitle={subappName}
+                subtitle={subappName || 'subappname null'}
                 permanentMessage={permanentMessage}
             />
             <div className="w-full min-h-[calc(100vh-64px)] flex items-start justify-center">

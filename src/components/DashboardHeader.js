@@ -14,8 +14,8 @@ const DashboardHeader = ({
     return (
         <div className={`fixed top-0 left-0 right-0 bg-white z-10 shadow-md 
             ${isLoginPage
-            ? 'max-h-[120px] md:min-h-[120px]'  // Reduced height for login page
-            : 'max-h-[200px] md:min-h-[120px]'   // Original height for other pages
+            ? 'max-h-[120px] md:min-h-[120px]'
+            : 'max-h-[200px] md:min-h-[120px]'
         }`}>
             <div className="max-w-6xl mx-auto px-4 py-3">
                 <div className="relative flex flex-col md:flex-row">
@@ -25,8 +25,8 @@ const DashboardHeader = ({
                             src={logoUrl}
                             alt="SmartyApps.AI Logo"
                             className={`${isLoginPage
-                                ? 'h-12 md:h-10'     // Smaller logo for login page
-                                : 'h-12 md:h-16'     // Original logo size for other pages
+                                ? 'h-12 md:h-10'     
+                                : 'h-12 md:h-16'     
                             }`}
                         />
                     </div>

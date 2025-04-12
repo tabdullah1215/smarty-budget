@@ -5,8 +5,6 @@ import { API_ENDPOINT, APP_ID, DEFAULT_BUDGET_TYPE } from '../config';
 
 const TOKEN_KEY = 'budget_auth_token';
 const API_KEY = process.env.REACT_APP_KEY_1;
-const subappNameCache = {};
-
 
 // Add interceptor
 axios.interceptors.response.use(
@@ -72,44 +70,9 @@ const authService = {
         try {
             const userInfo = this.getUserInfo();
             console.log('getsubappid: ', userInfo?.subAppId);
-            return userInfo?.subAppId || DEFAULT_BUDGET_TYPE; // Use default from config
+            return userInfo?.subAppId || DEFAULT_BUDGET_TYPE;
         } catch {
             return DEFAULT_BUDGET_TYPE; // Use default from config
-        }
-    },
-
-    async getSubappName(subappId) {
-        if (!subappId) return "Registration";
-
-        // Check cache first
-        if (subappNameCache[subappId]) {
-            return subappNameCache[subappId];
-        }
-
-        try {
-            const response = await axios.post(
-                `${API_ENDPOINT}/app-manager`,
-                {
-                    appId: APP_ID,
-                    subappId
-                },
-                {
-                    params: { action: 'getSubappInfo' },
-                    headers: { 'X-Api-Key': API_KEY }
-                }
-            );
-
-            if (response.data && response.data.subappName) {
-                subappNameCache[subappId] = response.data.subappName;
-                return response.data.subappName;
-            }
-
-            // Fallback to capitalized subappId if name not found
-            return subappId.charAt(0).toUpperCase() + subappId.slice(1);
-        } catch (error) {
-            console.error('Error fetching subapp name:', error);
-            // Fallback to capitalized subappId
-            return subappId.charAt(0).toUpperCase() + subappId.slice(1);
         }
     },
 
