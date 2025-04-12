@@ -318,7 +318,7 @@ export function AppRegistration() {
         <div className="min-h-screen bg-gray-200">
             <DashboardHeader
                 title="App Registration"
-                subtitle={`Registration Type: ${linkType}`}
+                subtitle="Paycheck Budget Tracker"
                 permanentMessage={permanentMessage}
             />
             <div className="w-full min-h-[calc(100vh-64px)] flex items-start justify-center">

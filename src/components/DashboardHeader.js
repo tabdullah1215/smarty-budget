@@ -1,12 +1,6 @@
 // src/components/DashboardHeader.js
 import React from 'react';
 
-// In DashboardHeader.js, update the layout structure:
-
-// In DashboardHeader.js, update the layout:
-
-// In DashboardHeader.js, update the component:
-
 const DashboardHeader = ({
                              subtitle = "DIGITALPHORM BUDGET TRACKER",
                              title,
