@@ -69,7 +69,8 @@ const authService = {
     getSubappId() {
         try {
             const userInfo = this.getUserInfo();
-            return userInfo?.subappId || DEFAULT_BUDGET_TYPE; // Use default from config
+            console.log('getsubappid: ', userInfo?.subAppId);
+            return userInfo?.subAppId || DEFAULT_BUDGET_TYPE; // Use default from config
         } catch {
             return DEFAULT_BUDGET_TYPE; // Use default from config
         }
