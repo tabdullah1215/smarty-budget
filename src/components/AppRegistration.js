@@ -10,6 +10,7 @@ import { IOSInstallInstructions } from './IOSInstallInstructions';
 import {withMinimumDelay} from "../utils/withDelay";
 import { useTransition, animated } from '@react-spring/web';
 import { modalTransitions, backdropTransitions } from '../utils/transitions';
+import authService from '../services/authService';
 
 export function AppRegistration() {
     const [email, setEmail] = useState('');
@@ -25,7 +26,7 @@ export function AppRegistration() {
     const [isLoading, setIsLoading] = useState(false);
     const [showCompleteUI, setShowCompleteUI] = useState(false);
     const [isInstalling, setIsInstalling] = useState(false);
-
+    const [subappName, setSubappName] = useState('Registration');
 
     const transitions = useTransition(showCompleteUI, modalTransitions);
     const backdropTransition = useTransition(showCompleteUI, backdropTransitions);
@@ -52,6 +53,21 @@ export function AppRegistration() {
         window.addEventListener('beforeinstallprompt', handleInstallPrompt);
         return () => window.removeEventListener('beforeinstallprompt', handleInstallPrompt);
     }, []);
+
+    useEffect(() => {
+        async function fetchSubappName() {
+            if (subappId) {
+                try {
+                    const name = await authService.getSubappName(subappId);
+                    setSubappName(name);
+                } catch (error) {
+                    console.error('Error fetching subapp name:', error);
+                }
+            }
+        }
+
+        fetchSubappName();
+    }, [subappId]);
 
     if (!isMobileDevice() && !shouldBypassMobileCheck()) {
         return <Navigate to="/" replace />;
@@ -318,7 +334,7 @@ export function AppRegistration() {
         <div className="min-h-screen bg-gray-200">
             <DashboardHeader
                 title="App Registration"
-                subtitle="Paycheck Budget Tracker"
+                subtitle={subappName}
                 permanentMessage={permanentMessage}
             />
             <div className="w-full min-h-[calc(100vh-64px)] flex items-start justify-center">
