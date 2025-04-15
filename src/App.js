@@ -12,6 +12,7 @@ import { Toaster } from 'react-hot-toast';  // Add this import
 import { ToastProvider } from './contexts/ToastContext';  // Add this import
 import { QRCodeSVG } from 'qrcode.react';
 import {isMobileDevice, shouldBypassMobileCheck} from "./utils/helpers";
+import { BusinessBudgets } from './components/BusinessBudgets';
 
 class ErrorBoundary extends React.Component {
     constructor(props) {
@@ -242,6 +243,14 @@ function App() {
                                         <ProtectedRoute>
                                             <Navigate to="/dashboard" replace />
                                         </ProtectedRoute>
+                                }
+                            />
+                            <Route
+                                path="/business-budgets"
+                                element={
+                                    <ProtectedRoute>
+                                        {isStandalone ? <BusinessBudgets /> : <PWAGateway />}
+                                    </ProtectedRoute>
                                 }
                             />
                             <Route path="*" element={<Navigate to="/login" replace />} />

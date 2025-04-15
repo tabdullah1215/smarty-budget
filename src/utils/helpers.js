@@ -35,8 +35,8 @@ export const budgetTypes = {
         icon: 'Briefcase',
         color: 'text-emerald-800',
         borderColor: 'border-emerald-800',
-        visible: false,
-        enabled: false
+        visible: true,
+        enabled: true
     },
     savings: {
         id: 'savings',

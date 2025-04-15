@@ -79,6 +79,83 @@ class IndexDBService {
                         });
                     });
                 }
+
+                if (!db.objectStoreNames.contains(DB_CONFIG.stores.businessCategories)) {
+                    const businessCategoriesStore = db.createObjectStore(DB_CONFIG.stores.businessCategories, { keyPath: 'id' });
+                    businessCategoriesStore.createIndex('name', 'name', { unique: true });
+
+                    // Add default business expense categories
+                    const defaultBusinessCategories = [
+                        // Transportation
+                        'Airfare',
+                        'Train Tickets',
+                        'Taxi/Rideshare',
+                        'Car Rental',
+                        'Fuel/Gas',
+                        'Parking Fees',
+                        'Tolls',
+                        'Mileage Reimbursement',
+                        'Public Transit',
+
+                        // Accommodation
+                        'Hotel/Lodging',
+                        'Airbnb/Rental',
+                        'Extended Stay',
+
+                        // Meals & Entertainment
+                        'Business Meals',
+                        'Client Entertainment',
+                        'Team Meals',
+                        'Per Diem Food',
+
+                        // Office Expenses
+                        'Office Supplies',
+                        'Printing/Copying',
+                        'Postage/Shipping',
+                        'Software Subscriptions',
+                        'Equipment Rental',
+
+                        // Communication
+                        'Mobile Phone',
+                        'Internet Expenses',
+                        'Conference Calls',
+
+                        // Professional Services
+                        'Legal Fees',
+                        'Accounting Services',
+                        'Consulting Fees',
+
+                        // Marketing & Advertising
+                        'Promotional Materials',
+                        'Digital Advertising',
+                        'Print Advertising',
+                        'Trade Show Fees',
+
+                        // Training & Development
+                        'Conference Registration',
+                        'Course Fees',
+                        'Books & Materials',
+                        'Professional Memberships',
+
+                        // Client-Related
+                        'Client Gifts',
+                        'Meeting Expenses',
+                        'Proposal Materials',
+
+                        // Miscellaneous
+                        'Bank Fees',
+                        'Currency Exchange',
+                        'Visa/Travel Documents',
+                        'Travel Insurance'
+                    ];
+
+                    defaultBusinessCategories.forEach((category, index) => {
+                        businessCategoriesStore.add({
+                            id: index + 1,
+                            name: category
+                        });
+                    });
+                }
             };
         });
     }
@@ -218,6 +295,19 @@ class IndexDBService {
         return new Promise((resolve, reject) => {
             const transaction = this.db.transaction([DB_CONFIG.stores.paycheckCategories], 'readonly');
             const store = transaction.objectStore(DB_CONFIG.stores.paycheckCategories);
+            const request = store.getAll();
+
+            request.onsuccess = () => resolve(request.result.sort((a, b) => a.name.localeCompare(b.name)));
+            request.onerror = () => reject(request.error);
+        });
+    }
+
+    async getBusinessCategories() {
+        if (!this.db) await this.initDB();
+
+        return new Promise((resolve, reject) => {
+            const transaction = this.db.transaction([DB_CONFIG.stores.businessCategories], 'readonly');
+            const store = transaction.objectStore(DB_CONFIG.stores.businessCategories);
             const request = store.getAll();
 
             request.onsuccess = () => resolve(request.result.sort((a, b) => a.name.localeCompare(b.name)));
