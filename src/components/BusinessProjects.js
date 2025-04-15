@@ -3,7 +3,6 @@ import { useSprings, useSpring, animated } from '@react-spring/web';
 import { useNavigate } from 'react-router-dom';
 import { Loader2, Plus } from 'lucide-react';
 import { Header } from './Header';
-import { PaycheckBudgetForm } from './PaycheckBudgetForm';
 import { PaycheckBudgetDetails } from './PaycheckBudgetDetails';
 import { usePaycheckBudgets } from '../hooks/usePaycheckBudget';
 import { withMinimumDelay } from "../utils/withDelay";
@@ -12,8 +11,9 @@ import DeleteConfirmationModal from "./DeleteConfirmationModal";
 import { PaycheckBudgetCard } from './PaycheckBudgetCard';
 import authService from '../services/authService';
 import { downloadCSV } from '../utils/budgetCsvGenerator';
+import { BusinessExpenseProjectForm } from './BusinessExpenseProjectForm';
 
-export const BusinessBudgets = () => {
+export const BusinessProjects = () => {
     const [isCreating, setIsCreating] = useState(false);
     const [showNewBudgetForm, setShowNewBudgetForm] = useState(false);
     const [selectedBudget, setSelectedBudget] = useState(null);
@@ -124,13 +124,8 @@ export const BusinessBudgets = () => {
 
     const handleCreateBudget = async (budgetData) => {
         try {
-            // Add budgetType to mark this as a business budget
-            const businessBudgetData = {
-                ...budgetData,
-                budgetType: 'business'  // This is the key addition
-            };
-
-            await createPaycheckBudget(businessBudgetData);
+            // The budgetType field is already set in the BusinessExpenseProjectForm
+            await createPaycheckBudget(budgetData);
             showToast('success', 'New business expense budget created successfully');
         } catch (error) {
             console.error('Error creating budget:', error);
@@ -242,7 +237,7 @@ export const BusinessBudgets = () => {
             </div>
 
             {showNewBudgetForm && (
-                <PaycheckBudgetForm
+                <BusinessExpenseProjectForm
                     onSave={handleCreateBudget}
                     onClose={() => setShowNewBudgetForm(false)}
                 />
@@ -267,4 +262,4 @@ export const BusinessBudgets = () => {
     );
 };
 
-export default BusinessBudgets;
+export default BusinessProjects;
