@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 
-const PaycheckBudgetTableHeader = ({
+const BudgetTableHeader = ({
                                        items,
                                        onToggleAll,
                                    }) => {
@@ -85,4 +85,4 @@ const PaycheckBudgetTableHeader = ({
     );
 };
 
-export default PaycheckBudgetTableHeader;
+export default BudgetTableHeader;

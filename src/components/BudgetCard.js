@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { FileText, Trash2, Loader2 } from 'lucide-react';
 import { animated, useSpring } from '@react-spring/web';
 
-export const PaycheckBudgetCard = ({
+export const BudgetCard = ({
                                        budget,
                                        onOpenBudget,
                                        onDeleteBudget,

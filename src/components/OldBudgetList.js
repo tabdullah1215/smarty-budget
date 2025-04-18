@@ -4,7 +4,7 @@ import { generateUniqueColor } from '../utils/colorGenerator';
 import { withMinimumDelay } from '../utils/withDelay';
 import {capitalizeFirstLetter} from "../utils/helpers";
 
-export const BudgetList = ({ budgets, onSelect, onDelete }) => {
+export const OldBudgetList = ({ budgets, onSelect, onDelete }) => {
     const [deletingBudgetId, setDeletingBudgetId] = useState(null);
     const [isDeleting, setIsDeleting] = useState(false);
     const [confirmingDeleteId, setConfirmingDeleteId] = useState(null);

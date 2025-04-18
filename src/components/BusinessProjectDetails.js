@@ -6,9 +6,9 @@ import { withMinimumDelay } from '../utils/withDelay';
 import { modalTransitions, backdropTransitions } from '../utils/transitions';
 import { useToast } from '../contexts/ToastContext';
 import { BusinessExpenseItemForm } from './BusinessExpenseItemForm';
-import PaycheckBudgetDetailsHeader from './PaycheckBudgetDetailsHeader';
-import PaycheckBudgetItemRow from './PaycheckBudgetItemRow';
-import PaycheckBudgetTableHeader from './PaycheckBudgetTableHeader';
+import BudgetDetailsHeader from './BudgetDetailsHeader';
+import BudgetItemRow from './BudgetItemRow';
+import BudgetTableHeader from './BudgetTableHeader';
 import DeleteConfirmationModal from './DeleteConfirmationModal';
 import { compressImage, formatFileSize } from '../utils/imageCompression';
 import { ImageViewer } from './ImageViewer';
@@ -364,7 +364,7 @@ export const BusinessProjectDetails = ({ budget, onClose, onUpdate }) => {
                             className="fixed inset-0 z-50 flex items-center justify-center"
                         >
                             <div className="w-[95%] max-w-4xl bg-white rounded-lg shadow-xl max-h-[80vh] flex flex-col">
-                                <PaycheckBudgetDetailsHeader
+                                <BudgetDetailsHeader
                                     budget={budget}
                                     totalSpent={totalSpent}
                                     remainingAmount={remainingAmount}
@@ -382,7 +382,7 @@ export const BusinessProjectDetails = ({ budget, onClose, onUpdate }) => {
                                     <div className="relative w-full min-h-0 max-h-[calc(80vh-250px)]">
                                         <div className="w-full overflow-x-hidden">
                                             <table className="min-w-full divide-y divide-gray-200">
-                                                <PaycheckBudgetTableHeader
+                                                <BudgetTableHeader
                                                     items={budget.items}
                                                     onToggleAll={handleToggleAll}
                                                 />
@@ -395,7 +395,7 @@ export const BusinessProjectDetails = ({ budget, onClose, onUpdate }) => {
                                                     </tr>
                                                 )}
                                                 {budget.items?.map(item => (
-                                                    <PaycheckBudgetItemRow
+                                                    <BudgetItemRow
                                                         key={item.id}
                                                         item={item}
                                                         onEdit={handleEditItem}

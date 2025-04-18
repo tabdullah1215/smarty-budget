@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { X, Loader2 } from 'lucide-react';
-import { BudgetList } from './BudgetList';
-import { BudgetDetails } from './BudgetDetails';
-import { BudgetForm } from './BudgetForm';
+import { OldBudgetList } from './OldBudgetList';
+import { OldBudgetDetails } from './OldBudgetDetails';
+import { OldBudgetForm } from './OldBudgetForm';
 import { Header } from './Header';
 import { useBudgets } from '../hooks/useBudget';
 import authService from '../services/authService';
 import {withMinimumDelay} from "../utils/withDelay";
 
-export const BudgetContent = () => {
+export const OldBudgetContent = () => {
     const {budgets, createBudget, updateBudget, deleteBudget, isLoading} = useBudgets();
     const [selectedBudget, setSelectedBudget] = useState(null);
     const [showNewBudgetForm, setShowNewBudgetForm] = useState(false);
@@ -71,7 +71,7 @@ export const BudgetContent = () => {
             <div className="pt-60 md:pt-36 px-4 sm:px-6 lg:px-8">
                 <div className="max-w-7xl mx-auto pb-8">
                     <div className="relative">
-                        <BudgetList
+                        <OldBudgetList
                             budgets={budgets}
                             onSelect={setSelectedBudget}
                             onDelete={deleteBudget}
@@ -97,7 +97,7 @@ export const BudgetContent = () => {
                                 )}
                             </button>
                         </div>
-                        <BudgetForm
+                        <OldBudgetForm
                             onSave={handleCreateBudget}
                             onClose={() => setShowNewBudgetForm(false)}
                             budgetType={selectedBudgetType}
@@ -110,7 +110,7 @@ export const BudgetContent = () => {
             {selectedBudget && (
                 <div className="fixed inset-0 bg-gray-600 bg-opacity-50 z-50 flex justify-center items-start pt-20 overflow-y-auto">
                     <div className="w-full max-w-4xl mx-auto px-4 pb-8">
-                        <BudgetDetails
+                        <OldBudgetDetails
                             budget={selectedBudget}
                             onClose={() => setSelectedBudget(null)}
                             onUpdate={updateBudget}

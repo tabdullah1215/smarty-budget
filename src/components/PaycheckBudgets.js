@@ -9,7 +9,7 @@ import {usePaycheckBudgets} from '../hooks/usePaycheckBudget';
 import {withMinimumDelay} from "../utils/withDelay";
 import {useToast} from '../contexts/ToastContext';
 import DeleteConfirmationModal from "./DeleteConfirmationModal";
-import {PaycheckBudgetCard} from './PaycheckBudgetCard';
+import {BudgetCard} from './BudgetCard';
 import authService from '../services/authService';
 import {downloadCSV} from '../utils/budgetCsvGenerator';
 import StaticRestoreButton from './StaticRestoreButton';
@@ -275,7 +275,7 @@ export const PaycheckBudgets = () => {
                     ) : (
                         <div className="space-y-4">
                             {sortedBudgets.map((budget, index) => (
-                                <PaycheckBudgetCard
+                                <BudgetCard
                                     key={budget.id}
                                     budget={budget}
                                     onOpenBudget={handleOpenBudget}

@@ -3,7 +3,7 @@ import { X, Loader2 } from 'lucide-react';
 import { budgetTemplates } from '../data/budgetTemplates';
 import { withMinimumDelay } from '../utils/withDelay';
 
-export const BudgetForm = ({
+export const OldBudgetForm = ({
                                onSave,
                                onClose,
                                budgetType,

@@ -3,7 +3,7 @@
 import {Loader2, PlusCircle, Printer, Share2, X} from "lucide-react";
 import React from "react";
 
-const PaycheckBudgetDetailsHeader = ({
+const BudgetDetailsHeader = ({
                                   budget,
                                   totalSpent,
                                   remainingAmount,
@@ -106,4 +106,4 @@ const PaycheckBudgetDetailsHeader = ({
     );
 };
 
-export default PaycheckBudgetDetailsHeader;
+export default BudgetDetailsHeader;

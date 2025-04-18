@@ -1,8 +1,8 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { useReactToPrint } from 'react-to-print';
 import { Printer, Share2, X, PlusCircle, Loader2 } from 'lucide-react';
-import { BudgetForm } from './BudgetForm';
-import { BudgetItemRow } from './BudgetItemRow';
+import { OldBudgetForm } from './OldBudgetForm';
+import { OldBudgetItemRow } from './OldBudgetItemRow';
 import { withMinimumDelay } from '../utils/withDelay';
 import { capitalizeFirstLetter} from '../utils/helpers';
 
@@ -42,7 +42,7 @@ const PrintableContent = React.forwardRef(({ budget }, ref) => {
 });
 PrintableContent.displayName = 'PrintableContent';
 
-export const BudgetDetails = ({ budget, onClose, onUpdate }) => {
+export const OldBudgetDetails = ({ budget, onClose, onUpdate }) => {
     const [showForm, setShowForm] = useState(false);
     const [editingItem, setEditingItem] = useState(null);
     const [isAddingItem, setIsAddingItem] = useState(false);
@@ -288,7 +288,7 @@ export const BudgetDetails = ({ budget, onClose, onUpdate }) => {
                             </thead>
                             <tbody className="bg-white divide-y divide-gray-200">
                             {localBudget.items.map(item => (
-                                <BudgetItemRow
+                                <OldBudgetItemRow
                                     key={item.id}
                                     item={item}
                                     budgetType={localBudget.type}
@@ -320,7 +320,7 @@ export const BudgetDetails = ({ budget, onClose, onUpdate }) => {
                 </div>
 
                 {showForm && (
-                    <BudgetForm
+                    <OldBudgetForm
                         onSave={handleSaveItem}
                         onClose={() => {
                             setShowForm(false);

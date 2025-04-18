@@ -1,224 +1,218 @@
-import React, { useState } from 'react';
-import { MinusCircle, Plus, Edit2, Loader2 } from 'lucide-react';
-import { budgetTemplates } from '../data/budgetTemplates';
-import { withMinimumDelay } from '../utils/withDelay';
+import React from 'react';
+import { Loader2, Edit2, Trash2, Paperclip, XCircle } from 'lucide-react';
 
-export const BudgetItemRow = ({
-                                  item,
-                                  budgetType,
-                                  isCommitted,
-                                  onUpdate,
-                                  onRemove,
-                                  onCommit,
-                                  onEdit,
-                                  isSaving = false
-                              }) => {
-    const [isDeleting, setIsDeleting] = useState(false);
-    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-    const [isEditing, setIsEditing] = useState(false);
-    const [isCommitting, setIsCommitting] = useState(false);
-    const [error, setError] = useState('');
-    const categories = budgetTemplates[budgetType]?.categories || [];
-
-    const handleDelete = async () => {
-        setShowDeleteConfirm(true);
-    };
-
-    const confirmDelete = async () => {
-        setIsDeleting(true);
-        try {
-            await withMinimumDelay(async () => {
-                await onRemove();
-            });
-        } catch (error) {
-            console.error('Error deleting item:', error);
-            setError('Failed to delete item. Please try again.');
-        } finally {
-            setIsDeleting(false);
-            setShowDeleteConfirm(false);
-        }
-    };
-
-    const handleEdit = async () => {
-        setIsEditing(true);
-        try {
-            await withMinimumDelay(async () => {
-                await onEdit();
-            });
-        } catch (error) {
-            console.error('Error editing item:', error);
-            setError('Failed to edit item. Please try again.');
-        } finally {
-            setIsEditing(false);
-        }
-    };
-
-    const handleCommit = async () => {
-        setIsCommitting(true);
-        try {
-            await withMinimumDelay(async () => {
-                await onCommit();
-            });
-        } catch (error) {
-            console.error('Error committing item:', error);
-            setError('Failed to commit item. Please try again.');
-        } finally {
-            setIsCommitting(false);
-        }
-    };
-
-    const handleFieldUpdate = async (updates) => {
-        try {
-            await onUpdate(updates);
-        } catch (error) {
-            console.error('Error updating field:', error);
-            setError('Failed to update field. Please try again.');
-        }
-    };
-
+const BudgetItemRow = ({
+                                   item,
+                                   onEdit,
+                                   onDelete,
+                                   onImageUpload,
+                                   onRemoveImage,
+                                   onToggleActive,
+                                   onImageClick,
+                                   editingItemId,
+                                   deletingButtonId,
+                                   uploadingImageItemId,
+                                   isSaving
+                               }) => {
     return (
-        <>
-            <tr>
+        <React.Fragment>
+            {/* Desktop Row */}
+            <tr className={`hidden md:table-row ${!item.isActive ? 'bg-orange-50' : ''}`}>
                 <td className="px-6 py-4 whitespace-nowrap">
-                    <select
-                        value={item.category}
-                        onChange={(e) => handleFieldUpdate({ category: e.target.value })}
-                        disabled={isCommitted || isSaving}
-                        className={`block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 ${
-                            isCommitted ? 'bg-gray-50' : ''
-                        }`}
-                    >
-                        <option value="">Select Category</option>
-                        {categories.map(category => (
-                            <option key={category} value={category}>{category}</option>
-                        ))}
-                    </select>
+                    <div className="flex items-center space-x-4">
+                        <input
+                            type="checkbox"
+                            checked={item.isActive}
+                            onChange={() => onToggleActive(item.id)}
+                            className="h-5 w-5 text-blue-600 border-3 border-gray-300 rounded-md
+                            focus:ring-2 focus:ring-blue-500 cursor-pointer
+                            transition-transform duration-200 hover:scale-110 active:scale-100
+                            checked:bg-blue-600 checked:border-transparent"
+                        />
+                        <div className="flex items-center space-x-2">
+                            <span className="min-w-[70px]">{item.category}</span>
+                            <span className={`text-orange-600 text-sm font-medium transition-opacity duration-200 ${
+                                item.isActive ? 'opacity-0' : 'opacity-100'
+                            }`}>
+                                (Pending)
+                            </span>
+                        </div>
+                    </div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                    <input
-                        type="text"
-                        value={item.description}
-                        onChange={(e) => handleFieldUpdate({ description: e.target.value })}
-                        disabled={isCommitted || isSaving}
-                        className={`block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 ${
-                            isCommitted ? 'bg-gray-50' : ''
-                        }`}
-                    />
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                    <input
-                        type="date"
-                        value={item.date || ''}
-                        onChange={(e) => handleFieldUpdate({ date: e.target.value })}
-                        disabled={isCommitted || isSaving}
-                        className={`block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 ${
-                            isCommitted ? 'bg-gray-50' : ''
-                        }`}
-                    />
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                    <input
-                        type="number"
-                        value={item.amount || ''}
-                        onChange={(e) => handleFieldUpdate({ amount: Number(e.target.value) })}
-                        min="0"
-                        step="0.01"
-                        disabled={isCommitted || isSaving}
-                        className={`block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-right ${
-                            isCommitted ? 'bg-gray-50' : ''
-                        }`}
-                    />
-                </td>
+                <td className="px-6 py-4 whitespace-nowrap">{item.description}</td>
+                <td className="px-6 py-4 whitespace-nowrap">{item.date}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-right">
-                    <div className="flex justify-end space-x-2">
-                        {!isCommitted ? (
+                    ${item.amount.toLocaleString()}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex flex-col items-center space-y-2">
+                        <div className="flex justify-center space-x-4">
                             <button
-                                onClick={handleCommit}
-                                disabled={!item.category || !item.description || !item.amount || !item.date || isCommitting || isSaving}
-                                className="inline-flex items-center p-2 border border-transparent rounded-md text-green-600 hover:bg-green-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-                                title="Add to budget"
-                            >
-                                {isCommitting ? (
-                                    <Loader2 className="h-5 w-5 animate-spin" />
-                                ) : (
-                                    <Plus className="h-5 w-5" />
-                                )}
-                            </button>
-                        ) : (
-                            <button
-                                onClick={handleEdit}
-                                disabled={isEditing || isSaving}
-                                className="inline-flex items-center p-2 border border-transparent rounded-md text-blue-600 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
+                                onClick={() => onEdit(item)}
+                                disabled={editingItemId === item.id || isSaving}
+                                className="text-blue-600 hover:text-blue-800 transition-colors duration-200
+                                disabled:opacity-50 disabled:cursor-not-allowed"
                                 title="Edit item"
                             >
-                                {isEditing ? (
-                                    <Loader2 className="h-5 w-5 animate-spin" />
+                                {editingItemId === item.id ? (
+                                    <Loader2 className="h-6 w-6 stroke-[1.5] animate-spin"/>
                                 ) : (
-                                    <Edit2 className="h-5 w-5" />
+                                    <Edit2 className="h-6 w-6 stroke-[1.5]"/>
                                 )}
                             </button>
+                            <button
+                                onClick={() => onDelete(item.id)}
+                                disabled={deletingButtonId === item.id}
+                                className="text-red-600 hover:text-red-800 transition-colors duration-200"
+                                title="Delete item"
+                            >
+                                {deletingButtonId === item.id ? (
+                                    <Loader2 className="h-6 w-6 animate-spin"/>
+                                ) : (
+                                    <Trash2 className="h-6 w-6 stroke-[1.5]"/>
+                                )}
+                            </button>
+                            <button
+                                onClick={() => onImageUpload(item.id)}
+                                disabled={uploadingImageItemId === item.id || isSaving}
+                                className="text-gray-600 hover:text-gray-800 transition-colors duration-200
+                                disabled:opacity-50 disabled:cursor-not-allowed"
+                                title={item.image ? "Update image" : "Add image"}
+                            >
+                                {uploadingImageItemId === item.id ? (
+                                    <Loader2 className="h-6 w-6 stroke-[1.5] animate-spin"/>
+                                ) : (
+                                    <Paperclip className="h-6 w-6 stroke-[1.5]"/>
+                                )}
+                            </button>
+                        </div>
+                        {item.image && (
+                            <div className="flex justify-center w-full">
+                                <div className="relative">
+                                    <button
+                                        onClick={() => onImageClick(item)}
+                                        className="relative"
+                                        title="Click to enlarge"
+                                    >
+                                        <img
+                                            src={`data:${item.fileType || 'image/png'};base64,${item.image}`}
+                                            alt="Budget Item"
+                                            className="w-16 h-16 object-cover rounded-md border-2 border-gray-300"
+                                        />
+                                    </button>
+                                    <button
+                                        onClick={() => onRemoveImage(item.id)}
+                                        className="absolute -bottom-2 -right-2 bg-red-100 hover:bg-red-200 text-red-600 rounded-full p-1.5 shadow-sm"
+                                        title="Remove attachment"
+                                    >
+                                        <XCircle className="h-3.5 w-3.5"/>
+                                    </button>
+                                </div>
+                            </div>
                         )}
-                        <button
-                            onClick={handleDelete}
-                            disabled={isDeleting || isSaving}
-                            className="inline-flex items-center p-2 border border-transparent rounded-md text-red-600 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all duration-200"
-                            title="Remove item"
-                        >
-                            {isDeleting ? (
-                                <Loader2 className="h-5 w-5 animate-spin" />
-                            ) : (
-                                <MinusCircle className="h-5 w-5" />
-                            )}
-                        </button>
                     </div>
                 </td>
             </tr>
 
-            {error && (
-                <tr>
-                    <td colSpan={5}>
-                        <div className="text-red-600 text-sm px-6 py-2">{error}</div>
-                    </td>
-                </tr>
-            )}
-
-            {showDeleteConfirm && (
-                <tr>
-                    <td colSpan={5}>
-                        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-                            <div className="relative top-20 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-md bg-white">
-                                <div className="mt-3 text-center">
-                                    <h3 className="text-lg leading-6 font-medium text-gray-900">Delete Item</h3>
-                                    <div className="mt-2 px-7 py-3">
-                                        <p className="text-sm text-gray-500">
-                                            Are you sure you want to delete this budget item? This action cannot be undone.
-                                        </p>
-                                    </div>
-                                    <div className="flex justify-center space-x-4 mt-4">
-                                        <button
-                                            onClick={() => setShowDeleteConfirm(false)}
-                                            disabled={isDeleting}
-                                            className="px-4 py-2 bg-gray-100 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                                        >
-                                            Cancel
-                                        </button>
-                                        <button
-                                            onClick={confirmDelete}
-                                            disabled={isDeleting}
-                                            className="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                                        >
-                                            {isDeleting ? (
-                                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                            ) : null}
-                                            Delete
-                                        </button>
-                                    </div>
+            {/* Mobile Row */}
+            <tr className={`md:hidden ${!item.isActive ? 'bg-orange-50' : ''}`}>
+                <td className="px-2 sm:px-6 py-4">
+                    <div className="flex space-x-3">
+                        <div className="flex-shrink-0 pt-1">
+                            <input
+                                type="checkbox"
+                                checked={item.isActive}
+                                onChange={() => onToggleActive(item.id)}
+                                className="h-5 w-5 text-blue-600 border-3 border-gray-300 rounded-md
+                                focus:ring-2 focus:ring-blue-500 cursor-pointer
+                                active:scale-150
+                                checked:bg-blue-600 checked:border-transparent
+                                scale-100 transform transition-transform duration-300"
+                            />
+                        </div>
+                        <div className="flex-1 flex flex-col space-y-1">
+                            <div className="flex items-center">
+                                <span className="font-medium text-gray-900">{item.category}</span>
+                                <span className={`ml-2 text-orange-600 text-sm font-medium transition-opacity duration-200 
+                                    ${item.isActive ? 'opacity-0' : 'opacity-100'}`}>
+                                    (Pending)
+                                </span>
+                            </div>
+                            <span className="text-gray-600">{item.description}</span>
+                            <span className="text-gray-500 text-sm">{item.date}</span>
+                            <span className="font-medium text-gray-900">${item.amount.toLocaleString()}</span>
+                        </div>
+                    </div>
+                </td>
+                <td className="px-2 sm:px-6 py-4 pr-4 sm:pr-8">
+                    <div className="flex flex-col items-center space-y-2 pr-2 sm:pr-4">
+                        <div className="flex justify-center space-x-2">
+                            <button
+                                onClick={() => onEdit(item)}
+                                disabled={editingItemId === item.id || isSaving}
+                                className="text-blue-600 hover:text-blue-800 transition-colors duration-200"
+                                title="Edit item"
+                            >
+                                {editingItemId === item.id ? (
+                                    <Loader2 className="h-6 w-6 stroke-[1.5] animate-spin"/>
+                                ) : (
+                                    <Edit2 className="h-6 w-6 stroke-[1.5]"/>
+                                )}
+                            </button>
+                            <button
+                                onClick={() => onDelete(item.id)}
+                                disabled={deletingButtonId === item.id}
+                                className="text-red-600 hover:text-red-800 transition-colors duration-200"
+                                title="Delete item"
+                            >
+                                {deletingButtonId === item.id ? (
+                                    <Loader2 className="h-5 w-5 animate-spin"/>
+                                ) : (
+                                    <Trash2 className="h-5 w-5"/>
+                                )}
+                            </button>
+                            <button
+                                onClick={() => onImageUpload(item.id)}
+                                disabled={uploadingImageItemId === item.id || isSaving}
+                                className="text-gray-600 hover:text-gray-800 transition-colors duration-200"
+                                title={item.image ? "Update image" : "Add image"}
+                            >
+                                {uploadingImageItemId === item.id ? (
+                                    <Loader2 className="h-6 w-6 stroke-[1.5] animate-spin"/>
+                                ) : (
+                                    <Paperclip className="h-6 w-6 stroke-[1.5]"/>
+                                )}
+                            </button>
+                        </div>
+                        {item.image && (
+                            <div className="flex justify-center w-full">
+                                <div className="relative">
+                                    <button
+                                        onClick={() => onImageClick(item)}
+                                        className="relative"
+                                        title="Click to enlarge"
+                                    >
+                                        <img
+                                            src={`data:${item.fileType || 'image/png'};base64,${item.image}`}
+                                            alt="Budget Item"
+                                            className="w-16 h-16 object-cover rounded-md border-2 border-gray-300"
+                                        />
+                                    </button>
+                                    <button
+                                        onClick={() => onRemoveImage(item.id)}
+                                        className="absolute -bottom-2 -right-2 bg-red-100 hover:bg-red-200 text-red-600 rounded-full p-1.5 shadow-sm"
+                                        title="Remove attachment"
+                                    >
+                                        <XCircle className="h-3.5 w-3.5"/>
+                                    </button>
                                 </div>
                             </div>
-                        </div>
-                    </td>
-                </tr>
-            )}
-        </>
+                        )}
+                    </div>
+                </td>
+            </tr>
+        </React.Fragment>
     );
 };
+
+export default BudgetItemRow
