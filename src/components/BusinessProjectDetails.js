@@ -10,6 +10,9 @@ import PaycheckBudgetDetailsHeader from './PaycheckBudgetDetailsHeader';
 import PaycheckBudgetItemRow from './PaycheckBudgetItemRow';
 import PaycheckBudgetTableHeader from './PaycheckBudgetTableHeader';
 import DeleteConfirmationModal from './DeleteConfirmationModal';
+import { compressImage, formatFileSize } from '../utils/imageCompression';
+import { ImageViewer } from './ImageViewer';
+import { getStorageEstimate, formatStorageMessage } from '../utils/storageEstimation';
 
 export const BusinessProjectDetails = ({ budget, onClose, onUpdate }) => {
     const [showForm, setShowForm] = useState(false);
@@ -27,6 +30,8 @@ export const BusinessProjectDetails = ({ budget, onClose, onUpdate }) => {
     const [isPrinting, setIsPrinting] = useState(false);
     const [isSharing, setIsSharing] = useState(false);
     const { showToast } = useToast();
+    const [selectedImage, setSelectedImage] = useState(null);
+    const [selectedImageType, setSelectedImageType] = useState(null);
 
     const transitions = useTransition(show, modalTransitions);
     const backdropTransition = useTransition(show, backdropTransitions);
@@ -183,18 +188,163 @@ export const BusinessProjectDetails = ({ budget, onClose, onUpdate }) => {
         );
     };
 
-    // Handle image upload, similar to PaycheckBudgetDetails
     const handleImageUpload = async (itemId) => {
         setUploadingImageItemId(itemId);
         try {
-            // Simplified for now - implement full image handling later
-            await withMinimumDelay(async () => {}, 800);
-            showToast('info', 'Receipt upload functionality coming soon');
+            await withMinimumDelay(async () => {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = 'image/*';
+
+                // Explicitly append to DOM to ensure it works on all browsers/devices
+                input.style.display = 'none';
+                document.body.appendChild(input);
+
+                // Create a promise that resolves when a file is selected
+                const fileSelection = new Promise((resolve) => {
+                    // Handle file selection
+                    input.onchange = () => {
+                        // Make sure we get the file before resolving
+                        if (input.files && input.files.length > 0) {
+                            const selectedFile = input.files[0];
+                            resolve(selectedFile);
+                        } else {
+                            resolve(null);
+                        }
+                    };
+
+                    // Handle dialog dismissal
+                    const focusHandler = () => {
+                        // Use a slight delay to ensure onchange had a chance to fire
+                        setTimeout(() => {
+                            // If no files were selected and input is no longer focused
+                            if (!input.files || input.files.length === 0) {
+                                window.removeEventListener('focus', focusHandler);
+                                resolve(null);
+                            }
+                        }, 300);
+                    };
+
+                    window.addEventListener('focus', focusHandler);
+                });
+
+                // Trigger the file selection dialog
+                input.click();
+
+                // Wait for file selection or dialog dismissal
+                const file = await fileSelection;
+
+                // Clean up the input element
+                document.body.removeChild(input);
+
+                if (!file) {
+                    setUploadingImageItemId(null);  // Clear loading state if cancelled
+                    return;
+                }
+
+                try {
+                    // Compress the image using our utility
+                    const compressResult = await compressImage(file);
+
+                    // Get storage estimate
+                    const storageEstimate = await getStorageEstimate();
+                    const storageMessage = formatStorageMessage(storageEstimate);
+
+                    // Show compression statistics in a toast with storage info
+                    showToast(
+                        'success',
+                        `Image compressed: ${formatFileSize(compressResult.originalSize)} → 
+                     ${formatFileSize(compressResult.compressedSize)} 
+                     (${compressResult.compressionRatio}% reduction)
+                     ${storageMessage ? `\n${storageMessage}` : ''}`
+                    );
+
+                    // Update the budget item with compressed image
+                    const updatedItems = budget.items.map(item =>
+                        item.id === itemId ? {
+                            ...item,
+                            image: compressResult.data,
+                            fileType: compressResult.fileType
+                        } : item
+                    );
+
+                    const updatedBudget = {...budget, items: updatedItems};
+                    await onUpdate(updatedBudget);
+
+                } catch (compressionError) {
+                    console.error('Error compressing image:', compressionError);
+                    showToast('error', 'Could not compress image. Using original instead.');
+
+                    // Fallback to original image if compression fails
+                    const reader = new FileReader();
+
+                    // Create a proper promise for FileReader operation
+                    const readFilePromise = new Promise((resolve, reject) => {
+                        reader.onloadend = (event) => {
+                            if (event.target.readyState === FileReader.DONE) {
+                                resolve(event.target.result);
+                            }
+                        };
+                        reader.onerror = () => {
+                            reject(new Error('Failed to read image file'));
+                        };
+
+                        // Start reading the file as a data URL
+                        reader.readAsDataURL(file);
+                    });
+
+                    try {
+                        const dataUrl = await readFilePromise;
+                        const base64Data = dataUrl.split(',')[1];
+                        const fileType = file.type;
+
+                        const updatedItems = budget.items.map(item =>
+                            item.id === itemId ? {
+                                ...item,
+                                image: base64Data,
+                                fileType: fileType
+                            } : item
+                        );
+
+                        const updatedBudget = {...budget, items: updatedItems};
+                        await onUpdate(updatedBudget);
+
+                    } catch (readError) {
+                        showToast('error', 'Failed to read image file. Please try again.');
+                        console.error('File read error:', readError);
+                    }
+                }
+
+            }, 800);
         } catch (error) {
-            console.error('Error with image upload:', error);
+            console.error('Error uploading image:', error);
+            showToast('error', 'Failed to upload image: ' + (error.message || 'Unknown error'));
         } finally {
             setUploadingImageItemId(null);
         }
+    };
+
+    const handleRemoveImage = async (itemId) => {
+        setUploadingImageItemId(itemId);
+        try {
+            await withMinimumDelay(async () => {
+                const updatedItems = budget.items.map(item =>
+                    item.id === itemId ? {...item, image: null, fileType: null} : item
+                );
+                const updatedBudget = {...budget, items: updatedItems};
+                await onUpdate(updatedBudget);
+                showToast('success', 'Attachment removed successfully');
+            });
+        } catch (error) {
+            showToast('error', 'Failed to remove attachment');
+        } finally {
+            setUploadingImageItemId(null);
+        }
+    };
+
+    const handleImageClick = (item) => {
+        setSelectedImage(item.image);
+        setSelectedImageType(item.fileType || 'image/png');
     };
 
     return (
@@ -251,9 +401,9 @@ export const BusinessProjectDetails = ({ budget, onClose, onUpdate }) => {
                                                         onEdit={handleEditItem}
                                                         onDelete={handleDeleteItem}
                                                         onImageUpload={handleImageUpload}
-                                                        onRemoveImage={() => {}}
+                                                        onRemoveImage={handleRemoveImage}
                                                         onToggleActive={handleToggleActive}
-                                                        onImageClick={() => {}}
+                                                        onImageClick={handleImageClick}
                                                         editingItemId={editingItemId}
                                                         deletingButtonId={deletingButtonId}
                                                         uploadingImageItemId={uploadingImageItemId}
@@ -307,6 +457,16 @@ export const BusinessProjectDetails = ({ budget, onClose, onUpdate }) => {
                 title="Delete Expense Item"
                 message="Are you sure you want to delete this expense item? This action cannot be undone."
             />
+            {selectedImage && (
+                <ImageViewer
+                    imageData={selectedImage}
+                    fileType={selectedImageType}
+                    onClose={() => {
+                        setSelectedImage(null);
+                        setSelectedImageType(null);
+                    }}
+                />
+            )}
         </>
     );
 };
