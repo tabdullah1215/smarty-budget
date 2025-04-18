@@ -38,6 +38,12 @@ class IndexDBService {
                     paycheckStore.createIndex('createdAt', 'createdAt', { unique: false });
                 }
 
+                if (!db.objectStoreNames.contains(DB_CONFIG.stores.businessBudgets)) {
+                    const businessStore = db.createObjectStore(DB_CONFIG.stores.businessBudgets, { keyPath: 'id' });
+                    businessStore.createIndex('userEmail', 'userEmail', { unique: false });
+                    businessStore.createIndex('createdAt', 'createdAt', { unique: false });
+                }
+
                 if (!db.objectStoreNames.contains(DB_CONFIG.stores.backupInfo)) {
                     const backupStore = db.createObjectStore(DB_CONFIG.stores.backupInfo, { keyPath: 'id' });
                     backupStore.createIndex('userEmail', 'userEmail', { unique: false });
@@ -311,6 +317,59 @@ class IndexDBService {
             const request = store.getAll();
 
             request.onsuccess = () => resolve(request.result.sort((a, b) => a.name.localeCompare(b.name)));
+            request.onerror = () => reject(request.error);
+        });
+    }
+
+    async getBusinessBudgetsByEmail(userEmail) {
+        if (!this.db) await this.initDB();
+
+        return new Promise((resolve, reject) => {
+            const transaction = this.db.transaction([DB_CONFIG.stores.businessBudgets], 'readonly');
+            const store = transaction.objectStore(DB_CONFIG.stores.businessBudgets);
+            const index = store.index('userEmail');
+            const request = index.getAll(IDBKeyRange.only(userEmail));
+
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
+    }
+
+    async addBusinessBudget(budget) {
+        if (!this.db) await this.initDB();
+
+        return new Promise((resolve, reject) => {
+            const transaction = this.db.transaction([DB_CONFIG.stores.businessBudgets], 'readwrite');
+            const store = transaction.objectStore(DB_CONFIG.stores.businessBudgets);
+            const request = store.add(budget);
+
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
+    }
+
+    async updateBusinessBudget(budget) {
+        if (!this.db) await this.initDB();
+
+        return new Promise((resolve, reject) => {
+            const transaction = this.db.transaction([DB_CONFIG.stores.businessBudgets], 'readwrite');
+            const store = transaction.objectStore(DB_CONFIG.stores.businessBudgets);
+            const request = store.put(budget);
+
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
+    }
+
+    async deleteBusinessBudget(budgetId) {
+        if (!this.db) await this.initDB();
+
+        return new Promise((resolve, reject) => {
+            const transaction = this.db.transaction([DB_CONFIG.stores.businessBudgets], 'readwrite');
+            const store = transaction.objectStore(DB_CONFIG.stores.businessBudgets);
+            const request = store.delete(budgetId);
+
+            request.onsuccess = () => resolve();
             request.onerror = () => reject(request.error);
         });
     }

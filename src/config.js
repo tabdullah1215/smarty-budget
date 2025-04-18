@@ -16,10 +16,11 @@ export const DEFAULT_BUDGET_TYPE = 'paycheck';
 
 export const DB_CONFIG = {
     name: 'BudgetTrackerDB',
-    version: 6, // Increment version for new store
+    version: 7, // Increment version for new store
     stores: {
         budgets: 'budgets',
         paycheckBudgets: 'paycheckBudgets',
+        businessBudgets: 'businessBudgets',
         paycheckCategories: 'paycheckCategories',
         businessCategories: 'businessCategories',
         backupInfo: 'backupInfo',

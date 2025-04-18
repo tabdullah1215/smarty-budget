@@ -36,14 +36,13 @@ export const BusinessExpenseProjectForm = ({
 
         try {
             await withMinimumDelay(async () => {
-                const projectName = `${projectName} - ${client || 'No Client'}`;
+                const fullProjectName = `${projectName} - ${client || 'No Client'}`;
                 await onSave({
-                    name: projectName,
+                    name: fullProjectName,
                     date: startDate,
                     amount: budgetLimit ? Number(budgetLimit) : 0,
                     projectName: projectName,
                     client: client,
-                    budgetType: 'business',
                     items: []
                 });
                 setShow(false); // Trigger exit animation

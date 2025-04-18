@@ -3,7 +3,6 @@ import { useSprings, useSpring, animated } from '@react-spring/web';
 import { useNavigate } from 'react-router-dom';
 import { Loader2, Plus } from 'lucide-react';
 import { Header } from './Header';
-import { PaycheckBudgetDetails } from './PaycheckBudgetDetails';
 import { usePaycheckBudgets } from '../hooks/usePaycheckBudget';
 import { withMinimumDelay } from "../utils/withDelay";
 import { useToast } from '../contexts/ToastContext';
@@ -12,6 +11,8 @@ import { PaycheckBudgetCard } from './PaycheckBudgetCard';
 import authService from '../services/authService';
 import { downloadCSV } from '../utils/budgetCsvGenerator';
 import { BusinessExpenseProjectForm } from './BusinessExpenseProjectForm';
+import { BusinessProjectDetails } from './BusinessProjectDetails';
+import { useBusinessBudgets } from '../hooks/useBusinessBudget';
 
 export const BusinessProjects = () => {
     const [isCreating, setIsCreating] = useState(false);
@@ -29,14 +30,17 @@ export const BusinessProjects = () => {
     const { showToast } = useToast();
 
     // For now, we'll reuse the PaycheckBudgets hook and filter for business type
-    const { paycheckBudgets, createPaycheckBudget, updatePaycheckBudget, deletePaycheckBudget, isLoading } = usePaycheckBudgets();
+    const {
+        businessBudgets,
+        createBusinessBudget,
+        updateBusinessBudget,
+        deleteBusinessBudget,
+        isLoading
+    } = useBusinessBudgets();
 
-    // Filter budgets to only show those with "business" type
     const sortedBudgets = useMemo(() => {
-        return [...paycheckBudgets]
-            .filter(budget => budget.budgetType === 'business')
-            .sort((a, b) => new Date(b.date) - new Date(a.date));
-    }, [paycheckBudgets]);
+        return [...businessBudgets].sort((a, b) => new Date(b.date) - new Date(a.date));
+    }, [businessBudgets]);
 
     // Get the complete budget objects for selected budget IDs
     const selectedBudgetObjects = useMemo(() => {
@@ -110,7 +114,7 @@ export const BusinessProjects = () => {
             try {
                 setFadingBudgetId(deletingBudgetId);
                 await withMinimumDelay(async () => {
-                    await deletePaycheckBudget(deletingBudgetId);
+                    await deleteBusinessBudget(deletingBudgetId);
                     setShowDeleteModal(false);
                 });
                 await withMinimumDelay(async () => {});
@@ -125,7 +129,7 @@ export const BusinessProjects = () => {
     const handleCreateBudget = async (budgetData) => {
         try {
             // The budgetType field is already set in the BusinessExpenseProjectForm
-            await createPaycheckBudget(budgetData);
+            await createBusinessBudget(budgetData);
             showToast('success', 'New business expense budget created successfully');
         } catch (error) {
             console.error('Error creating budget:', error);
@@ -135,14 +139,9 @@ export const BusinessProjects = () => {
 
     const handleUpdateBudget = async (updatedBudget) => {
         try {
-            // Make sure we preserve the budgetType
-            const businessBudget = {
-                ...updatedBudget,
-                budgetType: 'business'
-            };
 
-            await updatePaycheckBudget(businessBudget);
-            setSelectedBudget(businessBudget);
+            await updateBusinessBudget(updatedBudget);
+            setSelectedBudget(updatedBudget);
         } catch (error) {
             console.error('Error updating budget:', error);
         }
@@ -244,7 +243,7 @@ export const BusinessProjects = () => {
             )}
 
             {selectedBudget && (
-                <PaycheckBudgetDetails
+                <BusinessProjectDetails
                     budget={selectedBudget}
                     onClose={() => setSelectedBudget(null)}
                     onUpdate={handleUpdateBudget}
