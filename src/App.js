@@ -3,7 +3,6 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import PWAGateway from './components/PWAGateway';
 import Login from './components/Login';
 import AppRegistration from './components/AppRegistration';
-import { OldBudgetContent } from "./components/OldBudgetContent";
 import { Home } from "./components/Home";  // Add this import
 import authService from './services/authService';
 import { indexdbService } from './services/IndexDBService';
@@ -216,14 +215,6 @@ function App() {
                                 element={
                                     <ProtectedRoute>
                                         {shouldAllowAccess ? <Home /> : <PWAGateway />}
-                                    </ProtectedRoute>
-                                }
-                            />
-                            <Route
-                                path="/budgets"
-                                element={
-                                    <ProtectedRoute>
-                                        {isStandalone ? <OldBudgetContent /> : <PWAGateway />}
                                     </ProtectedRoute>
                                 }
                             />
