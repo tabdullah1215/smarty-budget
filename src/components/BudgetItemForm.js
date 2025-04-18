@@ -1,13 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { X, Loader2, PlusCircle } from 'lucide-react';
-import { useTransition, animated } from '@react-spring/web'; // No need to import `config` anymore
+import { useTransition, animated } from '@react-spring/web';
 import { withMinimumDelay } from '../utils/withDelay';
 import { indexdbService } from '../services/IndexDBService';
-// Add this import
 import { modalTransitions, backdropTransitions } from '../utils/transitions';
 import AddCategoryModal from './AddCategoryModal';
 
-export const PaycheckBudgetItemForm = ({onSave, onClose, initialItem = null, isSaving = false}) => {
+export const BudgetItemForm = ({
+                                   onSave,
+                                   onClose,
+                                   initialItem = null,
+                                   isSaving = false,
+                                   budgetType = 'paycheck' // 'paycheck' or 'business'
+                               }) => {
     const [category, setCategory] = useState(initialItem?.category || '');
     const [description, setDescription] = useState(initialItem?.description || '');
     const [date, setDate] = useState(initialItem?.date || new Date().toISOString().split('T')[0]);
@@ -20,35 +25,47 @@ export const PaycheckBudgetItemForm = ({onSave, onClose, initialItem = null, isS
     const [showAddCategory, setShowAddCategory] = useState(false);
     const [isAddingCategory, setIsAddingCategory] = useState(false);
 
-    // Replace with the imported transitions
     const transitions = useTransition(show, modalTransitions);
     const backdropTransition = useTransition(show, backdropTransitions);
+
+    // Determine styling based on budget type
+    const accentColor = budgetType === 'business' ? 'emerald' : 'blue';
+    const formTitle = budgetType === 'business'
+        ? (initialItem ? 'Edit Business Expense' : 'Add Business Expense')
+        : (initialItem ? 'Edit Expense Item' : 'Add Expense Item');
+    const descriptionPlaceholder = budgetType === 'business'
+        ? 'e.g., Hotel - San Francisco trip'
+        : 'e.g., Electric bill - August';
 
     useEffect(() => {
         const loadCategories = async () => {
             try {
-                const loadedCategories = await indexdbService.getPaycheckCategories();
+                // Load appropriate categories based on budget type
+                const storeName = budgetType === 'business' ? 'businessCategories' : 'paycheckCategories';
+                const loadedCategories = await (
+                    budgetType === 'business'
+                        ? indexdbService.getBusinessCategories()
+                        : indexdbService.getPaycheckCategories()
+                );
                 setCategories(loadedCategories);
             } catch (error) {
-                console.error('Error loading categories:', error);
-                setError('Failed to load categories: ' + error.message);
+                console.error(`Error loading ${budgetType} categories:`, error);
+                setError(`Failed to load categories: ${error.message}`);
             } finally {
                 setIsLoading(false);
             }
         };
 
         loadCategories();
-    }, []);
+    }, [budgetType]);
 
     const handleCancel = async () => {
         setIsCancelling(true);
-
         await withMinimumDelay(async () => {});
         setShow(false);
         await withMinimumDelay(async () => {});
         setIsCancelling(false);
         onClose();
-
     };
 
     const handleAddCategoryClick = async () => {
@@ -64,12 +81,11 @@ export const PaycheckBudgetItemForm = ({onSave, onClose, initialItem = null, isS
     const handleSave = async (itemData) => {
         try {
             await onSave(itemData); // Call the parent's onSave function
-            // await withMinimumDelay(async () => {});
             setShow(false); // Trigger exit animation
             await withMinimumDelay(async () => {});
             onClose();
         } catch (error) {
-            console.error('Error saving item:', error);
+            console.error(`Error saving ${budgetType} expense item:`, error);
             setError('Failed to save item');
         }
     };
@@ -92,7 +108,7 @@ export const PaycheckBudgetItemForm = ({onSave, onClose, initialItem = null, isS
                                 className="fixed inset-0 flex items-center justify-center"
                             >
                                 <div className="bg-white p-8 rounded-lg shadow-xl flex items-center space-x-4">
-                                    <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+                                    <Loader2 className={`h-8 w-8 animate-spin text-${accentColor}-500`} />
                                     <p className="text-lg text-gray-700">Loading categories...</p>
                                 </div>
                             </animated.div>
@@ -121,7 +137,7 @@ export const PaycheckBudgetItemForm = ({onSave, onClose, initialItem = null, isS
                             <div className="relative w-[95%] max-w-xl p-8 bg-white rounded-lg shadow-xl">
                                 <div className="flex justify-between items-center mb-6">
                                     <h2 className="text-2xl font-semibold text-gray-900">
-                                        {initialItem ? 'Edit Expense Item' : 'Add Expense Item'}
+                                        {formTitle}
                                     </h2>
                                     <button
                                         onClick={handleCancel}
@@ -163,7 +179,7 @@ export const PaycheckBudgetItemForm = ({onSave, onClose, initialItem = null, isS
                                                 onClick={handleAddCategoryClick}
                                                 disabled={isAddingCategory}
                                                 className="p-1 text-gray-600 hover:text-gray-900 transition-colors duration-200
-        hover:bg-gray-100 rounded-full disabled:opacity-50 disabled:cursor-not-allowed"
+                                            hover:bg-gray-100 rounded-full disabled:opacity-50 disabled:cursor-not-allowed"
                                                 title="Add new category"
                                             >
                                                 {isAddingCategory ? (
@@ -176,9 +192,9 @@ export const PaycheckBudgetItemForm = ({onSave, onClose, initialItem = null, isS
                                         <select
                                             value={category}
                                             onChange={(e) => setCategory(e.target.value)}
-                                            className="block w-full rounded-lg border-2 border-gray-300 px-4 py-3
-            shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-200
-            focus:ring-opacity-50 transition-colors duration-200"
+                                            className={`block w-full rounded-lg border-2 border-gray-300 px-4 py-3
+                                        shadow-sm focus:border-${accentColor}-500 focus:ring-4 focus:ring-${accentColor}-200
+                                        focus:ring-opacity-50 transition-colors duration-200`}
                                             required
                                             disabled={isSaving}
                                         >
@@ -190,17 +206,17 @@ export const PaycheckBudgetItemForm = ({onSave, onClose, initialItem = null, isS
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            Description/Reference (Optional)
+                                            Description
                                         </label>
                                         <input
                                             type="text"
                                             value={description}
                                             onChange={(e) => setDescription(e.target.value)}
-                                            className="block w-full rounded-lg border-2 border-gray-300 px-4 py-3
-                                        shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-200
-                                        focus:ring-opacity-50 transition-colors duration-200"
+                                            className={`block w-full rounded-lg border-2 border-gray-300 px-4 py-3
+                                        shadow-sm focus:border-${accentColor}-500 focus:ring-4 focus:ring-${accentColor}-200
+                                        focus:ring-opacity-50 transition-colors duration-200`}
                                             disabled={isSaving}
-                                            placeholder="e.g., Electric bill - August"
+                                            placeholder={descriptionPlaceholder}
                                         />
                                     </div>
 
@@ -212,9 +228,9 @@ export const PaycheckBudgetItemForm = ({onSave, onClose, initialItem = null, isS
                                             type="date"
                                             value={date}
                                             onChange={(e) => setDate(e.target.value)}
-                                            className="block w-full rounded-lg border-2 border-gray-300 px-4 py-3
-                                        shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-200
-                                        focus:ring-opacity-50 transition-colors duration-200"
+                                            className={`block w-full rounded-lg border-2 border-gray-300 px-4 py-3
+                                        shadow-sm focus:border-${accentColor}-500 focus:ring-4 focus:ring-${accentColor}-200
+                                        focus:ring-opacity-50 transition-colors duration-200`}
                                             required
                                             disabled={isSaving}
                                         />
@@ -225,8 +241,7 @@ export const PaycheckBudgetItemForm = ({onSave, onClose, initialItem = null, isS
                                             Amount
                                         </label>
                                         <div className="relative">
-                                        <span
-                                            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                                        <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
                                             $
                                         </span>
                                             <input
@@ -235,9 +250,9 @@ export const PaycheckBudgetItemForm = ({onSave, onClose, initialItem = null, isS
                                                 onChange={(e) => setAmount(e.target.value)}
                                                 min="0"
                                                 step="0.01"
-                                                className="block w-full rounded-lg border-2 border-gray-300 pl-8 pr-4 py-3
-                                            shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-200
-                                            focus:ring-opacity-50 transition-colors duration-200"
+                                                className={`block w-full rounded-lg border-2 border-gray-300 pl-8 pr-4 py-3
+                                            shadow-sm focus:border-${accentColor}-500 focus:ring-4 focus:ring-${accentColor}-200
+                                            focus:ring-opacity-50 transition-colors duration-200`}
                                                 placeholder="0.00"
                                                 required
                                                 disabled={isSaving}
@@ -246,8 +261,7 @@ export const PaycheckBudgetItemForm = ({onSave, onClose, initialItem = null, isS
                                     </div>
 
                                     {error && (
-                                        <div
-                                            className="text-red-600 text-sm bg-red-50 p-3 rounded-lg border border-red-200">
+                                        <div className="text-red-600 text-sm bg-red-50 p-3 rounded-lg border border-red-200">
                                             {error}
                                         </div>
                                     )}
@@ -276,13 +290,13 @@ export const PaycheckBudgetItemForm = ({onSave, onClose, initialItem = null, isS
                                         <button
                                             type="submit"
                                             disabled={isSaving}
-                                            className="inline-flex items-center px-4 py-2 border-2 border-transparent
+                                            className={`inline-flex items-center px-4 py-2 border-2 border-transparent
                                         rounded-lg shadow-sm text-sm font-medium text-white
-                                        bg-blue-600 hover:bg-blue-700
-                                        focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500
+                                        bg-${accentColor}-${budgetType === 'business' ? '800' : '600'} hover:bg-${accentColor}-${budgetType === 'business' ? '900' : '700'}
+                                        focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-${accentColor}-500
                                         transition-all duration-200
                                         disabled:opacity-50 disabled:cursor-not-allowed
-                                        min-w-[100px] justify-center"
+                                        min-w-[100px] justify-center`}
                                         >
                                             {isSaving ? (
                                                 <>
@@ -313,4 +327,4 @@ export const PaycheckBudgetItemForm = ({onSave, onClose, initialItem = null, isS
     );
 };
 
-export default PaycheckBudgetItemForm;
+export default BudgetItemForm;

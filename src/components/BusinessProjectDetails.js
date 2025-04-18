@@ -1,11 +1,11 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useReactToPrint } from 'react-to-print';
-import { Loader2, PlusCircle, Briefcase } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { useTransition, animated } from '@react-spring/web';
 import { withMinimumDelay } from '../utils/withDelay';
 import { modalTransitions, backdropTransitions } from '../utils/transitions';
 import { useToast } from '../contexts/ToastContext';
-import { BusinessExpenseItemForm } from './BusinessExpenseItemForm';
+import { BudgetItemForm } from './BudgetItemForm';
 import BudgetDetailsHeader from './BudgetDetailsHeader';
 import BudgetItemRow from './BudgetItemRow';
 import BudgetTableHeader from './BudgetTableHeader';
@@ -13,6 +13,45 @@ import DeleteConfirmationModal from './DeleteConfirmationModal';
 import { compressImage, formatFileSize } from '../utils/imageCompression';
 import { ImageViewer } from './ImageViewer';
 import { getStorageEstimate, formatStorageMessage } from '../utils/storageEstimation';
+import { disableScroll, enableScroll } from '../utils/scrollLock';
+
+const PrintableContent = React.forwardRef(({budget}, ref) => {
+    return (
+        <div ref={ref} className="print-content">
+            <div className="p-8">
+                <h2 className="text-2xl font-bold mb-4">{budget.name}</h2>
+                <div className="mb-4">
+                    <p>Date: {new Date(budget.date).toLocaleDateString()}</p>
+                    <p>Budget Limit: ${budget.amount.toLocaleString()}</p>
+                    {budget.client && <p>Client: {budget.client}</p>}
+                    <p>Created: {new Date(budget.createdAt).toLocaleDateString()}</p>
+                </div>
+                <table className="min-w-full divide-y divide-gray-200">
+                    <thead>
+                    <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                    </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                    {budget.items?.map(item => (
+                        <tr key={item.id}>
+                            <td className="px-6 py-4 whitespace-nowrap">{item.category}</td>
+                            <td className="px-6 py-4 whitespace-nowrap">{item.description}</td>
+                            <td className="px-6 py-4 whitespace-nowrap">{item.date}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-right">${item.amount.toLocaleString()}</td>
+                        </tr>
+                    ))}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    );
+});
+
+PrintableContent.displayName = 'PrintableContent';
 
 export const BusinessProjectDetails = ({ budget, onClose, onUpdate }) => {
     const [showForm, setShowForm] = useState(false);
@@ -35,6 +74,63 @@ export const BusinessProjectDetails = ({ budget, onClose, onUpdate }) => {
 
     const transitions = useTransition(show, modalTransitions);
     const backdropTransition = useTransition(show, backdropTransitions);
+
+    useEffect(() => {
+        disableScroll();
+        return () => {
+            enableScroll();
+        };
+    }, []);
+
+    // Handle printing
+    const handlePrint = useReactToPrint({
+        contentRef: componentRef,
+        documentTitle: `${budget.name} - Business Expense Project`,
+        onBeforePrint: async () => {
+            setIsPrinting(true);
+            await withMinimumDelay(async () => {}, 2000);
+        },
+        onAfterPrint: async () => {
+            await new Promise((resolve) => {
+                setIsPrinting(false);
+                showToast('success', 'Project printed successfully');
+                resolve();
+            });
+        },
+        onPrintError: (error) => {
+            console.error('Print error:', error);
+            showToast('error', 'Failed to print project. Please try again.');
+            setIsPrinting(false);
+        }
+    });
+
+    const handlePrintClick = (e) => {
+        e.preventDefault();
+        if (componentRef.current && !isPrinting) {
+            handlePrint();
+        }
+    };
+
+    // Handle sharing
+    const handleShare = async () => {
+        setIsSharing(true);
+        try {
+            await withMinimumDelay(async () => {}, 2000);
+            const shareData = {
+                title: budget.name,
+                text: `Business Expense Project: ${budget.name}\nBudget: $${budget.amount}\nClient: ${budget.client || 'None'}\nDate: ${new Date(budget.date).toLocaleDateString()}`,
+                url: window.location.href,
+            };
+            await navigator.share(shareData);
+            showToast('success', 'Project shared successfully');
+        } catch (error) {
+            console.error('Error sharing:', error);
+            if (error.name === 'AbortError') return;
+            showToast('error', 'Failed to share project. Please try again.');
+        } finally {
+            setIsSharing(false);
+        }
+    };
 
     // Calculate total spent and remaining amount
     const totalSpent = budget.items?.reduce((sum, item) =>
@@ -368,8 +464,8 @@ export const BusinessProjectDetails = ({ budget, onClose, onUpdate }) => {
                                     budget={budget}
                                     totalSpent={totalSpent}
                                     remainingAmount={remainingAmount}
-                                    onPrint={() => {}} // Implement print later
-                                    onShare={() => {}} // Implement share later
+                                    onPrint={handlePrintClick}
+                                    onShare={handleShare}
                                     onClose={handleClose}
                                     isPrinting={isPrinting}
                                     isSharing={isSharing}
@@ -377,6 +473,7 @@ export const BusinessProjectDetails = ({ budget, onClose, onUpdate }) => {
                                     isSaving={isSaving}
                                     handleAddItemClick={handleAddItemClick}
                                     isAddingItem={isAddingItem}
+                                    showPrintShare={false}
                                 />
                                 <div className="flex-1 overflow-y-auto overflow-x-hidden px-2 sm:px-5">
                                     <div className="relative w-full min-h-0 max-h-[calc(80vh-250px)]">
@@ -429,12 +526,19 @@ export const BusinessProjectDetails = ({ budget, onClose, onUpdate }) => {
                                         </button>
                                     </div>
                                 </div>
+
+                                <div style={{position: 'fixed', top: '-9999px', left: '-9999px'}}>
+                                    <PrintableContent
+                                        ref={componentRef}
+                                        budget={budget}
+                                    />
+                                </div>
                             </div>
                         </animated.div>
                     )
             )}
             {showForm && (
-                <BusinessExpenseItemForm
+                <BudgetItemForm
                     onSave={async (itemData) => {
                         setIsSaving(true);
                         try {
@@ -448,6 +552,7 @@ export const BusinessProjectDetails = ({ budget, onClose, onUpdate }) => {
                     onClose={handleFormClose}
                     initialItem={editingItem}
                     isSaving={isSaving}
+                    budgetType="business"
                 />
             )}
             <DeleteConfirmationModal

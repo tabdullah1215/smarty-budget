@@ -3,7 +3,7 @@ import {useReactToPrint} from 'react-to-print';
 import {Loader2} from 'lucide-react';
 import {useTransition, animated} from '@react-spring/web';
 import {withMinimumDelay} from '../utils/withDelay';
-import {PaycheckBudgetItemForm} from './PaycheckBudgetItemForm';
+import {BudgetItemForm} from './BudgetItemForm';
 import {modalTransitions, backdropTransitions} from '../utils/transitions';
 import {useToast} from '../contexts/ToastContext';
 import {ImageViewer} from './ImageViewer';
@@ -587,7 +587,7 @@ export const PaycheckBudgetDetails = ({budget, onClose, onUpdate}) => {
                                     </div>
                                 </div>
                                 {showForm && (
-                                    <PaycheckBudgetItemForm
+                                    <BudgetItemForm
                                         onSave={async (itemData) => {
                                             setIsSaving(true);
                                             try {
@@ -601,6 +601,7 @@ export const PaycheckBudgetDetails = ({budget, onClose, onUpdate}) => {
                                         onClose={handleFormClose}
                                         initialItem={editingItem}
                                         isSaving={isSaving}
+                                        budgetType="paycheck"
                                     />
                                 )}
 
