@@ -15,10 +15,12 @@ export const backupService = {
             // Get all user data
             const budgets = await indexdbService.getBudgetsByEmail(userEmail);
             const paycheckBudgets = await indexdbService.getPaycheckBudgetsByEmail(userEmail);
-            const categories = await indexdbService.getPaycheckCategories();
+            const businessBudgets = await indexdbService.getBusinessBudgetsByEmail(userEmail);
+            const paycheckCategories = await indexdbService.getPaycheckCategories();
+            const businessCategories = await indexdbService.getBusinessCategories();
 
             // Skip backup if no meaningful data
-            if (budgets.length === 0 && paycheckBudgets.length === 0) {
+            if (budgets.length === 0 && paycheckBudgets.length === 0 && businessBudgets.length === 0) {
                 throw new Error('No budget data to backup');
             }
 
@@ -30,13 +32,17 @@ export const backupService = {
                     summary: {
                         budgetsCount: budgets.length,
                         paycheckBudgetsCount: paycheckBudgets.length,
-                        categoriesCount: categories.length
+                        businessBudgetsCount: businessBudgets.length,
+                        paycheckCategoriesCount: paycheckCategories.length,
+                        businessCategoriesCount: businessCategories.length
                     }
                 },
                 data: {
                     budgets,
                     paycheckBudgets,
-                    categories
+                    businessBudgets,
+                    paycheckCategories,
+                    businessCategories
                 }
             };
         } catch (error) {
@@ -139,22 +145,39 @@ export const backupService = {
         return 'Unknown';
     },
 
-    async hasExistingData() {
+    async hasExistingData(budgetType) {
         const userEmail = authService.getUserInfo()?.sub;
         if (!userEmail) return false;
 
         try {
-            const budgets = await indexdbService.getBudgetsByEmail(userEmail);
-            const paycheckBudgets = await indexdbService.getPaycheckBudgetsByEmail(userEmail);
+            if (!budgetType) {
+                // Check all budget types
+                const budgets = await indexdbService.getBudgetsByEmail(userEmail);
+                const paycheckBudgets = await indexdbService.getPaycheckBudgetsByEmail(userEmail);
+                const businessBudgets = await indexdbService.getBusinessBudgetsByEmail(userEmail);
+                return budgets.length > 0 || paycheckBudgets.length > 0 || businessBudgets.length > 0;
+            } else if (budgetType === 'paycheck') {
+                // Check only paycheck budgets
+                const paycheckBudgets = await indexdbService.getPaycheckBudgetsByEmail(userEmail);
+                return paycheckBudgets.length > 0;
+            } else if (budgetType === 'business') {
+                // Check only business budgets
+                const businessBudgets = await indexdbService.getBusinessBudgetsByEmail(userEmail);
+                return businessBudgets.length > 0;
+            } else if (budgetType === 'custom') {
+                // Check only custom budgets
+                const budgets = await indexdbService.getBudgetsByEmail(userEmail);
+                return budgets.length > 0;
+            }
 
-            return budgets.length > 0 || paycheckBudgets.length > 0;
+            return false;
         } catch (error) {
             console.error('Error checking for existing data:', error);
             return false;
         }
     },
 
-    async importFromFile(file) {
+    async importFromFile(file, budgetType = null) {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
 
@@ -172,44 +195,74 @@ export const backupService = {
                         throw new Error('This backup belongs to a different user');
                     }
 
-                    // Check if the user has existing data
-                    const hasData = await this.hasExistingData();
+                    // Check if the user has existing data for the specified budget type
+                    const hasData = await this.hasExistingData(budgetType);
                     if (hasData) {
-                        throw new Error('Cannot restore: You already have data in your account');
+                        throw new Error(`Cannot restore: You already have ${budgetType ? budgetType : ''} data in your account`);
                     }
 
-                    // Process the import
+                    // Track what was restored
+                    const result = {
+                        success: true,
+                        timestamp: backup.metadata.timestamp,
+                        budgetsRestored: 0,
+                        paycheckBudgetsRestored: 0,
+                        businessBudgetsRestored: 0
+                    };
+
+                    // Process the import based on the budget type
                     try {
-                        // Import budgets
-                        if (backup.data.budgets && backup.data.budgets.length > 0) {
-                            for (const budget of backup.data.budgets) {
-                                await indexdbService.addBudget({...budget, userEmail});
-                            }
-                        }
-
-                        // Import paycheck budgets
-                        if (backup.data.paycheckBudgets && backup.data.paycheckBudgets.length > 0) {
-                            for (const budget of backup.data.paycheckBudgets) {
-                                await indexdbService.addPaycheckBudget({...budget, userEmail});
-                            }
-                        }
-
-                        // Import categories
-                        if (backup.data.categories && backup.data.categories.length > 0) {
-                            const existingCategories = await indexdbService.getPaycheckCategories();
-                            for (const category of backup.data.categories) {
-                                if (!existingCategories.some(c => c.name === category.name)) {
-                                    await indexdbService.addPaycheckCategory(category);
+                        // If no specific budget type is provided or 'custom', restore custom budgets
+                        if (!budgetType || budgetType === 'custom') {
+                            if (backup.data.budgets && backup.data.budgets.length > 0) {
+                                for (const budget of backup.data.budgets) {
+                                    await indexdbService.addBudget({...budget, userEmail});
+                                    result.budgetsRestored++;
                                 }
                             }
                         }
 
-                        resolve({
-                            success: true,
-                            timestamp: backup.metadata.timestamp,
-                            budgetsRestored: backup.data.budgets?.length || 0,
-                            paycheckBudgetsRestored: backup.data.paycheckBudgets?.length || 0
-                        });
+                        // If no specific budget type is provided or 'paycheck', restore paycheck budgets
+                        if (!budgetType || budgetType === 'paycheck') {
+                            if (backup.data.paycheckBudgets && backup.data.paycheckBudgets.length > 0) {
+                                for (const budget of backup.data.paycheckBudgets) {
+                                    await indexdbService.addPaycheckBudget({...budget, userEmail});
+                                    result.paycheckBudgetsRestored++;
+                                }
+                            }
+
+                            // Import paycheck categories if restoring paycheck data
+                            if (backup.data.paycheckCategories && backup.data.paycheckCategories.length > 0) {
+                                const existingCategories = await indexdbService.getPaycheckCategories();
+                                for (const category of backup.data.paycheckCategories) {
+                                    if (!existingCategories.some(c => c.name === category.name)) {
+                                        await indexdbService.addPaycheckCategory(category);
+                                    }
+                                }
+                            }
+                        }
+
+                        // If no specific budget type is provided or 'business', restore business budgets
+                        if (!budgetType || budgetType === 'business') {
+                            if (backup.data.businessBudgets && backup.data.businessBudgets.length > 0) {
+                                for (const budget of backup.data.businessBudgets) {
+                                    await indexdbService.addBusinessBudget({...budget, userEmail});
+                                    result.businessBudgetsRestored++;
+                                }
+                            }
+
+                            // Import business categories if restoring business data
+                            if (backup.data.businessCategories && backup.data.businessCategories.length > 0) {
+                                const existingCategories = await indexdbService.getBusinessCategories();
+                                for (const category of backup.data.businessCategories) {
+                                    if (!existingCategories.some(c => c.name === category.name)) {
+                                        await indexdbService.addBusinessCategory(category);
+                                    }
+                                }
+                            }
+                        }
+
+                        resolve(result);
                     } catch (error) {
                         reject(new Error(`Failed to restore data: ${error.message}`));
                     }

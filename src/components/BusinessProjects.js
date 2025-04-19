@@ -1,9 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useSprings, useSpring, animated } from '@react-spring/web';
+import { useSprings, useSpring, animated, config } from '@react-spring/web';
 import { useNavigate } from 'react-router-dom';
 import { Loader2, Plus } from 'lucide-react';
 import { Header } from './Header';
-import { usePaycheckBudgets } from '../hooks/usePaycheckBudget';
 import { withMinimumDelay } from "../utils/withDelay";
 import { useToast } from '../contexts/ToastContext';
 import DeleteConfirmationModal from "./DeleteConfirmationModal";
@@ -13,6 +12,7 @@ import { downloadCSV } from '../utils/budgetCsvGenerator';
 import { BusinessExpenseProjectForm } from './BusinessExpenseProjectForm';
 import { BusinessProjectDetails } from './BusinessProjectDetails';
 import { useBusinessBudgets } from '../hooks/useBusinessBudget';
+import StaticRestoreButton from './StaticRestoreButton';
 
 export const BusinessProjects = () => {
     const [isCreating, setIsCreating] = useState(false);
@@ -24,12 +24,14 @@ export const BusinessProjects = () => {
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [fadingBudgetId, setFadingBudgetId] = useState(null);
     const [selectedBudgetIds, setSelectedBudgetIds] = useState([]);
+    const [showRestoreOptions, setShowRestoreOptions] = useState(false);
+    const [isRestoring, setIsRestoring] = useState(false);
 
     const navigate = useNavigate();
     const userInfo = authService.getUserInfo();
     const { showToast } = useToast();
 
-    // For now, we'll reuse the PaycheckBudgets hook and filter for business type
+    // For business budgets we use the BusinessBudgets hook
     const {
         businessBudgets,
         createBusinessBudget,
@@ -37,6 +39,25 @@ export const BusinessProjects = () => {
         deleteBusinessBudget,
         isLoading
     } = useBusinessBudgets();
+
+    // Animation for the restore options panel
+    const restoreOptionsAnimation = useSpring({
+        opacity: showRestoreOptions ? 1 : 0,
+        height: showRestoreOptions ? 'auto' : 0,
+        transform: showRestoreOptions ? 'translateY(0px)' : 'translateY(-20px)',
+        config: {
+            tension: 120,
+            friction: 14,
+            duration: 800 // Slow animation for visibility
+        }
+    });
+
+    // Animation for the restore toggle link
+    const restoreToggleAnimation = useSpring({
+        scale: showRestoreOptions ? 1.1 : 1,
+        color: showRestoreOptions ? '#047857' : '#065f46', // Emerald colors
+        config: config.wobbly
+    });
 
     const sortedBudgets = useMemo(() => {
         return [...businessBudgets].sort((a, b) => new Date(b.date) - new Date(a.date));
@@ -139,7 +160,6 @@ export const BusinessProjects = () => {
 
     const handleUpdateBudget = async (updatedBudget) => {
         try {
-
             await updateBusinessBudget(updatedBudget);
             setSelectedBudget(updatedBudget);
         } catch (error) {
@@ -170,6 +190,24 @@ export const BusinessProjects = () => {
         }
     };
 
+    // Toggle function for restore options
+    const toggleRestoreOptions = () => {
+        setShowRestoreOptions(!showRestoreOptions);
+    };
+
+    // This function ensures page reload after successful restore
+    const handleRestoreSuccess = () => {
+        setIsRestoring(true);
+        showToast('success', 'Restore complete! Refreshing to show your data...');
+        localStorage.setItem('justRestored', 'true');
+        console.log('Restore complete, page will reload in 2 seconds', new Date().toISOString());
+
+        setTimeout(() => {
+            console.log('Executing page reload now', new Date().toISOString());
+            window.location.reload();
+        }, 2000);
+    };
+
     return (
         <div className="min-h-screen bg-gray-200">
             <Header
@@ -198,7 +236,7 @@ export const BusinessProjects = () => {
 
                                 <button
                                     onClick={handleCreateClick}
-                                    disabled={isCreating}
+                                    disabled={isCreating || isRestoring}
                                     className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-emerald-800 hover:bg-emerald-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 mb-6"
                                 >
                                     {isCreating ? (
@@ -213,6 +251,35 @@ export const BusinessProjects = () => {
                                         </>
                                     )}
                                 </button>
+
+                                {/* Restore Section with toggle and animated panel */}
+                                <div className="w-full max-w-md pt-4 border-t border-gray-200">
+                                    <div className="text-center mb-3">
+                                        <animated.button
+                                            onClick={toggleRestoreOptions}
+                                            style={{
+                                                transform: restoreToggleAnimation.scale.to(s => `scale(${s})`),
+                                                color: restoreToggleAnimation.color
+                                            }}
+                                            className="underline text-sm text-emerald-800 hover:text-emerald-700
+                                                      transition-colors duration-300"
+                                        >
+                                            {showRestoreOptions ? "Hide restore options" : "Or restore from a previously created backup"}
+                                        </animated.button>
+                                    </div>
+
+                                    {/* Animated restore options panel */}
+                                    <animated.div
+                                        style={restoreOptionsAnimation}
+                                        className="overflow-hidden"
+                                    >
+                                        <StaticRestoreButton
+                                            onRestore={handleRestoreSuccess}
+                                            budgetType="business"
+                                            primaryColor="emerald"
+                                        />
+                                    </animated.div>
+                                </div>
                             </div>
                         </div>
                     ) : (

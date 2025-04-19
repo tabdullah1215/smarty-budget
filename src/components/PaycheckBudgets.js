@@ -267,7 +267,11 @@ export const PaycheckBudgets = () => {
                                         style={restoreOptionsAnimation}
                                         className="overflow-hidden"
                                     >
-                                        <StaticRestoreButton onRestore={handleRestoreSuccess} />
+                                        <StaticRestoreButton
+                                            onRestore={handleRestoreSuccess}
+                                            budgetType="paycheck"
+                                            primaryColor="blue"
+                                        />
                                     </animated.div>
                                 </div>
                             </div>
