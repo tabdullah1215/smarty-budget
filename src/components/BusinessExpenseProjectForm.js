@@ -182,14 +182,17 @@ export const BusinessExpenseProjectForm = ({
                                                 min="0"
                                                 step="0.01"
                                                 className="block w-full rounded-lg border-2 border-gray-300 pl-8 pr-4 py-3
-                                            shadow-sm focus:border-emerald-500 focus:ring-4 focus:ring-emerald-200
-                                            focus:ring-opacity-50 transition-colors duration-200"
-                                                placeholder="0.00"
+            shadow-sm focus:border-emerald-500 focus:ring-4 focus:ring-emerald-200
+            focus:ring-opacity-50 transition-colors duration-200"
+                                                placeholder="Leave empty for no budget limit"
+                                                // Note: removed "required" attribute
                                                 disabled={isSaving}
                                             />
+                                            <div className="mt-1 text-xs text-gray-500">
+                                                Leave empty or set to 0 if you just want to track expenses without a budget limit
+                                            </div>
                                         </div>
                                     </div>
-
                                     {error && (
                                         <div className="text-red-600 text-sm bg-red-50 p-3 rounded-lg border border-red-200">
                                             {error}

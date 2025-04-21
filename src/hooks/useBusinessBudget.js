@@ -30,11 +30,14 @@ export const useBusinessBudgets = () => {
     const createBusinessBudget = async (budgetData) => {
         if (!userEmail) throw new Error('User not authenticated');
 
+        // Handle case where amount is empty or 0
+        const budgetAmount = budgetData.amount ? Number(budgetData.amount) : 0;
+
         const newBudget = {
             id: uuidv4(),
             name: budgetData.name,
             date: budgetData.date,
-            amount: budgetData.amount,
+            amount: budgetAmount, // Store as 0 if not provided
             projectName: budgetData.projectName || budgetData.name,
             client: budgetData.client || null,
             items: [],
@@ -53,7 +56,6 @@ export const useBusinessBudgets = () => {
             throw error;
         }
     };
-
     const updateBusinessBudget = async (updatedBudget) => {
         if (!userEmail) throw new Error('User not authenticated');
 

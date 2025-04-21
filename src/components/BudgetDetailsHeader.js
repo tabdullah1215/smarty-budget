@@ -7,6 +7,8 @@ const BudgetDetailsHeader = ({
                                   budget,
                                   totalSpent,
                                   remainingAmount,
+                                 hasBudgetLimit = true, // Default to true for backward compatibility
+                                 budgetType = "paycheck", // Default to paycheck for backward compatibility
                                   onPrint,
                                   onShare,
                                   onClose,
@@ -18,6 +20,15 @@ const BudgetDetailsHeader = ({
                                   isAddingItem,
                                   showPrintShare = false
                               }) => {
+
+    const labels = {
+        title: budgetType === "business" ? "Project Expenses" : "Expense Items",
+        amountLabel: budgetType === "business" ? "Budget Limit" : "Paycheck",
+        spentLabel: "Spent",
+        remainingLabel: "Remaining",
+        buttonLabel: budgetType === "business" ? "Record Expense" : "Record Expense!"
+    };
+
     return (
         <div className="p-4 border-b border-black">
             <div className="flex justify-between items-center mb-3">
@@ -67,39 +78,51 @@ const BudgetDetailsHeader = ({
             </div>
 
             <div className="grid grid-cols-3 gap-2 mb-3">
+                {/* First box - changes based on budget type */}
                 <div className="bg-gray-50 p-2 md:p-4 rounded-lg">
-                    <p className="text-sm text-gray-600">Paycheck</p>
+                    <p className="text-sm text-gray-600">{labels.amountLabel}</p>
                     <p className="text-2xl font-bold text-gray-900">
-                        ${budget.amount.toLocaleString()}
+                        {budgetType === "business" && !hasBudgetLimit
+                            ? "Not Set"
+                            : `$${budget.amount.toLocaleString()}`}
                     </p>
                 </div>
+                {/* Total Spent box - unchanged */}
                 <div className="bg-gray-50 p-2 md:p-4 rounded-lg">
-                    <p className="text-sm text-gray-600">Spent</p>
+                    <p className="text-sm text-gray-600">{labels.spentLabel}</p>
                     <p className="text-2xl font-bold text-gray-900">
                         ${totalSpent.toLocaleString()}
                     </p>
                 </div>
+                {/* Remaining box - conditional for business type */}
                 <div className="bg-gray-50 p-2 md:p-4 rounded-lg">
-                    <p className="text-sm text-gray-600">Remaining</p>
-                    <p className={`text-2xl font-bold ${remainingAmount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        ${remainingAmount.toLocaleString()}
-                    </p>
+                    <p className="text-sm text-gray-600">{labels.remainingLabel}</p>
+                    {budgetType === "business" && !hasBudgetLimit ? (
+                        <p className="text-2xl font-bold text-gray-600">N/A</p>
+                    ) : (
+                        <p className={`text-2xl font-bold ${remainingAmount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                            ${remainingAmount.toLocaleString()}
+                        </p>
+                    )}
                 </div>
             </div>
-
             <div className="flex justify-between items-center">
-                <h3 className="text-lg font-medium text-gray-900">Expense Items</h3>
+                <h3 className="text-lg font-medium text-gray-900">{labels.title}</h3>
                 <button
                     onClick={handleAddItemClick}
                     disabled={isAddingItem || isSaving}
-                    className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className={`inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white 
+                        ${budgetType === "business" ? "bg-emerald-800 hover:bg-emerald-900" : "bg-indigo-600 hover:bg-indigo-700"}
+                        focus:outline-none focus:ring-2 focus:ring-offset-2 
+                        ${budgetType === "business" ? "focus:ring-emerald-500" : "focus:ring-indigo-500"}
+                        transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
                     {isAddingItem ? (
                         <Loader2 className="h-6 w-6 mr-2 animate-spin stroke-[1.5]"/>
                     ) : (
                         <PlusCircle className="h-6 w-6 mr-2 stroke-[1.5]"/>
                     )}
-                    Record Expense!
+                    {labels.buttonLabel}
                 </button>
             </div>
         </div>

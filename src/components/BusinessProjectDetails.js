@@ -132,10 +132,14 @@ export const BusinessProjectDetails = ({ budget, onClose, onUpdate }) => {
         }
     };
 
-    // Calculate total spent and remaining amount
     const totalSpent = budget.items?.reduce((sum, item) =>
         sum + (item.isActive ? (item.amount || 0) : 0), 0) || 0;
-    const remainingAmount = budget.amount - totalSpent;
+
+    // Check if there's a meaningful budget limit
+    const hasBudgetLimit = budget.amount > 0;
+
+    // Only calculate remaining if there's a budget limit
+    const remainingAmount = hasBudgetLimit ? budget.amount - totalSpent : null;
 
     const handleClose = async () => {
         setIsClosing(true);
@@ -464,6 +468,8 @@ export const BusinessProjectDetails = ({ budget, onClose, onUpdate }) => {
                                     budget={budget}
                                     totalSpent={totalSpent}
                                     remainingAmount={remainingAmount}
+                                    hasBudgetLimit={hasBudgetLimit}
+                                    budgetType="business"
                                     onPrint={handlePrintClick}
                                     onShare={handleShare}
                                     onClose={handleClose}

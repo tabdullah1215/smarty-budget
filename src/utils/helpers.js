@@ -29,8 +29,8 @@ export const budgetTypes = {
     },
     business: {
         id: 'business',
-        title: 'Business Trip Expenses',
-        description: 'Track business travel expenses and receipts',
+        title: 'Business Projects',
+        description: 'Track expenses for Business Projects',
         route: '/business-budgets',
         icon: 'Briefcase',
         color: 'text-emerald-800',

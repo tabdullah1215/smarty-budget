@@ -7,6 +7,7 @@ import { Loader2, ArrowLeft, LogOut, X, FileDown, FileSpreadsheet } from 'lucide
 import { useToast } from '../contexts/ToastContext';
 import BackupButton from './BackupButton';
 import { generatePdfReport } from '../utils/directPdfGenerator';
+import { budgetTypes } from '../utils/helpers';
 
 export const Header = ({
                            showCreateButton = false,
@@ -91,11 +92,20 @@ export const Header = ({
 
     const getBudgetType = () => {
         const path = location.pathname;
-        if (path === '/' || path === '/dashboard') return '';
-        if (path.includes('paycheck')) return 'Paycheck Budgets';
-        if (path.includes('business')) return 'Business Trip Budgets';
-        if (path.includes('savings')) return 'Savings Budgets';
-        if (path.includes('budgets')) return 'Custom Budgets';
+
+        // Check each budget type's route
+        for (const key in budgetTypes) {
+            const budgetType = budgetTypes[key];
+            if (path.includes(budgetType.route)) {
+                return budgetType.title;
+            }
+        }
+
+        // Default return for dashboard or unknown paths
+        if (path === '/' || path === '/dashboard') {
+            return '';
+        }
+
         return '';
     };
 

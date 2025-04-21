@@ -367,13 +367,23 @@ class IndexDBService {
         return new Promise((resolve, reject) => {
             const transaction = this.db.transaction([DB_CONFIG.stores.businessBudgets], 'readwrite');
             const store = transaction.objectStore(DB_CONFIG.stores.businessBudgets);
-            const request = store.put(budget);
 
-            request.onsuccess = () => resolve(request.result);
+            // Create a complete business budget object with consistent structure
+            const completeBusinessBudget = {
+                ...budget,
+                items: budget.items.map(item => ({
+                    ...item,
+                    image: item.image || null
+                })),
+                updatedAt: new Date().toISOString()
+            };
+
+            const request = store.put(completeBusinessBudget);
+
+            request.onsuccess = () => resolve(completeBusinessBudget);
             request.onerror = () => reject(request.error);
         });
     }
-
     async deleteBusinessBudget(budgetId) {
         if (!this.db) await this.initDB();
 

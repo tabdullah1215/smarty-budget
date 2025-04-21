@@ -295,6 +295,7 @@ export const BusinessProjects = () => {
                                     style={fadeAnimations[index]}
                                     onSelect={handleSelectBudget}
                                     isSelected={isBudgetSelected(budget.id)}
+                                    budgetType="business" // Pass the budget type
                                 />
                             ))}
                         </div>
