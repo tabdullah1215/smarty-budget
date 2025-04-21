@@ -6,13 +6,22 @@ import { withMinimumDelay } from '../utils/withDelay';
 import { indexdbService } from '../services/IndexDBService';
 import { useToast } from '../contexts/ToastContext';
 
-const AddCategoryModal = ({ onClose, onCategoryAdded }) => {
+const AddCategoryModal = ({
+                              onClose,
+                              onCategoryAdded,
+                              budgetType = 'paycheck' // Default to paycheck for backward compatibility
+                          }) => {
     const [categoryName, setCategoryName] = useState('');
     const [show, setShow] = useState(true);
     const [isAdding, setIsAdding] = useState(false);
     const [isCancelling, setIsCancelling] = useState(false);
     const [isInputFocused, setIsInputFocused] = useState(false);
     const { showToast } = useToast();
+
+    // Set accent color based on budget type
+    const accentColor = budgetType === 'business' ? 'emerald' : 'blue';
+    const baseColor = budgetType === 'business' ? '800' : '600';
+    const hoverColor = budgetType === 'business' ? '900' : '700';
 
     // Enhanced transitions with longer durations
     const enhancedModalTransitions = {
@@ -100,12 +109,14 @@ const AddCategoryModal = ({ onClose, onCategoryAdded }) => {
                     name: categoryName.trim()
                 };
 
-                const categories = await indexdbService.getPaycheckCategories();
+                // Use dynamic method for fetching categories with budgetType parameter
+                const categories = await indexdbService.getCategories(budgetType);
                 if (categories.some(cat => cat.name.toLowerCase() === categoryName.trim().toLowerCase())) {
                     throw new Error('Category already exists');
                 }
 
-                await indexdbService.addPaycheckCategory(newCategory);
+                // Use dynamic method for adding categories with budgetType parameter
+                await indexdbService.addCategory(newCategory, budgetType);
                 showToast('success', 'Category added successfully');
                 onCategoryAdded(newCategory);
                 setShow(false);
@@ -143,14 +154,16 @@ const AddCategoryModal = ({ onClose, onCategoryAdded }) => {
                         >
                             <div className="relative mx-auto p-6 border w-[95%] max-w-md shadow-xl rounded-lg bg-white">
                                 <div className="flex justify-between items-center mb-4">
-                                    <h2 className="text-xl font-semibold text-gray-900">Add New Category</h2>
+                                    <h2 className="text-xl font-semibold text-gray-900">
+                                        Add New {budgetType === 'business' ? 'Business ' : ''}Category
+                                    </h2>
                                     <animated.button
                                         onClick={handleCancel}
                                         disabled={isCancelling || isAdding}
                                         className="text-gray-400 hover:text-gray-500 focus:outline-none
-                                        transition-all duration-200 transform hover:rotate-90
-                                        disabled:opacity-50 disabled:cursor-not-allowed
-                                        hover:bg-gray-100 rounded-full p-1"
+                                    transition-all duration-200 transform hover:rotate-90
+                                    disabled:opacity-50 disabled:cursor-not-allowed
+                                    hover:bg-gray-100 rounded-full p-1"
                                         style={{
                                             transform: style.scale.to(s => `scale(${s}) rotate(${s * 90}deg)`)
                                         }}
@@ -175,10 +188,10 @@ const AddCategoryModal = ({ onClose, onCategoryAdded }) => {
                                             onFocus={() => setIsInputFocused(true)}
                                             onBlur={() => setIsInputFocused(false)}
                                             style={inputStyles}
-                                            className="block w-full rounded-lg border-2 px-4 py-3
-                                            shadow-sm focus:ring-4 focus:ring-blue-200
-                                            focus:ring-opacity-50 transition-all duration-200
-                                            transform"
+                                            className={`block w-full rounded-lg border-2 px-4 py-3
+                                        shadow-sm focus:ring-4 focus:ring-${accentColor}-200
+                                        focus:ring-opacity-50 transition-all duration-200
+                                        transform`}
                                             placeholder="Enter category name"
                                             required
                                             disabled={isAdding}
@@ -194,10 +207,10 @@ const AddCategoryModal = ({ onClose, onCategoryAdded }) => {
                                             onMouseLeave={() => setIsCancelHovered(false)}
                                             style={cancelButtonSpring}
                                             className="px-4 py-2 bg-white text-gray-700 border-2 border-gray-300
-                                            rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2
-                                            focus:ring-offset-2 focus:ring-gray-500 transition-colors
-                                            duration-200 disabled:opacity-50 disabled:cursor-not-allowed
-                                            transform"
+                                        rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2
+                                        focus:ring-offset-2 focus:ring-gray-500 transition-colors
+                                        duration-200 disabled:opacity-50 disabled:cursor-not-allowed
+                                        transform"
                                         >
                                             {isCancelling ? (
                                                 <span className="inline-flex items-center">
@@ -214,11 +227,11 @@ const AddCategoryModal = ({ onClose, onCategoryAdded }) => {
                                             onMouseEnter={() => setIsAddHovered(true)}
                                             onMouseLeave={() => setIsAddHovered(false)}
                                             style={addButtonSpring}
-                                            className="px-4 py-2 bg-blue-600 text-white rounded-lg
-                                            hover:bg-blue-700 focus:outline-none focus:ring-2
-                                            focus:ring-offset-2 focus:ring-blue-500 transition-colors
-                                            duration-200 disabled:opacity-50 disabled:cursor-not-allowed
-                                            transform"
+                                            className={`px-4 py-2 bg-${accentColor}-${baseColor} text-white rounded-lg
+                                        hover:bg-${accentColor}-${hoverColor} focus:outline-none focus:ring-2
+                                        focus:ring-offset-2 focus:ring-${accentColor}-500 transition-colors
+                                        duration-200 disabled:opacity-50 disabled:cursor-not-allowed
+                                        transform`}
                                         >
                                             {isAdding ? (
                                                 <span className="inline-flex items-center">

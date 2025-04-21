@@ -282,38 +282,17 @@ class IndexDBService {
         });
     }
 
-    async addPaycheckCategory(category) {
+    async getCategories(budgetType = 'paycheck') {
         if (!this.db) await this.initDB();
 
-        return new Promise((resolve, reject) => {
-            const transaction = this.db.transaction([DB_CONFIG.stores.paycheckCategories], 'readwrite');
-            const store = transaction.objectStore(DB_CONFIG.stores.paycheckCategories);
-            const request = store.add(category);
-
-            request.onsuccess = () => resolve(request.result);
-            request.onerror = () => reject(request.error);
-        });
-    }
-
-    async addBusinessCategory(category) {
-        if (!this.db) await this.initDB();
+        // Determine the appropriate store name based on budgetType
+        const storeName = budgetType === 'business'
+            ? DB_CONFIG.stores.businessCategories
+            : DB_CONFIG.stores.paycheckCategories;
 
         return new Promise((resolve, reject) => {
-            const transaction = this.db.transaction([DB_CONFIG.stores.businessCategories], 'readwrite');
-            const store = transaction.objectStore(DB_CONFIG.stores.businessCategories);
-            const request = store.add(category);
-
-            request.onsuccess = () => resolve(request.result);
-            request.onerror = () => reject(request.error);
-        });
-    }
-
-    async getPaycheckCategories() {
-        if (!this.db) await this.initDB();
-
-        return new Promise((resolve, reject) => {
-            const transaction = this.db.transaction([DB_CONFIG.stores.paycheckCategories], 'readonly');
-            const store = transaction.objectStore(DB_CONFIG.stores.paycheckCategories);
+            const transaction = this.db.transaction([storeName], 'readonly');
+            const store = transaction.objectStore(storeName);
             const request = store.getAll();
 
             request.onsuccess = () => resolve(request.result.sort((a, b) => a.name.localeCompare(b.name)));
@@ -321,15 +300,19 @@ class IndexDBService {
         });
     }
 
-    async getBusinessCategories() {
+    async addCategory(category, budgetType = 'paycheck') {
         if (!this.db) await this.initDB();
 
-        return new Promise((resolve, reject) => {
-            const transaction = this.db.transaction([DB_CONFIG.stores.businessCategories], 'readonly');
-            const store = transaction.objectStore(DB_CONFIG.stores.businessCategories);
-            const request = store.getAll();
+        const storeName = budgetType === 'business'
+            ? DB_CONFIG.stores.businessCategories
+            : DB_CONFIG.stores.paycheckCategories;
 
-            request.onsuccess = () => resolve(request.result.sort((a, b) => a.name.localeCompare(b.name)));
+        return new Promise((resolve, reject) => {
+            const transaction = this.db.transaction([storeName], 'readwrite');
+            const store = transaction.objectStore(storeName);
+            const request = store.add(category);
+
+            request.onsuccess = () => resolve(request.result);
             request.onerror = () => reject(request.error);
         });
     }

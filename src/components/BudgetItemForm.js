@@ -40,13 +40,8 @@ export const BudgetItemForm = ({
     useEffect(() => {
         const loadCategories = async () => {
             try {
-                // Load appropriate categories based on budget type
-                const storeName = budgetType === 'business' ? 'businessCategories' : 'paycheckCategories';
-                const loadedCategories = await (
-                    budgetType === 'business'
-                        ? indexdbService.getBusinessCategories()
-                        : indexdbService.getPaycheckCategories()
-                );
+                // Use dynamic method with budgetType
+                const loadedCategories = await indexdbService.getCategories(budgetType);
                 setCategories(loadedCategories);
             } catch (error) {
                 console.error(`Error loading ${budgetType} categories:`, error);
@@ -58,7 +53,6 @@ export const BudgetItemForm = ({
 
         loadCategories();
     }, [budgetType]);
-
     const handleCancel = async () => {
         setIsCancelling(true);
         await withMinimumDelay(async () => {});
@@ -320,7 +314,10 @@ export const BudgetItemForm = ({
                         setCategories(prev => [...prev, newCategory].sort((a, b) =>
                             a.name.localeCompare(b.name)
                         ));
+                        setShowAddCategory(false);
+                        setCategory(newCategory.name);
                     }}
+                    budgetType={budgetType}
                 />
             )}
         </div>
