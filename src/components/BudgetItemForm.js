@@ -6,13 +6,53 @@ import { indexdbService } from '../services/IndexDBService';
 import { modalTransitions, backdropTransitions } from '../utils/transitions';
 import AddCategoryModal from './AddCategoryModal';
 
+// Budget type configurations
+const budgetTypeConfigs = {
+    paycheck: {
+        title: {
+            add: 'Add Expense Item',
+            edit: 'Edit Expense Item'
+        },
+        accentColor: 'blue',
+        hoverColor: '700',
+        baseColor: '600',
+        descriptionPlaceholder: 'e.g., Electric bill - August',
+        formIcons: {
+            category: 'CategoryIcon',
+            description: 'FileTextIcon',
+            date: 'CalendarIcon',
+            amount: 'DollarSignIcon'
+        }
+    },
+    business: {
+        title: {
+            add: 'Add Business Expense',
+            edit: 'Edit Business Expense'
+        },
+        accentColor: 'emerald',
+        hoverColor: '900',
+        baseColor: '800',
+        descriptionPlaceholder: 'e.g., Hotel - San Francisco trip',
+        formIcons: {
+            category: 'BriefcaseIcon',
+            description: 'FileTextIcon',
+            date: 'CalendarIcon',
+            amount: 'DollarSignIcon'
+        }
+    }
+};
+
 export const BudgetItemForm = ({
                                    onSave,
                                    onClose,
                                    initialItem = null,
                                    isSaving = false,
-                                   budgetType = 'paycheck' // 'paycheck' or 'business'
+                                   budgetType = 'paycheck' // Default to paycheck for backward compatibility
                                }) => {
+    // Get the configuration based on budget type
+    const config = budgetTypeConfigs[budgetType] || budgetTypeConfigs.paycheck;
+
+    // Form state
     const [category, setCategory] = useState(initialItem?.category || '');
     const [description, setDescription] = useState(initialItem?.description || '');
     const [date, setDate] = useState(initialItem?.date || new Date().toISOString().split('T')[0]);
@@ -25,22 +65,18 @@ export const BudgetItemForm = ({
     const [showAddCategory, setShowAddCategory] = useState(false);
     const [isAddingCategory, setIsAddingCategory] = useState(false);
 
+    // Animations
     const transitions = useTransition(show, modalTransitions);
     const backdropTransition = useTransition(show, backdropTransitions);
 
-    // Determine styling based on budget type
-    const accentColor = budgetType === 'business' ? 'emerald' : 'blue';
-    const formTitle = budgetType === 'business'
-        ? (initialItem ? 'Edit Business Expense' : 'Add Business Expense')
-        : (initialItem ? 'Edit Expense Item' : 'Add Expense Item');
-    const descriptionPlaceholder = budgetType === 'business'
-        ? 'e.g., Hotel - San Francisco trip'
-        : 'e.g., Electric bill - August';
+    // Get form title based on whether we're adding or editing
+    const formTitle = initialItem ? config.title.edit : config.title.add;
 
+    // Load categories based on budget type - now using generic getCategories method
     useEffect(() => {
         const loadCategories = async () => {
             try {
-                // Use dynamic method with budgetType
+                // Use the dynamic getCategories method with budgetType parameter
                 const loadedCategories = await indexdbService.getCategories(budgetType);
                 setCategories(loadedCategories);
             } catch (error) {
@@ -53,6 +89,7 @@ export const BudgetItemForm = ({
 
         loadCategories();
     }, [budgetType]);
+
     const handleCancel = async () => {
         setIsCancelling(true);
         await withMinimumDelay(async () => {});
@@ -72,17 +109,35 @@ export const BudgetItemForm = ({
         }
     };
 
-    const handleSave = async (itemData) => {
+    const handleSave = async (e) => {
+        e.preventDefault();
+
         try {
-            await onSave(itemData); // Call the parent's onSave function
+            const itemData = {
+                category,
+                description,
+                date,
+                amount: parseFloat(amount)
+            };
+
+            await onSave(itemData);
             setShow(false); // Trigger exit animation
             await withMinimumDelay(async () => {});
             onClose();
         } catch (error) {
-            console.error(`Error saving ${budgetType} expense item:`, error);
+            console.error('Error saving item:', error);
             setError('Failed to save item');
         }
     };
+
+    // Customized button styling based on budget type
+    const buttonClass = `inline-flex items-center px-4 py-2 border-2 border-transparent
+    rounded-lg shadow-sm text-sm font-medium text-white
+    bg-${config.accentColor}-${config.baseColor} hover:bg-${config.accentColor}-${config.hoverColor}
+    focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-${config.accentColor}-500
+    transition-all duration-200
+    disabled:opacity-50 disabled:cursor-not-allowed
+    min-w-[100px] justify-center`;
 
     if (isLoading) {
         return (
@@ -102,7 +157,7 @@ export const BudgetItemForm = ({
                                 className="fixed inset-0 flex items-center justify-center"
                             >
                                 <div className="bg-white p-8 rounded-lg shadow-xl flex items-center space-x-4">
-                                    <Loader2 className={`h-8 w-8 animate-spin text-${accentColor}-500`} />
+                                    <Loader2 className={`h-8 w-8 animate-spin text-${config.accentColor}-500`} />
                                     <p className="text-lg text-gray-700">Loading categories...</p>
                                 </div>
                             </animated.div>
@@ -137,7 +192,7 @@ export const BudgetItemForm = ({
                                         onClick={handleCancel}
                                         disabled={isCancelling || isSaving}
                                         className="text-gray-400 hover:text-gray-500 focus:outline-none transition-colors duration-200
-                                    disabled:opacity-50 disabled:cursor-not-allowed p-2 hover:bg-gray-100 rounded-full"
+                  disabled:opacity-50 disabled:cursor-not-allowed p-2 hover:bg-gray-100 rounded-full"
                                     >
                                         {isCancelling ? (
                                             <Loader2 className="h-6 w-6 animate-spin" />
@@ -147,21 +202,7 @@ export const BudgetItemForm = ({
                                     </button>
                                 </div>
 
-                                <form className="space-y-6" onSubmit={async (e) => {
-                                    e.preventDefault();
-                                    try {
-                                        const itemData = {
-                                            category,
-                                            description,
-                                            date,
-                                            amount: parseFloat(amount)
-                                        };
-                                        await handleSave(itemData);
-                                    } catch (error) {
-                                        console.error('Error saving item:', error);
-                                        setError('Failed to save item');
-                                    }
-                                }}>
+                                <form className="space-y-6" onSubmit={handleSave}>
                                     {/* Form fields */}
                                     <div>
                                         <div className="flex justify-between items-center mb-2">
@@ -173,7 +214,7 @@ export const BudgetItemForm = ({
                                                 onClick={handleAddCategoryClick}
                                                 disabled={isAddingCategory}
                                                 className="p-1 text-gray-600 hover:text-gray-900 transition-colors duration-200
-                                            hover:bg-gray-100 rounded-full disabled:opacity-50 disabled:cursor-not-allowed"
+                        hover:bg-gray-100 rounded-full disabled:opacity-50 disabled:cursor-not-allowed"
                                                 title="Add new category"
                                             >
                                                 {isAddingCategory ? (
@@ -187,8 +228,8 @@ export const BudgetItemForm = ({
                                             value={category}
                                             onChange={(e) => setCategory(e.target.value)}
                                             className={`block w-full rounded-lg border-2 border-gray-300 px-4 py-3
-                                        shadow-sm focus:border-${accentColor}-500 focus:ring-4 focus:ring-${accentColor}-200
-                                        focus:ring-opacity-50 transition-colors duration-200`}
+                      shadow-sm focus:border-${config.accentColor}-500 focus:ring-4 focus:ring-${config.accentColor}-200
+                      focus:ring-opacity-50 transition-colors duration-200`}
                                             required
                                             disabled={isSaving}
                                         >
@@ -198,6 +239,7 @@ export const BudgetItemForm = ({
                                             ))}
                                         </select>
                                     </div>
+
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-2">
                                             Description
@@ -207,10 +249,10 @@ export const BudgetItemForm = ({
                                             value={description}
                                             onChange={(e) => setDescription(e.target.value)}
                                             className={`block w-full rounded-lg border-2 border-gray-300 px-4 py-3
-                                        shadow-sm focus:border-${accentColor}-500 focus:ring-4 focus:ring-${accentColor}-200
-                                        focus:ring-opacity-50 transition-colors duration-200`}
+                      shadow-sm focus:border-${config.accentColor}-500 focus:ring-4 focus:ring-${config.accentColor}-200
+                      focus:ring-opacity-50 transition-colors duration-200`}
                                             disabled={isSaving}
-                                            placeholder={descriptionPlaceholder}
+                                            placeholder={config.descriptionPlaceholder}
                                         />
                                     </div>
 
@@ -223,8 +265,8 @@ export const BudgetItemForm = ({
                                             value={date}
                                             onChange={(e) => setDate(e.target.value)}
                                             className={`block w-full rounded-lg border-2 border-gray-300 px-4 py-3
-                                        shadow-sm focus:border-${accentColor}-500 focus:ring-4 focus:ring-${accentColor}-200
-                                        focus:ring-opacity-50 transition-colors duration-200`}
+                      shadow-sm focus:border-${config.accentColor}-500 focus:ring-4 focus:ring-${config.accentColor}-200
+                      focus:ring-opacity-50 transition-colors duration-200`}
                                             required
                                             disabled={isSaving}
                                         />
@@ -235,9 +277,9 @@ export const BudgetItemForm = ({
                                             Amount
                                         </label>
                                         <div className="relative">
-                                        <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
-                                            $
-                                        </span>
+                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                      $
+                    </span>
                                             <input
                                                 type="number"
                                                 value={amount}
@@ -245,8 +287,8 @@ export const BudgetItemForm = ({
                                                 min="0"
                                                 step="0.01"
                                                 className={`block w-full rounded-lg border-2 border-gray-300 pl-8 pr-4 py-3
-                                            shadow-sm focus:border-${accentColor}-500 focus:ring-4 focus:ring-${accentColor}-200
-                                            focus:ring-opacity-50 transition-colors duration-200`}
+                        shadow-sm focus:border-${config.accentColor}-500 focus:ring-4 focus:ring-${config.accentColor}-200
+                        focus:ring-opacity-50 transition-colors duration-200`}
                                                 placeholder="0.00"
                                                 required
                                                 disabled={isSaving}
@@ -266,11 +308,11 @@ export const BudgetItemForm = ({
                                             onClick={handleCancel}
                                             disabled={isCancelling || isSaving}
                                             className="inline-flex items-center px-4 py-2 bg-white text-gray-700
-                                        border-2 border-gray-300 rounded-lg hover:bg-gray-50
-                                        focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500
-                                        transition-all duration-200
-                                        disabled:opacity-50 disabled:cursor-not-allowed
-                                        min-w-[100px] justify-center shadow-sm"
+                      border-2 border-gray-300 rounded-lg hover:bg-gray-50
+                      focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500
+                      transition-all duration-200
+                      disabled:opacity-50 disabled:cursor-not-allowed
+                      min-w-[100px] justify-center shadow-sm"
                                         >
                                             {isCancelling ? (
                                                 <>
@@ -284,13 +326,7 @@ export const BudgetItemForm = ({
                                         <button
                                             type="submit"
                                             disabled={isSaving}
-                                            className={`inline-flex items-center px-4 py-2 border-2 border-transparent
-                                        rounded-lg shadow-sm text-sm font-medium text-white
-                                        bg-${accentColor}-${budgetType === 'business' ? '800' : '600'} hover:bg-${accentColor}-${budgetType === 'business' ? '900' : '700'}
-                                        focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-${accentColor}-500
-                                        transition-all duration-200
-                                        disabled:opacity-50 disabled:cursor-not-allowed
-                                        min-w-[100px] justify-center`}
+                                            className={buttonClass}
                                         >
                                             {isSaving ? (
                                                 <>
