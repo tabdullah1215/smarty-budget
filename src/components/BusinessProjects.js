@@ -13,6 +13,7 @@ import { BusinessExpenseProjectForm } from './BusinessExpenseProjectForm';
 import { BusinessProjectDetails } from './BusinessProjectDetails';
 import { useBusinessBudgets } from '../hooks/useBusinessBudget';
 import StaticRestoreButton from './StaticRestoreButton';
+import BudgetSetupForm from "./BudgetSetupForm";
 
 export const BusinessProjects = () => {
     const [isCreating, setIsCreating] = useState(false);
@@ -304,9 +305,10 @@ export const BusinessProjects = () => {
             </div>
 
             {showNewBudgetForm && (
-                <BusinessExpenseProjectForm
+                <BudgetSetupForm
                     onSave={handleCreateBudget}
                     onClose={() => setShowNewBudgetForm(false)}
+                    budgetType="business"
                 />
             )}
 

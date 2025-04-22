@@ -13,6 +13,7 @@ import {BudgetCard} from './BudgetCard';
 import authService from '../services/authService';
 import {downloadCSV} from '../utils/budgetCsvGenerator';
 import StaticRestoreButton from './StaticRestoreButton';
+import BudgetSetupForm from "./BudgetSetupForm";
 
 export const PaycheckBudgets = () => {
     const [isCreating, setIsCreating] = useState(false);
@@ -297,9 +298,10 @@ export const PaycheckBudgets = () => {
             </div>
 
             {showNewBudgetForm && (
-                <PaycheckBudgetForm
+                <BudgetSetupForm
                     onSave={handleCreateBudget}
                     onClose={() => setShowNewBudgetForm(false)}
+                    budgetType="paycheck"
                 />
             )}
 
