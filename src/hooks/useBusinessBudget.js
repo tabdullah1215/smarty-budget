@@ -30,7 +30,6 @@ export const useBusinessBudgets = () => {
     const createBusinessBudget = async (budgetData) => {
         if (!userEmail) throw new Error('User not authenticated');
 
-        // Handle case where amount is empty or 0
         const budgetAmount = budgetData.amount ? Number(budgetData.amount) : 0;
 
         const newBudget = {
@@ -47,7 +46,6 @@ export const useBusinessBudgets = () => {
         };
 
         try {
-            // Use the dedicated method for business budgets
             await indexdbService.addBusinessBudget(newBudget);
             setBusinessBudgets(prev => [...prev, newBudget]);
             return newBudget;

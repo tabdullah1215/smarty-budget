@@ -74,6 +74,7 @@ export const BusinessProjectDetails = ({ budget, onClose, onUpdate }) => {
 
     const transitions = useTransition(show, modalTransitions);
     const backdropTransition = useTransition(show, backdropTransitions);
+    const fileInputRef = useRef(null);
 
     useEffect(() => {
         disableScroll();
@@ -292,135 +293,16 @@ export const BusinessProjectDetails = ({ budget, onClose, onUpdate }) => {
         setUploadingImageItemId(itemId);
         try {
             await withMinimumDelay(async () => {
-                const input = document.createElement('input');
-                input.type = 'file';
-                input.accept = 'image/*';
-
-                // Explicitly append to DOM to ensure it works on all browsers/devices
-                input.style.display = 'none';
-                document.body.appendChild(input);
-
-                // Create a promise that resolves when a file is selected
-                const fileSelection = new Promise((resolve) => {
-                    // Handle file selection
-                    input.onchange = () => {
-                        // Make sure we get the file before resolving
-                        if (input.files && input.files.length > 0) {
-                            const selectedFile = input.files[0];
-                            resolve(selectedFile);
-                        } else {
-                            resolve(null);
-                        }
-                    };
-
-                    // Handle dialog dismissal
-                    const focusHandler = () => {
-                        // Use a slight delay to ensure onchange had a chance to fire
-                        setTimeout(() => {
-                            // If no files were selected and input is no longer focused
-                            if (!input.files || input.files.length === 0) {
-                                window.removeEventListener('focus', focusHandler);
-                                resolve(null);
-                            }
-                        }, 300);
-                    };
-
-                    window.addEventListener('focus', focusHandler);
-                });
-
-                // Trigger the file selection dialog
-                input.click();
-
-                // Wait for file selection or dialog dismissal
-                const file = await fileSelection;
-
-                // Clean up the input element
-                document.body.removeChild(input);
-
-                if (!file) {
-                    setUploadingImageItemId(null);  // Clear loading state if cancelled
-                    return;
+                if (fileInputRef.current) {
+                    fileInputRef.current.dataset.itemId = itemId;
+                    fileInputRef.current.click();
                 }
-
-                try {
-                    // Compress the image using our utility
-                    const compressResult = await compressImage(file);
-
-                    // Get storage estimate
-                    const storageEstimate = await getStorageEstimate();
-                    const storageMessage = formatStorageMessage(storageEstimate);
-
-                    // Show compression statistics in a toast with storage info
-                    showToast(
-                        'success',
-                        `Image compressed: ${formatFileSize(compressResult.originalSize)} → 
-                     ${formatFileSize(compressResult.compressedSize)} 
-                     (${compressResult.compressionRatio}% reduction)
-                     ${storageMessage ? `\n${storageMessage}` : ''}`
-                    );
-
-                    // Update the budget item with compressed image
-                    const updatedItems = budget.items.map(item =>
-                        item.id === itemId ? {
-                            ...item,
-                            image: compressResult.data,
-                            fileType: compressResult.fileType
-                        } : item
-                    );
-
-                    const updatedBudget = {...budget, items: updatedItems};
-                    await onUpdate(updatedBudget);
-
-                } catch (compressionError) {
-                    console.error('Error compressing image:', compressionError);
-                    showToast('error', 'Could not compress image. Using original instead.');
-
-                    // Fallback to original image if compression fails
-                    const reader = new FileReader();
-
-                    // Create a proper promise for FileReader operation
-                    const readFilePromise = new Promise((resolve, reject) => {
-                        reader.onloadend = (event) => {
-                            if (event.target.readyState === FileReader.DONE) {
-                                resolve(event.target.result);
-                            }
-                        };
-                        reader.onerror = () => {
-                            reject(new Error('Failed to read image file'));
-                        };
-
-                        // Start reading the file as a data URL
-                        reader.readAsDataURL(file);
-                    });
-
-                    try {
-                        const dataUrl = await readFilePromise;
-                        const base64Data = dataUrl.split(',')[1];
-                        const fileType = file.type;
-
-                        const updatedItems = budget.items.map(item =>
-                            item.id === itemId ? {
-                                ...item,
-                                image: base64Data,
-                                fileType: fileType
-                            } : item
-                        );
-
-                        const updatedBudget = {...budget, items: updatedItems};
-                        await onUpdate(updatedBudget);
-
-                    } catch (readError) {
-                        showToast('error', 'Failed to read image file. Please try again.');
-                        console.error('File read error:', readError);
-                    }
-                }
-
             }, 800);
         } catch (error) {
             console.error('Error uploading image:', error);
             showToast('error', 'Failed to upload image: ' + (error.message || 'Unknown error'));
         } finally {
-            setUploadingImageItemId(null);
+            // Don't clear uploadingImageItemId here - it will be done in handleFileInputChange
         }
     };
 
@@ -445,6 +327,58 @@ export const BusinessProjectDetails = ({ budget, onClose, onUpdate }) => {
     const handleImageClick = (item) => {
         setSelectedImage(item.image);
         setSelectedImageType(item.fileType || 'image/png');
+    };
+
+    const handleFileInputChange = async (e) => {
+        const file = e.target.files?.[0];
+        const itemId = e.target.dataset.itemId;
+
+        if (!file || !itemId) {
+            setUploadingImageItemId(null);
+            return;
+        }
+
+        try {
+            // Same compression and storage logic as before
+            const compressResult = await compressImage(file);
+
+            // Get storage estimate
+            const storageEstimate = await getStorageEstimate();
+            const storageMessage = formatStorageMessage(storageEstimate);
+
+            // Show compression statistics in a toast with storage info
+            showToast(
+                'success',
+                `Image compressed: ${formatFileSize(compressResult.originalSize)} → 
+       ${formatFileSize(compressResult.compressedSize)} 
+       (${compressResult.compressionRatio}% reduction)
+       ${storageMessage ? `\n${storageMessage}` : ''}`
+            );
+
+            // Update the budget item with compressed image
+            const updatedItems = budget.items.map(item =>
+                item.id === itemId ? {
+                    ...item,
+                    image: compressResult.data,
+                    fileType: compressResult.fileType
+                } : item
+            );
+
+            const updatedBudget = {...budget, items: updatedItems};
+            await onUpdate(updatedBudget);
+
+        } catch (compressionError) {
+            console.error('Error compressing image:', compressionError);
+            showToast('error', 'Could not compress image. Using original instead.');
+
+
+        } finally {
+            // Reset the file input value so the same file can be selected again
+            if (fileInputRef.current) {
+                fileInputRef.current.value = '';
+            }
+            setUploadingImageItemId(null);
+        }
     };
 
     return (
@@ -578,6 +512,13 @@ export const BusinessProjectDetails = ({ budget, onClose, onUpdate }) => {
                     }}
                 />
             )}
+            <input
+                type="file"
+                ref={fileInputRef}
+                accept="image/*"
+                style={{display: 'none'}}
+                onChange={handleFileInputChange}
+            />
         </>
     );
 };

@@ -3,7 +3,6 @@ import { indexdbService } from './IndexDBService';
 import { DB_CONFIG } from '../config';
 import authService from './authService';
 
-// Define a static backup filename
 export const STATIC_BACKUP_FILENAME = 'budget-tracker-backup.json';
 
 export const backupService = {
@@ -12,14 +11,12 @@ export const backupService = {
         if (!userEmail) throw new Error('User not authenticated');
 
         try {
-            // Get all user data
             const budgets = await indexdbService.getBudgetsByEmail(userEmail);
             const paycheckBudgets = await indexdbService.getPaycheckBudgetsByEmail(userEmail);
             const businessBudgets = await indexdbService.getBusinessBudgetsByEmail(userEmail);
             const paycheckCategories = await indexdbService.getPaycheckCategories();
             const businessCategories = await indexdbService.getBusinessCategories();
 
-            // Skip backup if no meaningful data
             if (budgets.length === 0 && paycheckBudgets.length === 0 && businessBudgets.length === 0) {
                 throw new Error('No budget data to backup');
             }
@@ -77,7 +74,6 @@ export const backupService = {
         }
     },
 
-    // Get estimated download path based on browser/OS detection
     getEstimatedDownloadPath() {
         const os = this.detectOS();
         const browser = this.detectBrowser();
@@ -125,7 +121,6 @@ export const backupService = {
         }
     },
 
-    // Simple OS detection
     detectOS() {
         const userAgent = window.navigator.userAgent;
         if (userAgent.indexOf("Windows") !== -1) return 'Windows';
@@ -135,7 +130,6 @@ export const backupService = {
         return 'Unknown';
     },
 
-    // Simple browser detection
     detectBrowser() {
         const userAgent = window.navigator.userAgent;
         if (userAgent.indexOf("Chrome") !== -1) return 'Chrome';
@@ -151,7 +145,6 @@ export const backupService = {
 
         try {
             if (!budgetType) {
-                // Check all budget types
                 const budgets = await indexdbService.getBudgetsByEmail(userEmail);
                 const paycheckBudgets = await indexdbService.getPaycheckBudgetsByEmail(userEmail);
                 const businessBudgets = await indexdbService.getBusinessBudgetsByEmail(userEmail);
@@ -210,7 +203,6 @@ export const backupService = {
                         businessBudgetsRestored: 0
                     };
 
-                    // Process the import based on the budget type
                     try {
                         // If no specific budget type is provided or 'custom', restore custom budgets
                         if (!budgetType || budgetType === 'custom') {

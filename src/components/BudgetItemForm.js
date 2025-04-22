@@ -52,7 +52,6 @@ export const BudgetItemForm = ({
     // Get the configuration based on budget type
     const config = budgetTypeConfigs[budgetType] || budgetTypeConfigs.paycheck;
 
-    // Form state
     const [category, setCategory] = useState(initialItem?.category || '');
     const [description, setDescription] = useState(initialItem?.description || '');
     const [date, setDate] = useState(initialItem?.date || new Date().toISOString().split('T')[0]);
@@ -65,18 +64,14 @@ export const BudgetItemForm = ({
     const [showAddCategory, setShowAddCategory] = useState(false);
     const [isAddingCategory, setIsAddingCategory] = useState(false);
 
-    // Animations
     const transitions = useTransition(show, modalTransitions);
     const backdropTransition = useTransition(show, backdropTransitions);
 
-    // Get form title based on whether we're adding or editing
     const formTitle = initialItem ? config.title.edit : config.title.add;
 
-    // Load categories based on budget type - now using generic getCategories method
     useEffect(() => {
         const loadCategories = async () => {
             try {
-                // Use the dynamic getCategories method with budgetType parameter
                 const loadedCategories = await indexdbService.getCategories(budgetType);
                 setCategories(loadedCategories);
             } catch (error) {
