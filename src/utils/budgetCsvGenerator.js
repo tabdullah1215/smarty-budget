@@ -10,6 +10,18 @@ export const downloadCSV = async (selectedBudgets = []) => {
         // Log the incoming data to debug
         console.log('Selected budgets:', selectedBudgets);
 
+        // Determine budget type from first budget (assuming all are same type)
+        const isBusinessBudget = selectedBudgets.length > 0 &&
+            selectedBudgets[0].hasOwnProperty('projectName');
+
+        // Check if business budget has no meaningful limit
+        const hasBudgetLimit = (budget) => {
+            if (isBusinessBudget) {
+                return budget.amount > 0;
+            }
+            return true; // Paycheck budgets always have a limit
+        };
+
         const rows = selectedBudgets.flatMap(budget => {
             console.log('Processing budget:', budget);
             return (budget.items || []).map(item => {
@@ -17,21 +29,32 @@ export const downloadCSV = async (selectedBudgets = []) => {
                 return {
                     PaycheckName: budget.name || '',
                     PaycheckDate: budget.date || '',
-                    PaycheckAmount: budget.amount || 0,
+                    PaycheckAmount: hasBudgetLimit(budget) ? (budget.amount || 0) : 'No Limit',
                     ExpenseCategory: item.category || '',
                     ExpenseDescription: item.description || '',
                     ExpenseDate: item.date || '',
                     ExpenseAmount: item.amount || 0,
                     HasAttachment: item.image ? 'Yes' : 'No',
-                    Status: 'All Items Included'
+                    Status: item.isActive ? 'Included' : 'Pending'
                 };
             });
         });
 
         // Add summary rows
-        const totalBudget = selectedBudgets.reduce((sum, budget) => sum + (budget.amount || 0), 0);
+        // Calculate summary values with special handling for unlimited budgets
+        const totalBudget = selectedBudgets.reduce((sum, budget) => {
+            // Only add budget amount to total if it has a limit
+            if (hasBudgetLimit(budget)) {
+                return sum + (budget.amount || 0);
+            }
+            return sum;
+        }, 0);
+
         const totalSpent = rows.reduce((sum, row) => sum + (row.ExpenseAmount || 0), 0);
-        const remainingBudget = totalBudget - totalSpent;
+
+        // For remaining budget, only calculate if there are meaningful limits
+        const hasAnyBudgetLimit = selectedBudgets.some(hasBudgetLimit);
+        const remainingBudget = hasAnyBudgetLimit ? totalBudget - totalSpent : 'Not Applicable';
 
         rows.push(
             {
@@ -48,7 +71,7 @@ export const downloadCSV = async (selectedBudgets = []) => {
             {
                 PaycheckName: 'Total Budget',
                 PaycheckDate: '',
-                PaycheckAmount: totalBudget,
+                PaycheckAmount: hasAnyBudgetLimit ? totalBudget : 'Some Budgets Unlimited',
                 ExpenseCategory: '',
                 ExpenseDescription: '',
                 ExpenseDate: '',
@@ -90,8 +113,11 @@ export const downloadCSV = async (selectedBudgets = []) => {
         const link = document.createElement('a');
         const url = URL.createObjectURL(blob);
 
+        // Determine file name based on budget type
+        const prefix = isBusinessBudget ? 'business-expense' : 'budget';
+
         link.setAttribute('href', url);
-        link.setAttribute('download', `budget-report-${new Date().toISOString().split('T')[0]}.csv`);
+        link.setAttribute('download', `${prefix}-report-${new Date().toISOString().split('T')[0]}.csv`);
         link.style.visibility = 'hidden';
 
         document.body.appendChild(link);

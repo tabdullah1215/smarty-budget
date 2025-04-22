@@ -11,8 +11,6 @@ import { withMinimumDelay } from './withDelay';
  * @param {Function} loadingCallback - Optional callback to update the loading state in the UI
  * @returns {Promise<boolean>} True if the PDF was generated successfully
  */
-// In directPdfGenerator.js, replace the temporary container creation with:
-
 export const generatePdfReport = async (selectedBudgets, showToast, loadingCallback = () => {}) => {
     try {
         // If no budgets, don't proceed
@@ -25,6 +23,10 @@ export const generatePdfReport = async (selectedBudgets, showToast, loadingCallb
 
         // Get user info for the report
         const userInfo = authService.getUserInfo();
+
+        // Determine budget type for appropriate filename
+        const isBusinessBudget = selectedBudgets.length > 0 &&
+            selectedBudgets[0].hasOwnProperty('projectName');
 
         // Generate HTML content for the report
         const htmlContent = generateReportHtml(selectedBudgets, userInfo);
@@ -119,8 +121,11 @@ export const generatePdfReport = async (selectedBudgets, showToast, loadingCallb
             }
         }
 
-        // Save the PDF with filename based on date
-        const filename = `budget-report-${new Date().toISOString().split('T')[0]}.pdf`;
+        // Save the PDF with filename based on budget type and date
+        const filename = isBusinessBudget
+            ? `business-expense-report-${new Date().toISOString().split('T')[0]}.pdf`
+            : `budget-report-${new Date().toISOString().split('T')[0]}.pdf`;
+
         pdf.save(filename);
 
         // Cleanup - remove the iframe
@@ -137,4 +142,5 @@ export const generatePdfReport = async (selectedBudgets, showToast, loadingCallb
         loadingCallback(false);
     }
 };
+
 export default generatePdfReport;

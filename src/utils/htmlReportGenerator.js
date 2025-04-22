@@ -10,8 +10,25 @@ export const generateReportHtml = (budgets, userInfo) => {
     // Process data
     const reportData = processReportData(budgets);
 
+    // Determine if first budget is a business budget
+    const isBusinessBudget = budgets.length > 0 && 'projectName' in budgets[0];
+
+    // Check if a budget is a business budget with no meaningful limit
+    const hasBudgetLimit = (budget) => {
+        // If it has a projectName property, it's a business budget
+        if (budget.projectName) {
+            return budget.amount > 0;
+        }
+        // Otherwise it's a paycheck budget which always has a limit
+        return true;
+    };
+
     // Format currency amounts
-    const formatCurrency = (amount) => {
+    const formatCurrency = (amount, budgetType, budgetHasLimit) => {
+        // Special case for business budgets with no limit
+        if (budgetType === 'business' && !budgetHasLimit) {
+            return 'Not Set';
+        }
         return '$' + amount.toLocaleString();
     };
 
@@ -111,6 +128,9 @@ export const generateReportHtml = (budgets, userInfo) => {
       }
       .negative {
         color: #ef4444;
+      }
+      .not-applicable {
+        color: #6b7280;
       }
       table {
         width: 100%;
@@ -343,27 +363,34 @@ export const generateReportHtml = (budgets, userInfo) => {
 
     // Generate payment details HTML
     const generatePaycheckDetailsHtml = () => {
-        return reportData.paycheckDetails.map(paycheck => `
+        return reportData.paycheckDetails.map((budget, index) => {
+            const budgetHasLimit = hasBudgetLimit(budgets[index]);
+
+            return `
       <div class="paycheck-card">
         <div style="border-bottom: 1px solid #e5e7eb; padding-bottom: 10px; margin-bottom: 15px;">
-          <h3>${paycheck.name}</h3>
-          <p style="color: #6b7280;">Date: ${formatDate(paycheck.date)}</p>
+          <h3>${budget.name}</h3>
+          <p style="color: #6b7280;">Date: ${formatDate(budget.date)}</p>
+          ${budgets[index].projectName ? `<p style="color: #6b7280;">Client: ${budgets[index].client || 'None'}</p>` : ''}
         </div>
         
         <div class="summary-grid">
           <div class="summary-box">
-            <p class="summary-label">Amount</p>
-            <p class="summary-value">${formatCurrency(paycheck.amount)}</p>
+            <p class="summary-label">${isBusinessBudget ? 'Budget Limit' : 'Amount'}</p>
+            <p class="summary-value">${formatCurrency(budget.amount, isBusinessBudget ? 'business' : 'paycheck', budgetHasLimit)}</p>
           </div>
           <div class="summary-box">
             <p class="summary-label">Total Spent</p>
-            <p class="summary-value">${formatCurrency(paycheck.totalSpent)}</p>
+            <p class="summary-value">${formatCurrency(budget.totalSpent)}</p>
           </div>
           <div class="summary-box">
             <p class="summary-label">Remaining</p>
-            <p class="summary-value ${paycheck.remaining >= 0 ? 'positive' : 'negative'}">
-              ${formatCurrency(paycheck.remaining)}
-            </p>
+            ${budgetHasLimit ?
+                `<p class="summary-value ${budget.remaining >= 0 ? 'positive' : 'negative'}">
+                ${formatCurrency(budget.remaining)}
+              </p>` :
+                `<p class="summary-value not-applicable">N/A</p>`
+            }
           </div>
         </div>
         
@@ -377,7 +404,7 @@ export const generateReportHtml = (budgets, userInfo) => {
             </tr>
           </thead>
           <tbody>
-            ${paycheck.items.map(item => `
+            ${budget.items.map(item => `
               <tr>
                 <td>${item.category}</td>
                 <td>${item.description || ''}</td>
@@ -388,12 +415,10 @@ export const generateReportHtml = (budgets, userInfo) => {
           </tbody>
         </table>
       </div>
-    `).join('');
+    `}).join('');
     };
 
     // Generate category analysis HTML with pie chart
-// Modify the generateCategoryAnalysisHtml function in htmlReportGenerator.js
-
     const generateCategoryAnalysisHtml = () => {
         const colors = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#A28DFF', '#FF6B6B', '#4ECDC4', '#45B7D1'];
 
@@ -491,12 +516,16 @@ export const generateReportHtml = (budgets, userInfo) => {
       </div>
     `;
 
+        // For business budgets without limits, handle differently
+        const hasMeaningfulBudgetLimit = isBusinessBudget ?
+            budgets.some(hasBudgetLimit) : true;
+
         return `
       <div class="stats-grid">
         <div class="stat-box">
-          <p class="summary-label">Total Income</p>
+          <p class="summary-label">${isBusinessBudget ? 'Total Budget' : 'Total Income'}</p>
           <p style="font-size: 20px; font-weight: bold;">
-            ${formatCurrency(reportData.overall.totalIncome)}
+            ${formatCurrency(reportData.overall.totalIncome, isBusinessBudget ? 'business' : 'paycheck', hasMeaningfulBudgetLimit)}
           </p>
         </div>
         <div class="stat-box">
@@ -506,16 +535,22 @@ export const generateReportHtml = (budgets, userInfo) => {
           </p>
         </div>
         <div class="stat-box">
-          <p class="summary-label">Net Savings</p>
-          <p style="font-size: 20px; font-weight: bold;" class="${reportData.overall.netSavings >= 0 ? 'positive' : 'negative'}">
-            ${formatCurrency(reportData.overall.netSavings)}
-          </p>
+          <p class="summary-label">${isBusinessBudget ? 'Net Balance' : 'Net Savings'}</p>
+          ${hasMeaningfulBudgetLimit ?
+            `<p style="font-size: 20px; font-weight: bold;" class="${reportData.overall.netSavings >= 0 ? 'positive' : 'negative'}">
+              ${formatCurrency(reportData.overall.netSavings)}
+            </p>` :
+            `<p style="font-size: 20px; font-weight: bold;" class="not-applicable">N/A</p>`
+        }
         </div>
         <div class="stat-box">
-          <p class="summary-label">Savings Rate</p>
-          <p style="font-size: 20px; font-weight: bold;" class="${Number(reportData.overall.savingsRate) >= 0 ? 'positive' : 'negative'}">
-            ${reportData.overall.savingsRate}%
-          </p>
+          <p class="summary-label">${isBusinessBudget ? 'Budget Utilization' : 'Savings Rate'}</p>
+          ${hasMeaningfulBudgetLimit ?
+            `<p style="font-size: 20px; font-weight: bold;" class="${Number(reportData.overall.savingsRate) >= 0 ? 'positive' : 'negative'}">
+              ${reportData.overall.savingsRate}%
+            </p>` :
+            `<p style="font-size: 20px; font-weight: bold;" class="not-applicable">N/A</p>`
+        }
         </div>
       </div>
       
@@ -526,7 +561,7 @@ export const generateReportHtml = (budgets, userInfo) => {
     `;
     };
 
-// Generate image gallery HTML for attached images with better pagination
+    // Generate image gallery HTML for attached images
     const generateImageGalleryHtml = () => {
         // Get all items with images from all budgets
         const itemsWithImages = [];
@@ -593,20 +628,28 @@ export const generateReportHtml = (budgets, userInfo) => {
   `;
     };
 
+    // Get an appropriate title for the report
+    const reportTitle = isBusinessBudget ?
+        "Business Expense Analysis Report" :
+        "Paycheck Budget Analysis Report";
+
+    // Get appropriate section titles
+    const detailsSectionTitle = isBusinessBudget ? "Project Details" : "Paycheck Details";
+
     // Assemble the full HTML document
     const htmlContent = `
     <!DOCTYPE html>
     <html>
     <head>
       <meta charset="UTF-8">
-      <title>Paycheck Budget Analysis Report</title>
+      <title>${reportTitle}</title>
       ${styles}
     </head>
     <body>
       <div class="container">
         <!-- Report Header -->
         <div class="report-header">
-          <h1>Paycheck Budget Analysis Report</h1>
+          <h1>${reportTitle}</h1>
           <div class="info-box">
             <div class="info-grid">
               <div>
@@ -624,9 +667,9 @@ export const generateReportHtml = (budgets, userInfo) => {
           </div>
         </div>
         
-        <!-- Paycheck Details Section -->
+        <!-- Budget Details Section -->
         <div class="paycheck-section section">
-          <h2>Paycheck Details</h2>
+          <h2>${detailsSectionTitle}</h2>
           ${generatePaycheckDetailsHtml()}
         </div>
         
@@ -648,7 +691,7 @@ export const generateReportHtml = (budgets, userInfo) => {
         <!-- Report Footer -->
         <div class="footer">
           <p>Report generated on ${new Date().toLocaleString()}</p>
-          <p>Analysis based on ${reportData.paycheckDetails.length} paychecks</p>
+          <p>Analysis based on ${reportData.paycheckDetails.length} ${isBusinessBudget ? 'projects' : 'paychecks'}</p>
         </div>
       </div>
     </body>
@@ -706,7 +749,7 @@ function processReportData(budgets) {
     const totalIncome = _.sumBy(paycheckDetails, 'amount');
     const totalSpent = _.sumBy(paycheckDetails, 'totalSpent');
     const netSavings = totalIncome - totalSpent;
-    const savingsRate = ((netSavings / totalIncome) * 100).toFixed(1);
+    const savingsRate = totalIncome > 0 ? ((netSavings / totalIncome) * 100).toFixed(1) : '0.0';
 
     return {
         paycheckDetails,
