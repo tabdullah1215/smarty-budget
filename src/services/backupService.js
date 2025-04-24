@@ -1,5 +1,5 @@
 // src/services/backupService.js
-import { indexdbService } from './IndexDBService';
+import { indexdbService } from '../services/IndexDBService';
 import { DB_CONFIG } from '../config';
 import authService from './authService';
 
@@ -11,11 +11,20 @@ export const backupService = {
         if (!userEmail) throw new Error('User not authenticated');
 
         try {
+            // Make sure DB is initialized first
+            if (!indexdbService.db) {
+                await indexdbService.initDB();
+            }
+
+            // Fetch all budget data
             const budgets = await indexdbService.getBudgetsByEmail(userEmail);
             const paycheckBudgets = await indexdbService.getPaycheckBudgetsByEmail(userEmail);
             const businessBudgets = await indexdbService.getBusinessBudgetsByEmail(userEmail);
-            const paycheckCategories = await indexdbService.getPaycheckCategories();
-            const businessCategories = await indexdbService.getBusinessCategories();
+
+            // Fetch categories using the specific category getter methods
+            // The IndexDBService has getCategories method that accepts a budgetType parameter
+            const paycheckCategories = await indexdbService.getCategories('paycheck');
+            const businessCategories = await indexdbService.getCategories('business');
 
             if (budgets.length === 0 && paycheckBudgets.length === 0 && businessBudgets.length === 0) {
                 throw new Error('No budget data to backup');
@@ -225,10 +234,10 @@ export const backupService = {
 
                             // Import paycheck categories if restoring paycheck data
                             if (backup.data.paycheckCategories && backup.data.paycheckCategories.length > 0) {
-                                const existingCategories = await indexdbService.getPaycheckCategories();
+                                const existingCategories = await indexdbService.getCategories('paycheck');
                                 for (const category of backup.data.paycheckCategories) {
                                     if (!existingCategories.some(c => c.name === category.name)) {
-                                        await indexdbService.addPaycheckCategory(category);
+                                        await indexdbService.addCategory(category, 'paycheck');
                                     }
                                 }
                             }
@@ -245,10 +254,10 @@ export const backupService = {
 
                             // Import business categories if restoring business data
                             if (backup.data.businessCategories && backup.data.businessCategories.length > 0) {
-                                const existingCategories = await indexdbService.getBusinessCategories();
+                                const existingCategories = await indexdbService.getCategories('business');
                                 for (const category of backup.data.businessCategories) {
                                     if (!existingCategories.some(c => c.name === category.name)) {
-                                        await indexdbService.addBusinessCategory(category);
+                                        await indexdbService.addCategory(category, 'business');
                                     }
                                 }
                             }
