@@ -24,9 +24,8 @@ class IndexDBService {
             request.onupgradeneeded = (event) => {
                 const db = event.target.result;
 
-                // Create stores if they don't exist
-                if (!db.objectStoreNames.contains(DB_CONFIG.stores.budgets)) {
-                    const store = db.createObjectStore(DB_CONFIG.stores.budgets, {keyPath: 'id'});
+                if (!db.objectStoreNames.contains(DB_CONFIG.stores.customBudgets)) {
+                    const store = db.createObjectStore(DB_CONFIG.stores.customBudgets, {keyPath: 'id'});
                     store.createIndex('userEmail', 'userEmail', {unique: false});
                     store.createIndex('createdAt', 'createdAt', {unique: false});
                 }
@@ -198,12 +197,12 @@ class IndexDBService {
         });
     }
 
-    async getBudgetsByEmail(userEmail) {
+    async getCustomBudgetsByEmail(userEmail) {
         if (!this.db) await this.initDB();
 
         return new Promise((resolve, reject) => {
-            const transaction = this.db.transaction([DB_CONFIG.stores.budgets], 'readonly');
-            const store = transaction.objectStore(DB_CONFIG.stores.budgets);
+            const transaction = this.db.transaction([DB_CONFIG.stores.customBudgets], 'readonly');
+            const store = transaction.objectStore(DB_CONFIG.stores.customBudgets);
             const index = store.index('userEmail');
             const request = index.getAll(IDBKeyRange.only(userEmail));
 
@@ -212,12 +211,12 @@ class IndexDBService {
         });
     }
 
-    async addBudget(budget) {
+    async addCustomBudget(budget) {
         if (!this.db) await this.initDB();
 
         return new Promise((resolve, reject) => {
-            const transaction = this.db.transaction([DB_CONFIG.stores.budgets], 'readwrite');
-            const store = transaction.objectStore(DB_CONFIG.stores.budgets);
+            const transaction = this.db.transaction([DB_CONFIG.stores.customBudgets], 'readwrite');
+            const store = transaction.objectStore(DB_CONFIG.stores.customBudgets);
             const request = store.add(budget);
 
             request.onsuccess = () => resolve(request.result);
@@ -225,25 +224,35 @@ class IndexDBService {
         });
     }
 
-    async updateBudget(budget) {
+    async updateCustomBudget(budget) {
         if (!this.db) await this.initDB();
 
         return new Promise((resolve, reject) => {
-            const transaction = this.db.transaction([DB_CONFIG.stores.budgets], 'readwrite');
-            const store = transaction.objectStore(DB_CONFIG.stores.budgets);
-            const request = store.put(budget);
+            const transaction = this.db.transaction([DB_CONFIG.stores.customBudgets], 'readwrite');
+            const store = transaction.objectStore(DB_CONFIG.stores.customBudgets);
 
-            request.onsuccess = () => resolve(request.result);
+            const completeCustomBudget = {
+                ...budget,
+                items: budget.items.map(item => ({
+                    ...item,
+                    image: item.image || null
+                })),
+                updatedAt: new Date().toISOString()
+            };
+
+            const request = store.put(completeCustomBudget);
+
+            request.onsuccess = () => resolve(completeCustomBudget);
             request.onerror = () => reject(request.error);
         });
     }
 
-    async deleteBudget(budgetId) {
+    async deleteCustomBudget(budgetId) {
         if (!this.db) await this.initDB();
 
         return new Promise((resolve, reject) => {
-            const transaction = this.db.transaction([DB_CONFIG.stores.budgets], 'readwrite');
-            const store = transaction.objectStore(DB_CONFIG.stores.budgets);
+            const transaction = this.db.transaction([DB_CONFIG.stores.customBudgets], 'readwrite');
+            const store = transaction.objectStore(DB_CONFIG.stores.customBudgets);
             const request = store.delete(budgetId);
 
             request.onsuccess = () => resolve();
@@ -251,6 +260,7 @@ class IndexDBService {
         });
     }
 
+    // Paycheck budget methods
     async getPaycheckBudgetsByEmail(userEmail) {
         if (!this.db) await this.initDB();
 
@@ -314,41 +324,6 @@ class IndexDBService {
         });
     }
 
-    async getCategories(budgetType = 'paycheck') {
-        if (!this.db) await this.initDB();
-
-        // Determine the appropriate store name based on budgetType
-        const storeName = budgetType === 'business'
-            ? DB_CONFIG.stores.businessCategories
-            : DB_CONFIG.stores.paycheckCategories;
-
-        return new Promise((resolve, reject) => {
-            const transaction = this.db.transaction([storeName], 'readonly');
-            const store = transaction.objectStore(storeName);
-            const request = store.getAll();
-
-            request.onsuccess = () => resolve(request.result.sort((a, b) => a.name.localeCompare(b.name)));
-            request.onerror = () => reject(request.error);
-        });
-    }
-
-    async addCategory(category, budgetType = 'paycheck') {
-        if (!this.db) await this.initDB();
-
-        const storeName = budgetType === 'business'
-            ? DB_CONFIG.stores.businessCategories
-            : DB_CONFIG.stores.paycheckCategories;
-
-        return new Promise((resolve, reject) => {
-            const transaction = this.db.transaction([storeName], 'readwrite');
-            const store = transaction.objectStore(storeName);
-            const request = store.add(category);
-
-            request.onsuccess = () => resolve(request.result);
-            request.onerror = () => reject(request.error);
-        });
-    }
-
     async getBusinessBudgetsByEmail(userEmail) {
         if (!this.db) await this.initDB();
 
@@ -399,6 +374,7 @@ class IndexDBService {
             request.onerror = () => reject(request.error);
         });
     }
+
     async deleteBusinessBudget(budgetId) {
         if (!this.db) await this.initDB();
 
@@ -412,22 +388,66 @@ class IndexDBService {
         });
     }
 
+    async getCategories(budgetType = 'paycheck') {
+        if (!this.db) await this.initDB();
+
+        // Determine the appropriate store name based on budgetType
+        let storeName;
+        if (budgetType === 'business') {
+            storeName = DB_CONFIG.stores.businessCategories;
+        } else if (budgetType === 'custom') {
+            storeName = DB_CONFIG.stores.customCategories;
+        } else {
+            storeName = DB_CONFIG.stores.paycheckCategories;
+        }
+
+        return new Promise((resolve, reject) => {
+            const transaction = this.db.transaction([storeName], 'readonly');
+            const store = transaction.objectStore(storeName);
+            const request = store.getAll();
+
+            request.onsuccess = () => resolve(request.result.sort((a, b) => a.name.localeCompare(b.name)));
+            request.onerror = () => reject(request.error);
+        });
+    }
+
+    async addCategory(category, budgetType = 'paycheck') {
+        if (!this.db) await this.initDB();
+
+        let storeName;
+        if (budgetType === 'business') {
+            storeName = DB_CONFIG.stores.businessCategories;
+        } else if (budgetType === 'custom') {
+            storeName = DB_CONFIG.stores.customCategories;
+        } else {
+            storeName = DB_CONFIG.stores.paycheckCategories;
+        }
+
+        return new Promise((resolve, reject) => {
+            const transaction = this.db.transaction([storeName], 'readwrite');
+            const store = transaction.objectStore(storeName);
+            const request = store.add(category);
+
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
+    }
+
     async clearUserData(userEmail) {
         if (!this.db) await this.initDB();
 
-        // Clear regular budgets
-        const budgets = await this.getBudgetsByEmail(userEmail);
-        const regularBudgetPromises = budgets.map(budget =>
+        // Clear custom budgets
+        const customBudgets = await this.getCustomBudgetsByEmail(userEmail);
+        const customBudgetPromises = customBudgets.map(budget =>
             new Promise((resolve, reject) => {
-                const transaction = this.db.transaction([DB_CONFIG.stores.budgets], 'readwrite');
-                const store = transaction.objectStore(DB_CONFIG.stores.budgets);
+                const transaction = this.db.transaction([DB_CONFIG.stores.customBudgets], 'readwrite');
+                const store = transaction.objectStore(DB_CONFIG.stores.customBudgets);
                 const request = store.delete(budget.id);
                 request.onsuccess = () => resolve();
                 request.onerror = () => reject(request.error);
             })
         );
 
-        // Clear paycheck budgets
         const paycheckBudgets = await this.getPaycheckBudgetsByEmail(userEmail);
         const paycheckBudgetPromises = paycheckBudgets.map(budget =>
             new Promise((resolve, reject) => {
@@ -439,7 +459,22 @@ class IndexDBService {
             })
         );
 
-        return Promise.all([...regularBudgetPromises, ...paycheckBudgetPromises]);
+        const businessBudgets = await this.getBusinessBudgetsByEmail(userEmail);
+        const businessBudgetPromises = businessBudgets.map(budget =>
+            new Promise((resolve, reject) => {
+                const transaction = this.db.transaction([DB_CONFIG.stores.businessBudgets], 'readwrite');
+                const store = transaction.objectStore(DB_CONFIG.stores.businessBudgets);
+                const request = store.delete(budget.id);
+                request.onsuccess = () => resolve();
+                request.onerror = () => reject(request.error);
+            })
+        );
+
+        return Promise.all([
+            ...customBudgetPromises,
+            ...paycheckBudgetPromises,
+            ...businessBudgetPromises
+        ]);
     }
 }
 

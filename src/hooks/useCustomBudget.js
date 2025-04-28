@@ -15,7 +15,7 @@ export const useCustomBudgets = () => {
             if (!userEmail) return;
             try {
                 // We're using the existing getBudgetsByEmail method for custom budgets
-                const userBudgets = await indexdbService.getBudgetsByEmail(userEmail);
+                const userBudgets = await indexdbService.getCustomBudgetsByEmail(userEmail);
                 setCustomBudgets(userBudgets);
             } catch (error) {
                 console.error('Error loading custom budgets:', error);
@@ -42,7 +42,7 @@ export const useCustomBudgets = () => {
         };
 
         try {
-            await indexdbService.addBudget(newBudget);
+            await indexdbService.addCustomBudget(newBudget);
             setCustomBudgets(prev => [...prev, newBudget]);
             return newBudget;
         } catch (error) {
@@ -62,7 +62,7 @@ export const useCustomBudgets = () => {
                 items: updatedBudget.items || []
             };
 
-            await indexdbService.updateBudget(budgetToUpdate);
+            await indexdbService.updateCustomBudget(budgetToUpdate);
             setCustomBudgets(prev => prev.map(budget =>
                 budget.id === budgetToUpdate.id ? budgetToUpdate : budget
             ));
@@ -78,7 +78,7 @@ export const useCustomBudgets = () => {
         if (!userEmail) throw new Error('User not authenticated');
 
         try {
-            await indexdbService.deleteBudget(budgetId);
+            await indexdbService.deleteCustomBudget(budgetId);
             setCustomBudgets(prev => prev.filter(budget => budget.id !== budgetId));
         } catch (error) {
             console.error('Error deleting custom budget:', error);

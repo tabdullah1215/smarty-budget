@@ -17,17 +17,14 @@ export const backupService = {
             }
 
             // Fetch all budget data
-            const budgets = await indexdbService.getBudgetsByEmail(userEmail);
+            const customBudgets = await indexdbService.getCustomBudgetsByEmail(userEmail);
             const paycheckBudgets = await indexdbService.getPaycheckBudgetsByEmail(userEmail);
             const businessBudgets = await indexdbService.getBusinessBudgetsByEmail(userEmail);
             const customCategories = await indexdbService.getCategories('custom');
-
-            // Fetch categories using the specific category getter methods
-            // The IndexDBService has getCategories method that accepts a budgetType parameter
             const paycheckCategories = await indexdbService.getCategories('paycheck');
             const businessCategories = await indexdbService.getCategories('business');
 
-            if (budgets.length === 0 && paycheckBudgets.length === 0 && businessBudgets.length === 0) {
+            if (customBudgets.length === 0 && paycheckBudgets.length === 0 && businessBudgets.length === 0) {
                 throw new Error('No budget data to backup');
             }
 
@@ -37,7 +34,7 @@ export const backupService = {
                     timestamp: new Date().toISOString(),
                     userEmail,
                     summary: {
-                        budgetsCount: budgets.length,
+                        budgetsCount: customBudgets.length,
                         paycheckBudgetsCount: paycheckBudgets.length,
                         businessBudgetsCount: businessBudgets.length,
                         paycheckCategoriesCount: paycheckCategories.length,
@@ -46,7 +43,7 @@ export const backupService = {
                     }
                 },
                 data: {
-                    budgets,
+                    customBudgets,
                     paycheckBudgets,
                     businessBudgets,
                     paycheckCategories,
@@ -162,17 +159,14 @@ export const backupService = {
                 const businessBudgets = await indexdbService.getBusinessBudgetsByEmail(userEmail);
                 return budgets.length > 0 || paycheckBudgets.length > 0 || businessBudgets.length > 0;
             } else if (budgetType === 'paycheck') {
-                // Check only paycheck budgets
                 const paycheckBudgets = await indexdbService.getPaycheckBudgetsByEmail(userEmail);
                 return paycheckBudgets.length > 0;
             } else if (budgetType === 'business') {
-                // Check only business budgets
                 const businessBudgets = await indexdbService.getBusinessBudgetsByEmail(userEmail);
                 return businessBudgets.length > 0;
             } else if (budgetType === 'custom') {
-                // Check only custom budgets
-                const budgets = await indexdbService.getBudgetsByEmail(userEmail);
-                return budgets.length > 0;
+                const customBudgets = await indexdbService.getCustomBudgetsByEmail(userEmail);
+                return customBudgets.length > 0;
             }
 
             return false;
