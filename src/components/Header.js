@@ -28,7 +28,7 @@ export const Header = ({
     const { showToast } = useToast();
 
     const currentBudgetType = budgetTypes[budgetType] || budgetTypes.paycheck;
-    
+
     const createButtonText = currentBudgetType.buttonText || 'Create New Budget';
 
     const onLogout = async () => {

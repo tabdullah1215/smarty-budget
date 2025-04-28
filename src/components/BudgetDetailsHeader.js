@@ -1,5 +1,5 @@
 
-// First let's define the BudgetHeader component within PaycheckBudgetDetails.js
+
 import {Loader2, PlusCircle, Printer, Share2, X} from "lucide-react";
 import React from "react";
 
@@ -7,8 +7,8 @@ const BudgetDetailsHeader = ({
                                   budget,
                                   totalSpent,
                                   remainingAmount,
-                                 hasBudgetLimit = true, // Default to true for backward compatibility
-                                 budgetType = "paycheck", // Default to paycheck for backward compatibility
+                                 hasBudgetLimit = true,
+                                 budgetType = "paycheck",
                                   onPrint,
                                   onShare,
                                   onClose,
@@ -22,11 +22,17 @@ const BudgetDetailsHeader = ({
                               }) => {
 
     const labels = {
-        title: budgetType === "business" ? "Project Expenses" : "Expense Items",
-        amountLabel: budgetType === "business" ? "Budget Limit" : "Paycheck",
+        title: budgetType === "business" ? "Project Expenses" :
+            budgetType === "custom" ? "Budget Items" :
+                "Expense Items",
+        amountLabel: budgetType === "business" ? "Budget Limit" :
+            budgetType === "custom" ? "Budget Limit" :
+                "Paycheck",
         spentLabel: "Spent",
         remainingLabel: "Remaining",
-        buttonLabel: budgetType === "business" ? "Record Expense" : "Record Expense!"
+        buttonLabel: budgetType === "business" ? "Record Expense" :
+            budgetType === "custom" ? "Add Budget Item" :
+                "Record Expense!"
     };
 
     return (
@@ -112,10 +118,14 @@ const BudgetDetailsHeader = ({
                     onClick={handleAddItemClick}
                     disabled={isAddingItem || isSaving}
                     className={`inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white 
-                        ${budgetType === "business" ? "bg-emerald-800 hover:bg-emerald-900" : "bg-indigo-600 hover:bg-indigo-700"}
-                        focus:outline-none focus:ring-2 focus:ring-offset-2 
-                        ${budgetType === "business" ? "focus:ring-emerald-500" : "focus:ring-indigo-500"}
-                        transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed`}
+    ${budgetType === "business" ? "bg-emerald-800 hover:bg-emerald-900" :
+                        budgetType === "custom" ? "bg-purple-600 hover:bg-purple-700" :
+                            "bg-indigo-600 hover:bg-indigo-700"}
+    focus:outline-none focus:ring-2 focus:ring-offset-2 
+    ${budgetType === "business" ? "focus:ring-emerald-500" :
+                        budgetType === "custom" ? "focus:ring-purple-500" :
+                            "focus:ring-indigo-500"}
+    transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
                     {isAddingItem ? (
                         <Loader2 className="h-6 w-6 mr-2 animate-spin stroke-[1.5]"/>

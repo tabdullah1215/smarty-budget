@@ -50,6 +50,38 @@ class IndexDBService {
                     backupStore.createIndex('timestamp', 'timestamp', { unique: false });
                 }
 
+                if (!db.objectStoreNames.contains(DB_CONFIG.stores.customCategories)) {
+                    const customCategoriesStore = db.createObjectStore(DB_CONFIG.stores.customCategories, { keyPath: 'id' });
+                    customCategoriesStore.createIndex('name', 'name', { unique: true });
+
+                    // Add default custom budget categories
+                    const defaultCustomCategories = [
+                        'Housing',
+                        'Food',
+                        'Transportation',
+                        'Utilities',
+                        'Insurance',
+                        'Healthcare',
+                        'Saving & Investments',
+                        'Debt Payments',
+                        'Personal Spending',
+                        'Recreation & Entertainment',
+                        'Education',
+                        'Gifts & Donations',
+                        'Travel',
+                        'Childcare',
+                        'Taxes',
+                        'Miscellaneous'
+                    ];
+
+                    defaultCustomCategories.forEach((category, index) => {
+                        customCategoriesStore.add({
+                            id: index + 1,
+                            name: category
+                        });
+                    });
+                }
+
                 // Add the paycheckCategories object store
                 if (!db.objectStoreNames.contains(DB_CONFIG.stores.paycheckCategories)) {
                     const categoriesStore = db.createObjectStore(DB_CONFIG.stores.paycheckCategories, { keyPath: 'id' });

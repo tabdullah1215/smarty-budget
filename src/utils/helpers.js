@@ -9,7 +9,7 @@ export const budgetTypes = {
         id: 'custom',
         title: 'Custom Budgets',
         description: 'Create and manage custom budget plans',
-        route: '/budgets',
+        route: '/custom-budgets',
         icon: 'Calculator',
         color: 'text-purple-600',
         borderColor: 'border-purple-600',

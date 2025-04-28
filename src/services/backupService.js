@@ -20,6 +20,7 @@ export const backupService = {
             const budgets = await indexdbService.getBudgetsByEmail(userEmail);
             const paycheckBudgets = await indexdbService.getPaycheckBudgetsByEmail(userEmail);
             const businessBudgets = await indexdbService.getBusinessBudgetsByEmail(userEmail);
+            const customCategories = await indexdbService.getCategories('custom');
 
             // Fetch categories using the specific category getter methods
             // The IndexDBService has getCategories method that accepts a budgetType parameter
@@ -40,7 +41,8 @@ export const backupService = {
                         paycheckBudgetsCount: paycheckBudgets.length,
                         businessBudgetsCount: businessBudgets.length,
                         paycheckCategoriesCount: paycheckCategories.length,
-                        businessCategoriesCount: businessCategories.length
+                        businessCategoriesCount: businessCategories.length,
+                        customCategoriesCount: customCategories.length
                     }
                 },
                 data: {
@@ -48,7 +50,8 @@ export const backupService = {
                     paycheckBudgets,
                     businessBudgets,
                     paycheckCategories,
-                    businessCategories
+                    businessCategories,
+                    customCategories
                 }
             };
         } catch (error) {
@@ -215,10 +218,12 @@ export const backupService = {
                     try {
                         // If no specific budget type is provided or 'custom', restore custom budgets
                         if (!budgetType || budgetType === 'custom') {
-                            if (backup.data.budgets && backup.data.budgets.length > 0) {
-                                for (const budget of backup.data.budgets) {
-                                    await indexdbService.addBudget({...budget, userEmail});
-                                    result.budgetsRestored++;
+                            if (backup.data.customCategories && backup.data.customCategories.length > 0) {
+                                const existingCategories = await indexdbService.getCategories('custom');
+                                for (const category of backup.data.customCategories) {
+                                    if (!existingCategories.some(c => c.name === category.name)) {
+                                        await indexdbService.addCategory(category, 'custom');
+                                    }
                                 }
                             }
                         }

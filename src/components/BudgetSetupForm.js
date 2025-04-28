@@ -4,6 +4,7 @@ import { X, Loader2, Calendar, DollarSign, Briefcase, Users } from 'lucide-react
 import { withMinimumDelay } from '../utils/withDelay';
 import { modalTransitions, backdropTransitions } from '../utils/transitions';
 import { disableScroll, enableScroll } from '../utils/scrollLock';
+import { Calculator } from 'lucide-react';
 
 export const BudgetSetupForm = ({
                                     onSave,
@@ -49,6 +50,24 @@ export const BudgetSetupForm = ({
             amountLabel: 'Budget Limit (Optional)',
             amountRequired: false,
             amountHelpText: 'Leave empty or set to 0 if you just want to track expenses without a budget limit'
+        },
+        custom: {
+            title: 'New Custom Budget',
+            icon: <Calculator className="h-8 w-8 text-purple-600" />,
+            primaryColor: 'purple',
+            primaryShade: '600',
+            hoverShade: '700',
+            buttonText: 'Create Budget',
+            amountLabel: 'Budget Limit',
+            amountRequired: true,
+            amountHelpText: '',
+            descriptionPlaceholder: 'e.g., Monthly household expenses',
+            formIcons: {
+                category: 'CategoryIcon',
+                description: 'FileTextIcon',
+                date: 'CalendarIcon',
+                amount: 'DollarSignIcon'
+            }
         }
     };
 
