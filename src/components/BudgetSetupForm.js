@@ -1,6 +1,8 @@
+// src/components/BudgetSetupForm.js - Updated version
+
 import React, { useState, useEffect } from 'react';
 import { useTransition, animated } from '@react-spring/web';
-import { X, Loader2, Calendar, DollarSign, Briefcase, Users } from 'lucide-react';
+import { X, Loader2, Calendar, DollarSign, Briefcase, Users, Text } from 'lucide-react';
 import { withMinimumDelay } from '../utils/withDelay';
 import { modalTransitions, backdropTransitions } from '../utils/transitions';
 import { disableScroll, enableScroll } from '../utils/scrollLock';
@@ -10,9 +12,9 @@ export const BudgetSetupForm = ({
                                     onSave,
                                     onClose,
                                     isSaving = false,
-                                    budgetType = 'paycheck' // 'paycheck' or 'business'
+                                    budgetType = 'paycheck' // 'paycheck', 'business', or 'custom'
                                 }) => {
-    // Shared state across both budget types
+    // Shared state across all budget types
     const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
     const [amount, setAmount] = useState('');
     const [isCancelling, setIsCancelling] = useState(false);
@@ -23,6 +25,9 @@ export const BudgetSetupForm = ({
     // Business budget specific state
     const [projectName, setProjectName] = useState('');
     const [client, setClient] = useState('');
+
+    // Custom budget specific state
+    const [budgetName, setBudgetName] = useState('');
 
     const transitions = useTransition(show, modalTransitions);
     const backdropTransition = useTransition(show, backdropTransitions);
@@ -61,13 +66,7 @@ export const BudgetSetupForm = ({
             amountLabel: 'Budget Limit',
             amountRequired: true,
             amountHelpText: '',
-            descriptionPlaceholder: 'e.g., Monthly household expenses',
-            formIcons: {
-                category: 'CategoryIcon',
-                description: 'FileTextIcon',
-                date: 'CalendarIcon',
-                amount: 'DollarSignIcon'
-            }
+            namePlaceholder: 'Vacation, DYI Project, Wedding, etc...',
         }
     };
 
@@ -97,7 +96,7 @@ export const BudgetSetupForm = ({
                     budgetData.date = date;
                     budgetData.amount = Number(amount);
                     budgetData.items = [];
-                } else {
+                } else if (budgetType === 'business') {
                     // Business budget data format
                     const fullProjectName = `${projectName} - ${client || 'No Client'}`;
                     budgetData.name = fullProjectName;
@@ -105,6 +104,12 @@ export const BudgetSetupForm = ({
                     budgetData.amount = amount ? Number(amount) : 0;
                     budgetData.projectName = projectName;
                     budgetData.client = client;
+                    budgetData.items = [];
+                } else if (budgetType === 'custom') {
+                    // Custom budget data format
+                    budgetData.name = budgetName;
+                    budgetData.date = date;
+                    budgetData.amount = Number(amount);
                     budgetData.items = [];
                 }
 
@@ -158,7 +163,7 @@ export const BudgetSetupForm = ({
                                         onClick={handleCancel}
                                         disabled={isCancelling || isSaving}
                                         className="text-gray-400 hover:text-gray-500 focus:outline-none transition-colors duration-200
-                                        disabled:opacity-50 disabled:cursor-not-allowed p-2 hover:bg-gray-100 rounded-full"
+                                    disabled:opacity-50 disabled:cursor-not-allowed p-2 hover:bg-gray-100 rounded-full"
                                     >
                                         {isCancelling ? (
                                             <Loader2 className="h-6 w-6 animate-spin" />
@@ -183,8 +188,8 @@ export const BudgetSetupForm = ({
                                                         value={projectName}
                                                         onChange={(e) => setProjectName(e.target.value)}
                                                         className={`block w-full rounded-lg border-2 border-gray-300 px-4 py-3
-                                                        shadow-sm focus:border-emerald-500 focus:ring-4 focus:ring-emerald-200
-                                                        focus:ring-opacity-50 transition-colors duration-200`}
+                                                    shadow-sm focus:border-emerald-500 focus:ring-4 focus:ring-emerald-200
+                                                    focus:ring-opacity-50 transition-colors duration-200`}
                                                         placeholder="Enter project name"
                                                         required
                                                         disabled={isSaving}
@@ -203,8 +208,8 @@ export const BudgetSetupForm = ({
                                                         value={client}
                                                         onChange={(e) => setClient(e.target.value)}
                                                         className={`block w-full rounded-lg border-2 border-gray-300 px-4 py-3
-                                                        shadow-sm focus:border-emerald-500 focus:ring-4 focus:ring-emerald-200
-                                                        focus:ring-opacity-50 transition-colors duration-200`}
+                                                    shadow-sm focus:border-emerald-500 focus:ring-4 focus:ring-emerald-200
+                                                    focus:ring-opacity-50 transition-colors duration-200`}
                                                         placeholder="Enter client name"
                                                         disabled={isSaving}
                                                     />
@@ -213,11 +218,35 @@ export const BudgetSetupForm = ({
                                         </>
                                     )}
 
+                                    {/* Custom Budget-specific Fields */}
+                                    {budgetType === 'custom' && (
+                                        <div>
+                                            <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
+                                                <Calculator className="h-5 w-5 text-gray-400 mr-2" />
+                                                Budget Name *
+                                            </label>
+                                            <div className="relative">
+                                                <input
+                                                    type="text"
+                                                    value={budgetName}
+                                                    onChange={(e) => setBudgetName(e.target.value)}
+                                                    className={`block w-full rounded-lg border-2 border-gray-300 px-4 py-3
+                                                shadow-sm focus:border-${currentConfig.primaryColor}-500 focus:ring-4 focus:ring-${currentConfig.primaryColor}-200
+                                                focus:ring-opacity-50 transition-colors duration-200`}
+                                                    placeholder={currentConfig.namePlaceholder || "Enter budget name"}
+                                                    required
+                                                    disabled={isSaving}
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
+
                                     {/* Common Date Field */}
                                     <div>
                                         <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
                                             <Calendar className="h-5 w-5 text-gray-400 mr-2" />
-                                            {budgetType === 'business' ? 'Start Date' : 'Paycheck Date'}
+                                            {budgetType === 'business' ? 'Start Date' :
+                                                budgetType === 'custom' ? 'Budget Date' : 'Paycheck Date'}
                                         </label>
                                         <div className="relative">
                                             <input
@@ -225,9 +254,9 @@ export const BudgetSetupForm = ({
                                                 value={date}
                                                 onChange={(e) => setDate(e.target.value)}
                                                 className={`block w-full rounded-lg border-2 border-gray-300 px-4 py-3
-                                                shadow-sm focus:border-${currentConfig.primaryColor}-500 focus:ring-4 focus:ring-${currentConfig.primaryColor}-200
-                                                focus:ring-opacity-50 transition-colors duration-200
-                                                appearance-none bg-white`}
+                                            shadow-sm focus:border-${currentConfig.primaryColor}-500 focus:ring-4 focus:ring-${currentConfig.primaryColor}-200
+                                            focus:ring-opacity-50 transition-colors duration-200
+                                            appearance-none bg-white`}
                                                 required
                                                 disabled={isSaving}
                                                 style={{
@@ -253,8 +282,8 @@ export const BudgetSetupForm = ({
                                                 min="0"
                                                 step="0.01"
                                                 className={`block w-full rounded-lg border-2 border-gray-300 pl-8 pr-4 py-3
-                                                shadow-sm focus:border-${currentConfig.primaryColor}-500 focus:ring-4 focus:ring-${currentConfig.primaryColor}-200
-                                                focus:ring-opacity-50 transition-colors duration-200`}
+                                            shadow-sm focus:border-${currentConfig.primaryColor}-500 focus:ring-4 focus:ring-${currentConfig.primaryColor}-200
+                                            focus:ring-opacity-50 transition-colors duration-200`}
                                                 placeholder={budgetType === 'business' ? "Leave empty for no budget limit" : "0.00"}
                                                 required={currentConfig.amountRequired}
                                                 disabled={isSaving}
@@ -281,11 +310,11 @@ export const BudgetSetupForm = ({
                                             onClick={handleCancel}
                                             disabled={isCancelling || isSaving}
                                             className="inline-flex items-center px-4 py-2 bg-white text-gray-700
-                                            border-2 border-gray-300 rounded-lg hover:bg-gray-50
-                                            focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500
-                                            transition-all duration-200
-                                            disabled:opacity-50 disabled:cursor-not-allowed
-                                            min-w-[100px] justify-center shadow-sm"
+                                        border-2 border-gray-300 rounded-lg hover:bg-gray-50
+                                        focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500
+                                        transition-all duration-200
+                                        disabled:opacity-50 disabled:cursor-not-allowed
+                                        min-w-[100px] justify-center shadow-sm"
                                         >
                                             {isCancelling ? (
                                                 <>
@@ -300,12 +329,12 @@ export const BudgetSetupForm = ({
                                             type="submit"
                                             disabled={isSaving || isAdding}
                                             className={`inline-flex items-center px-4 py-2 border-2 border-transparent
-                                            rounded-lg shadow-sm text-sm font-medium text-white
-                                            bg-${currentConfig.primaryColor}-${currentConfig.primaryShade} hover:bg-${currentConfig.primaryColor}-${currentConfig.hoverShade}
-                                            focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-${currentConfig.primaryColor}-500
-                                            transition-all duration-200
-                                            disabled:opacity-50 disabled:cursor-not-allowed
-                                            min-w-[100px] justify-center`}
+                                        rounded-lg shadow-sm text-sm font-medium text-white
+                                        bg-${currentConfig.primaryColor}-${currentConfig.primaryShade} hover:bg-${currentConfig.primaryColor}-${currentConfig.hoverShade}
+                                        focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-${currentConfig.primaryColor}-500
+                                        transition-all duration-200
+                                        disabled:opacity-50 disabled:cursor-not-allowed
+                                        min-w-[100px] justify-center`}
                                         >
                                             {isAdding || isSaving ? (
                                                 <>
