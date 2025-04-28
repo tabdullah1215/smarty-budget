@@ -1,5 +1,3 @@
-// src/components/BudgetSetupForm.js - Updated version
-
 import React, { useState, useEffect } from 'react';
 import { useTransition, animated } from '@react-spring/web';
 import { X, Loader2, Calendar, DollarSign, Briefcase, Users, Text } from 'lucide-react';
@@ -14,7 +12,7 @@ export const BudgetSetupForm = ({
                                     isSaving = false,
                                     budgetType = 'paycheck' // 'paycheck', 'business', or 'custom'
                                 }) => {
-    // Shared state across all budget types
+
     const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
     const [amount, setAmount] = useState('');
     const [isCancelling, setIsCancelling] = useState(false);
@@ -22,17 +20,15 @@ export const BudgetSetupForm = ({
     const [isAdding, setIsAdding] = useState(false);
     const [show, setShow] = useState(true);
 
-    // Business budget specific state
     const [projectName, setProjectName] = useState('');
     const [client, setClient] = useState('');
 
-    // Custom budget specific state
     const [budgetName, setBudgetName] = useState('');
 
     const transitions = useTransition(show, modalTransitions);
     const backdropTransition = useTransition(show, backdropTransitions);
 
-    // Configuration object for type-specific styling and behavior
+
     const config = {
         paycheck: {
             title: 'New Paycheck Budget',
@@ -70,7 +66,7 @@ export const BudgetSetupForm = ({
         }
     };
 
-    // Get configuration for current budget type
+
     const currentConfig = config[budgetType] || config.paycheck;
 
     useEffect(() => {
@@ -90,14 +86,12 @@ export const BudgetSetupForm = ({
                 const budgetData = {};
 
                 if (budgetType === 'paycheck') {
-                    // Paycheck budget data format
                     const budgetName = `Budget for ${new Date(date).toLocaleDateString()} Paycheck`;
                     budgetData.name = budgetName;
                     budgetData.date = date;
                     budgetData.amount = Number(amount);
                     budgetData.items = [];
                 } else if (budgetType === 'business') {
-                    // Business budget data format
                     const fullProjectName = `${projectName} - ${client || 'No Client'}`;
                     budgetData.name = fullProjectName;
                     budgetData.date = date;
@@ -106,7 +100,6 @@ export const BudgetSetupForm = ({
                     budgetData.client = client;
                     budgetData.items = [];
                 } else if (budgetType === 'custom') {
-                    // Custom budget data format
                     budgetData.name = budgetName;
                     budgetData.date = date;
                     budgetData.amount = Number(amount);
@@ -116,7 +109,6 @@ export const BudgetSetupForm = ({
                 await onSave(budgetData);
                 setShow(false); // Trigger exit animation
                 await withMinimumDelay(async () => {}); // Wait for animation
-                onClose(); // Close after animation completes
             }, 2000);
         } catch (error) {
             console.error('Error saving:', error);
@@ -174,7 +166,6 @@ export const BudgetSetupForm = ({
                                 </div>
 
                                 <form onSubmit={handleSubmit} className="space-y-6">
-                                    {/* Business-specific Fields */}
                                     {budgetType === 'business' && (
                                         <>
                                             <div>
@@ -217,8 +208,6 @@ export const BudgetSetupForm = ({
                                             </div>
                                         </>
                                     )}
-
-                                    {/* Custom Budget-specific Fields */}
                                     {budgetType === 'custom' && (
                                         <div>
                                             <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
@@ -240,8 +229,6 @@ export const BudgetSetupForm = ({
                                             </div>
                                         </div>
                                     )}
-
-                                    {/* Common Date Field */}
                                     <div>
                                         <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
                                             <Calendar className="h-5 w-5 text-gray-400 mr-2" />
@@ -266,8 +253,6 @@ export const BudgetSetupForm = ({
                                             <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 h-6 w-6 text-gray-400 pointer-events-none" />
                                         </div>
                                     </div>
-
-                                    {/* Common Amount Field */}
                                     <div>
                                         <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
                                             <DollarSign className="h-5 w-5 text-gray-400 mr-2" />
@@ -295,15 +280,11 @@ export const BudgetSetupForm = ({
                                             )}
                                         </div>
                                     </div>
-
-                                    {/* Error Display */}
                                     {error && (
                                         <div className="text-red-600 text-sm bg-red-50 p-3 rounded-lg border border-red-200">
                                             {error}
                                         </div>
                                     )}
-
-                                    {/* Form Actions */}
                                     <div className="flex justify-end space-x-4 pt-6">
                                         <button
                                             type="button"

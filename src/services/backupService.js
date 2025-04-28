@@ -11,12 +11,10 @@ export const backupService = {
         if (!userEmail) throw new Error('User not authenticated');
 
         try {
-            // Make sure DB is initialized first
             if (!indexdbService.db) {
                 await indexdbService.initDB();
             }
 
-            // Fetch all budget data
             const customBudgets = await indexdbService.getCustomBudgetsByEmail(userEmail);
             const paycheckBudgets = await indexdbService.getPaycheckBudgetsByEmail(userEmail);
             const businessBudgets = await indexdbService.getBusinessBudgetsByEmail(userEmail);
@@ -73,7 +71,6 @@ export const backupService = {
             document.body.removeChild(link);
             URL.revokeObjectURL(url);
 
-            // Record backup time for reminder purposes
             localStorage.setItem('lastBackupDate', new Date().toISOString());
 
             return backup;
@@ -89,7 +86,6 @@ export const backupService = {
 
         let path = "Downloads folder";
 
-        // Estimate download path based on OS and browser
         if (os === 'Windows') {
             path = "Downloads folder (usually C:\\Users\\YourName\\Downloads)";
             if (browser === 'Firefox') {
@@ -154,7 +150,7 @@ export const backupService = {
 
         try {
             if (!budgetType) {
-                const budgets = await indexdbService.getBudgetsByEmail(userEmail);
+                const budgets = await indexdbService.getCustomBudgetsByEmail(userEmail);
                 const paycheckBudgets = await indexdbService.getPaycheckBudgetsByEmail(userEmail);
                 const businessBudgets = await indexdbService.getBusinessBudgetsByEmail(userEmail);
                 return budgets.length > 0 || paycheckBudgets.length > 0 || businessBudgets.length > 0;
@@ -185,7 +181,6 @@ export const backupService = {
                     const backup = JSON.parse(e.target.result);
                     const userEmail = authService.getUserInfo()?.sub;
 
-                    // Basic validation
                     if (!backup.metadata || !backup.data) {
                         throw new Error('Invalid backup file format');
                     }
@@ -194,7 +189,6 @@ export const backupService = {
                         throw new Error('This backup belongs to a different user');
                     }
 
-                    // Check if the user has existing data for the specified budget type
                     const hasData = await this.hasExistingData(budgetType);
                     if (hasData) {
                         throw new Error(`Cannot restore: You already have ${budgetType ? budgetType : ''} data in your account`);
@@ -204,14 +198,21 @@ export const backupService = {
                     const result = {
                         success: true,
                         timestamp: backup.metadata.timestamp,
-                        budgetsRestored: 0,
+                        customBudgetsRestored: 0,
                         paycheckBudgetsRestored: 0,
                         businessBudgetsRestored: 0
                     };
 
                     try {
-                        // If no specific budget type is provided or 'custom', restore custom budgets
                         if (!budgetType || budgetType === 'custom') {
+
+                            if (backup.data.customBudgets && backup.data.customBudgets.length > 0) {
+                                for (const budget of backup.data.customBudgets) {
+                                    await indexdbService.addCustomBudget({...budget, userEmail});
+                                    result.customBudgetsRestored = (result.customBudgetsRestored || 0) + 1;
+                                }
+                            }
+
                             if (backup.data.customCategories && backup.data.customCategories.length > 0) {
                                 const existingCategories = await indexdbService.getCategories('custom');
                                 for (const category of backup.data.customCategories) {
@@ -222,7 +223,6 @@ export const backupService = {
                             }
                         }
 
-                        // If no specific budget type is provided or 'paycheck', restore paycheck budgets
                         if (!budgetType || budgetType === 'paycheck') {
                             if (backup.data.paycheckBudgets && backup.data.paycheckBudgets.length > 0) {
                                 for (const budget of backup.data.paycheckBudgets) {
@@ -231,7 +231,6 @@ export const backupService = {
                                 }
                             }
 
-                            // Import paycheck categories if restoring paycheck data
                             if (backup.data.paycheckCategories && backup.data.paycheckCategories.length > 0) {
                                 const existingCategories = await indexdbService.getCategories('paycheck');
                                 for (const category of backup.data.paycheckCategories) {
@@ -242,7 +241,6 @@ export const backupService = {
                             }
                         }
 
-                        // If no specific budget type is provided or 'business', restore business budgets
                         if (!budgetType || budgetType === 'business') {
                             if (backup.data.businessBudgets && backup.data.businessBudgets.length > 0) {
                                 for (const budget of backup.data.businessBudgets) {
@@ -251,7 +249,6 @@ export const backupService = {
                                 }
                             }
 
-                            // Import business categories if restoring business data
                             if (backup.data.businessCategories && backup.data.businessCategories.length > 0) {
                                 const existingCategories = await indexdbService.getCategories('business');
                                 for (const category of backup.data.businessCategories) {
