@@ -14,7 +14,8 @@ export const budgetTypes = {
         color: 'text-purple-600',
         borderColor: 'border-purple-600',
         visible: false,
-        enabled: false
+        enabled: false,
+        buttonText: 'Create New Budget'
     },
     paycheck: {
         id: 'paycheck',
@@ -25,7 +26,8 @@ export const budgetTypes = {
         color: 'text-blue-600',
         borderColor: 'border-blue-600',
         visible: true,
-        enabled: true
+        enabled: true,
+        buttonText: 'Create New Budget'
     },
     business: {
         id: 'business',
@@ -36,7 +38,8 @@ export const budgetTypes = {
         color: 'text-emerald-800',
         borderColor: 'border-emerald-800',
         visible: true,
-        enabled: true
+        enabled: true,
+        buttonText: 'Create New Project'
     },
     savings: {
         id: 'savings',
@@ -47,7 +50,8 @@ export const budgetTypes = {
         color: 'text-orange-800',
         borderColor: 'border-orange-800',
         visible: true,
-        enabled: false
+        enabled: false,
+        buttonText: 'Create New Goal'
     }
 };
 

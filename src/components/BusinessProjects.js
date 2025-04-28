@@ -9,7 +9,6 @@ import DeleteConfirmationModal from "./DeleteConfirmationModal";
 import { BudgetCard } from './BudgetCard';
 import authService from '../services/authService';
 import { downloadCSV } from '../utils/budgetCsvGenerator';
-import { BusinessExpenseProjectForm } from './BusinessExpenseProjectForm';
 import { BusinessProjectDetails } from './BusinessProjectDetails';
 import { useBusinessBudgets } from '../hooks/useBusinessBudget';
 import StaticRestoreButton from './StaticRestoreButton';
@@ -217,6 +216,7 @@ export const BusinessProjects = () => {
                 isCreatingBudget={isCreating}
                 selectedBudgets={selectedBudgetObjects}
                 onDownloadCsv={handleDownloadCsv}
+                budgetType="business"
             />
 
             <div className="pt-64 md:pt-40 px-4 sm:px-6 lg:px-8">

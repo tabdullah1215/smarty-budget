@@ -209,6 +209,7 @@ export const PaycheckBudgets = () => {
                 isCreatingBudget={isCreating}
                 selectedBudgets={selectedBudgetObjects} // Pass complete budget objects
                 onDownloadCsv={handleDownloadCsv}
+                budgetType="paycheck"
             />
 
             {/* Increased padding to ensure content is below header */}
