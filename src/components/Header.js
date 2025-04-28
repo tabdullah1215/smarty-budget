@@ -15,7 +15,7 @@ export const Header = ({
                            isCreatingBudget = false,
                            onDownloadCsv = () => {},
                            selectedBudgets = [],
-                           budgetType = 'paycheck' // Default to paycheck if not specified
+                           budgetType = 'paycheck'
                        }) => {
     const { handleLogout } = useLogin();
     const [isLoggingOut, setIsLoggingOut] = React.useState(false);
@@ -27,10 +27,8 @@ export const Header = ({
     const isHomePage = location.pathname === '/' || location.pathname === '/dashboard';
     const { showToast } = useToast();
 
-    // Get the current budget type configuration
     const currentBudgetType = budgetTypes[budgetType] || budgetTypes.paycheck;
-
-    // Get the button text based on the current budget type
+    
     const createButtonText = currentBudgetType.buttonText || 'Create New Budget';
 
     const onLogout = async () => {
