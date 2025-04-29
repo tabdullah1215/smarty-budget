@@ -208,6 +208,7 @@ export const CustomBudgets = () => {
                 isCreatingBudget={isCreating}
                 selectedBudgets={selectedBudgetObjects}
                 onDownloadCsv={handleDownloadCsv}
+                budgetType="custom"
             />
 
             {/* Increased padding to ensure content is below header */}

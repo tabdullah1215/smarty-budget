@@ -26,6 +26,19 @@ export const BudgetCard = ({
     // Add a fade-in animation for newly added budget cards
     const [hasMounted, setHasMounted] = useState(false);
 
+    // Define theme colors based on budget type
+    const getIconColor = () => {
+        if (budgetType === 'custom') {
+            return "text-purple-600";
+        } else if (budgetType === 'business') {
+            return "text-emerald-800";
+        } else {
+            return "text-blue-600";
+        }
+    };
+
+    const iconColor = getIconColor();
+
     // On initial mount, set hasMounted to true after a short delay
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -126,8 +139,8 @@ export const BudgetCard = ({
                             if (!openingBudgetId) onOpenBudget(budget);
                         }}
                         disabled={openingBudgetId === budget.id || confirmingDeleteId === budget.id}
-                        className="text-indigo-600 hover:text-indigo-800 transition-colors duration-200
-                          disabled:opacity-50 disabled:cursor-not-allowed"
+                        className={`${iconColor} hover:opacity-75 transition-colors duration-200
+                          disabled:opacity-50 disabled:cursor-not-allowed`}
                         title="View details"
                     >
                         {openingBudgetId === budget.id ? (

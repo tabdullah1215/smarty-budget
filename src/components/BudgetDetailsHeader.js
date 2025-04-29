@@ -1,25 +1,43 @@
-
-
 import {Loader2, PlusCircle, Printer, Share2, X} from "lucide-react";
 import React from "react";
 
 const BudgetDetailsHeader = ({
-                                  budget,
-                                  totalSpent,
-                                  remainingAmount,
+                                 budget,
+                                 totalSpent,
+                                 remainingAmount,
                                  hasBudgetLimit = true,
                                  budgetType = "paycheck",
-                                  onPrint,
-                                  onShare,
-                                  onClose,
-                                  isPrinting,
-                                  isSharing,
-                                  isClosing,
-                                  isSaving,
-                                  handleAddItemClick,
-                                  isAddingItem,
-                                  showPrintShare = false
-                              }) => {
+                                 onPrint,
+                                 onShare,
+                                 onClose,
+                                 isPrinting,
+                                 isSharing,
+                                 isClosing,
+                                 isSaving,
+                                 handleAddItemClick,
+                                 isAddingItem,
+                                 showPrintShare = false
+                             }) => {
+
+    // Define button and text colors based on budget type
+    // Updated to match the colors used in Header.js
+    const buttonColors = {
+        "paycheck": {
+            bg: "bg-blue-600 hover:bg-blue-700",
+            focus: "focus:ring-blue-500"
+        },
+        "business": {
+            bg: "bg-emerald-800 hover:bg-emerald-900",
+            focus: "focus:ring-emerald-500"
+        },
+        "custom": {
+            bg: "bg-purple-600 hover:bg-purple-700",
+            focus: "focus:ring-purple-500"
+        }
+    };
+
+    // Get the button colors for current budget type
+    const buttonColor = buttonColors[budgetType] || buttonColors.paycheck;
 
     const labels = {
         title: budgetType === "business" ? "Project Expenses" :
@@ -32,7 +50,7 @@ const BudgetDetailsHeader = ({
         remainingLabel: "Remaining",
         buttonLabel: budgetType === "business" ? "Record Expense" :
             budgetType === "custom" ? "Add Budget Item" :
-                "Record Expense!"
+                "Record Expense"
     };
 
     return (
@@ -118,14 +136,10 @@ const BudgetDetailsHeader = ({
                     onClick={handleAddItemClick}
                     disabled={isAddingItem || isSaving}
                     className={`inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white 
-    ${budgetType === "business" ? "bg-emerald-800 hover:bg-emerald-900" :
-                        budgetType === "custom" ? "bg-purple-600 hover:bg-purple-700" :
-                            "bg-indigo-600 hover:bg-indigo-700"}
-    focus:outline-none focus:ring-2 focus:ring-offset-2 
-    ${budgetType === "business" ? "focus:ring-emerald-500" :
-                        budgetType === "custom" ? "focus:ring-purple-500" :
-                            "focus:ring-indigo-500"}
-    transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed`}
+                    ${buttonColor.bg} 
+                    focus:outline-none focus:ring-2 focus:ring-offset-2 
+                    ${buttonColor.focus}
+                    transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
                     {isAddingItem ? (
                         <Loader2 className="h-6 w-6 mr-2 animate-spin stroke-[1.5]"/>

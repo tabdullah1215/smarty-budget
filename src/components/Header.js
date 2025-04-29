@@ -1,3 +1,5 @@
+// src/components/Header.js - Fixed version with safeguards for color classes
+
 import React, { useState, useEffect } from 'react';
 import { useLogin } from '../hooks/useLogin';
 import authService from '../services/authService';
@@ -27,9 +29,26 @@ export const Header = ({
     const isHomePage = location.pathname === '/' || location.pathname === '/dashboard';
     const { showToast } = useToast();
 
-    const currentBudgetType = budgetTypes[budgetType] || budgetTypes.paycheck;
+    // Normalize budgetType to lowercase to avoid case sensitivity issues
+    const normalizedBudgetType = budgetType?.toLowerCase() || 'paycheck';
+
+    const currentBudgetType = budgetTypes[normalizedBudgetType] || budgetTypes.paycheck;
 
     const createButtonText = currentBudgetType.buttonText || 'Create New Budget';
+
+    // IMPORTANT: Define fixed button classes instead of using dynamic classes
+    // This ensures Tailwind won't purge these classes during build
+    const getButtonClasses = () => {
+        // Include all possible color variations directly in the code
+        // This ensures Tailwind preserves all these classes during build
+        if (normalizedBudgetType === 'custom') {
+            return "bg-purple-600 hover:bg-purple-700 focus:ring-purple-500";
+        } else if (normalizedBudgetType === 'business') {
+            return "bg-emerald-800 hover:bg-emerald-900 focus:ring-emerald-500";
+        } else {
+            return "bg-blue-600 hover:bg-blue-700 focus:ring-blue-500";
+        }
+    };
 
     const onLogout = async () => {
         setIsLoggingOut(true);
@@ -114,6 +133,10 @@ export const Header = ({
         return '';
     };
 
+    // For debugging - you can remove this in production
+    console.log("Current budget type:", normalizedBudgetType);
+    console.log("Button classes:", getButtonClasses());
+
     return (
         <div className="fixed top-0 left-0 right-0 bg-white z-10 shadow-lg">
             <div className="max-w-7xl mx-auto py-2 px-4 sm:px-6 lg:px-8">
@@ -160,12 +183,17 @@ export const Header = ({
                             <button
                                 onClick={onCreateClick}
                                 disabled={isCreatingBudget}
-                                className="inline-flex items-center justify-center px-4 py-2
-                                    border border-transparent text-sm font-medium rounded-md
-                                    shadow-sm text-white bg-indigo-600 hover:bg-indigo-700
-                                    focus:outline-none focus:ring-2 focus:ring-offset-2
-                                    focus:ring-indigo-500 transition-all duration-200
-                                    disabled:opacity-50 disabled:cursor-not-allowed"
+                                className={`inline-flex items-center justify-center px-4 py-2
+            border border-transparent text-sm font-medium rounded-md
+            shadow-sm text-white ${budgetType === 'custom' ? 'bg-purple-600 hover:bg-purple-700' :
+                                    budgetType === 'business' ? 'bg-emerald-800 hover:bg-emerald-900' :
+                                        'bg-blue-600 hover:bg-blue-700'}
+            focus:outline-none focus:ring-2 focus:ring-offset-2
+            ${budgetType === 'custom' ? 'focus:ring-purple-500' :
+                                    budgetType === 'business' ? 'focus:ring-emerald-500' :
+                                        'focus:ring-blue-500'}
+            transition-all duration-200
+            disabled:opacity-50 disabled:cursor-not-allowed`}
                             >
                                 {isCreatingBudget ? (
                                     <>

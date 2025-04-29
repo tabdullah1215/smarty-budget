@@ -39,6 +39,22 @@ const budgetTypeConfigs = {
             date: 'CalendarIcon',
             amount: 'DollarSignIcon'
         }
+    },
+    custom: {
+        title: {
+            add: 'Add Budget Item',
+            edit: 'Edit Budget Item'
+        },
+        accentColor: 'purple',
+        hoverColor: '700',
+        baseColor: '600',
+        descriptionPlaceholder: 'e.g., New sofa - Living room remodel',
+        formIcons: {
+            category: 'CategoryIcon',
+            description: 'FileTextIcon',
+            date: 'CalendarIcon',
+            amount: 'DollarSignIcon'
+        }
     }
 };
 
@@ -208,8 +224,8 @@ export const BudgetItemForm = ({
                                                 type="button"
                                                 onClick={handleAddCategoryClick}
                                                 disabled={isAddingCategory}
-                                                className="p-1 text-gray-600 hover:text-gray-900 transition-colors duration-200
-                        hover:bg-gray-100 rounded-full disabled:opacity-50 disabled:cursor-not-allowed"
+                                                className={`p-1 text-${config.accentColor}-${config.baseColor} hover:text-${config.accentColor}-${config.hoverColor} transition-colors duration-200
+                        hover:bg-gray-100 rounded-full disabled:opacity-50 disabled:cursor-not-allowed`}
                                                 title="Add new category"
                                             >
                                                 {isAddingCategory ? (
@@ -354,5 +370,3 @@ export const BudgetItemForm = ({
         </div>
     );
 };
-
-export default BudgetItemForm;
