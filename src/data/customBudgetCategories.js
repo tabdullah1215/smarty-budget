@@ -1,0 +1,422 @@
+export const CUSTOM_BUDGET_CATEGORIES = {
+    "vacation": {
+        name: "Vacation/Travel",
+        description: "For planning trips, vacations, and travel experiences",
+        categories: [
+            "Flights/Airfare",
+            "Hotels/Accommodations",
+            "Car Rental",
+            "Local Transportation",
+            "Meals/Dining",
+            "Activities/Tours",
+            "Souvenirs/Shopping",
+            "Travel Insurance",
+            "Passport/Visa Fees",
+            "Luggage/Travel Gear",
+            "Excursions",
+            "Transportation to Airport",
+            "Travel Vaccinations",
+            "Currency Exchange Fees",
+            "Photography/Equipment"
+        ]
+    },
+    "wedding": {
+        name: "Wedding/Engagement",
+        description: "For wedding planning, engagement parties, and related celebrations",
+        categories: [
+            "Venue",
+            "Catering/Food",
+            "Wedding Attire",
+            "Photography/Videography",
+            "Flowers/Decorations",
+            "Music/Entertainment",
+            "Invitations/Stationery",
+            "Wedding Rings",
+            "Ceremony Fees",
+            "Officiant",
+            "Wedding Cake",
+            "Transportation",
+            "Hair/Makeup",
+            "Gifts/Favors",
+            "Honeymoon Expenses"
+        ]
+    },
+    "home_renovation": {
+        name: "Home Renovation/Improvement",
+        description: "For remodeling, repairs, and upgrades to living spaces",
+        categories: [
+            "Materials",
+            "Labor/Contractors",
+            "Furniture",
+            "Appliances",
+            "Flooring",
+            "Painting/Wallpaper",
+            "Electrical Work",
+            "Plumbing",
+            "Landscaping",
+            "Windows/Doors",
+            "Kitchen/Bath Fixtures",
+            "Tools/Equipment",
+            "Permits/Fees",
+            "Design Services",
+            "Decor/Accessories"
+        ]
+    },
+    "education": {
+        name: "Education/Learning",
+        description: "For courses, degrees, certifications, and learning experiences",
+        categories: [
+            "Tuition/Fees",
+            "Books/Textbooks",
+            "Software/Apps",
+            "School Supplies",
+            "Technology/Equipment",
+            "Online Courses",
+            "Certification Exams",
+            "Lab Fees",
+            "Study Abroad Expenses",
+            "Transportation",
+            "Housing/Dorm",
+            "Meal Plan",
+            "Student Activities",
+            "Tutoring Services",
+            "Professional Development"
+        ]
+    },
+    "medical": {
+        name: "Medical/Health",
+        description: "For planned medical procedures, treatments, and health journeys",
+        categories: [
+            "Doctor Visits",
+            "Hospital Fees",
+            "Surgery Costs",
+            "Medications",
+            "Laboratory Tests",
+            "Therapy Services",
+            "Medical Equipment",
+            "Insurance Copays",
+            "Dental Procedures",
+            "Vision Care",
+            "Alternative Treatments",
+            "Rehabilitative Care",
+            "Medical Transport",
+            "Diet/Nutrition",
+            "Mental Health Services"
+        ]
+    },
+    "special_event": {
+        name: "Special Event",
+        description: "For birthdays, anniversaries, graduations, and other special occasions",
+        categories: [
+            "Venue Rental",
+            "Catering/Food",
+            "Decorations",
+            "Entertainment",
+            "Photography",
+            "Invitations",
+            "Cake/Desserts",
+            "Event Attire",
+            "Party Favors/Gifts",
+            "Transportation",
+            "Rentals (tables, chairs, etc.)",
+            "Flowers/Centerpieces",
+            "Alcohol/Beverages",
+            "Event Planner",
+            "Accommodations"
+        ]
+    },
+    "vehicle": {
+        name: "Vehicle Purchase/Maintenance",
+        description: "For buying or maintaining vehicles (cars, motorcycles, boats, etc.)",
+        categories: [
+            "Down Payment",
+            "Monthly Payments",
+            "Insurance",
+            "Registration/Taxes",
+            "Maintenance/Service",
+            "Repairs",
+            "Tires/Wheels",
+            "Accessories/Upgrades",
+            "Fuel",
+            "Extended Warranty",
+            "Detailing/Cleaning",
+            "Parking/Storage",
+            "Loan Fees",
+            "Inspection Costs",
+            "Tools/Equipment"
+        ]
+    },
+    "major_purchase": {
+        name: "Major Purchase",
+        description: "For electronics, appliances, furniture, and other significant items",
+        categories: [
+            "Electronics",
+            "Appliances",
+            "Furniture",
+            "Jewelry/Watches",
+            "Technology",
+            "Exercise Equipment",
+            "Musical Instruments",
+            "Art/Collectibles",
+            "Outdoor Equipment",
+            "Warranty/Protection Plan",
+            "Delivery/Installation",
+            "Accessories",
+            "Setup Services",
+            "Taxes/Fees",
+            "Financing Costs"
+        ]
+    },
+    "holiday": {
+        name: "Holiday Season",
+        description: "For seasonal holiday expenses (Christmas, Hanukkah, Diwali, etc.)",
+        categories: [
+            "Gifts",
+            "Decorations",
+            "Holiday Food/Catering",
+            "Travel",
+            "Holiday Cards/Postage",
+            "Wrapping Supplies",
+            "Seasonal Clothing",
+            "Party Hosting",
+            "Charitable Donations",
+            "Holiday Events/Activities",
+            "Photos/Portraits",
+            "Special Meals/Dining",
+            "Accommodations",
+            "Holiday Baking",
+            "Tree/Wreath/Seasonal Items"
+        ]
+    },
+    "moving": {
+        name: "Moving/Relocation",
+        description: "For moving expenses, new home setup, and relocation costs",
+        categories: [
+            "Moving Company",
+            "Truck Rental",
+            "Packing Supplies",
+            "Temporary Housing",
+            "Storage Fees",
+            "Utility Setup/Deposits",
+            "New Furniture",
+            "Home Essentials",
+            "Travel Expenses",
+            "Professional Cleaning",
+            "Insurance",
+            "Administrative Fees",
+            "Repairs/Improvements",
+            "Security Deposits",
+            "Moving Help/Labor"
+        ]
+    },
+    "baby": {
+        name: "Baby/Child",
+        description: "For baby preparation, childcare expenses, and children's needs",
+        categories: [
+            "Nursery Furniture",
+            "Baby Gear/Equipment",
+            "Clothing",
+            "Diapers/Wipes",
+            "Feeding Supplies",
+            "Healthcare/Medicine",
+            "Toys/Books",
+            "Childcare/Babysitting",
+            "Education/Activities",
+            "Safety Equipment",
+            "Stroller/Car Seat",
+            "Formula/Food",
+            "Special Events",
+            "Photography/Memories",
+            "Baby-proofing"
+        ]
+    },
+    "pet": {
+        name: "Pet Expenses",
+        description: "For new pets, veterinary procedures, and ongoing pet care",
+        categories: [
+            "Pet Purchase/Adoption",
+            "Veterinary Care",
+            "Food/Treats",
+            "Supplies/Equipment",
+            "Grooming",
+            "Training",
+            "Boarding/Pet Sitting",
+            "Toys/Enrichment",
+            "Medications",
+            "Pet Insurance",
+            "Bedding/Housing",
+            "Fencing/Containment",
+            "Clothing/Accessories",
+            "Emergency Care",
+            "Travel Expenses"
+        ]
+    },
+    "professional": {
+        name: "Professional Project",
+        description: "For freelance work, side hustles, and professional initiatives",
+        categories: [
+            "Equipment/Hardware",
+            "Software/Subscriptions",
+            "Office Supplies",
+            "Marketing/Advertising",
+            "Professional Services",
+            "Workspace Rental",
+            "Conference/Events",
+            "Travel/Transportation",
+            "Licenses/Permits",
+            "Insurance",
+            "Training/Education",
+            "Reference Materials",
+            "Client Meetings",
+            "Shipping/Delivery",
+            "Subcontractor Fees"
+        ]
+    },
+    "hobby": {
+        name: "Hobby/Interest",
+        description: "For collecting, crafts, sports equipment, and leisure activities",
+        categories: [
+            "Equipment/Gear",
+            "Supplies/Materials",
+            "Club/Membership Fees",
+            "Classes/Lessons",
+            "Events/Competitions",
+            "Travel Expenses",
+            "Books/Media",
+            "Storage/Organization",
+            "Specialty Items",
+            "Software/Apps",
+            "Maintenance/Repairs",
+            "Clothing/Accessories",
+            "Display/Preservation",
+            "Community/Group Activities",
+            "Collectibles"
+        ]
+    },
+    "emergency": {
+        name: "Emergency Fund",
+        description: "For creating targeted emergency funds for specific purposes",
+        categories: [
+            "Medical Emergency",
+            "Job Loss",
+            "Home Repairs",
+            "Vehicle Repairs",
+            "Family Emergency",
+            "Natural Disaster",
+            "Pet Emergency",
+            "Technology Replacement",
+            "Travel Emergency",
+            "Legal Expenses",
+            "Insurance Deductibles",
+            "Temporary Housing",
+            "Utilities Emergency",
+            "Security Measures",
+            "Emergency Travel"
+        ]
+    },
+    "debt_payoff": {
+        name: "Debt Payoff",
+        description: "For strategies to eliminate specific debts",
+        categories: [
+            "Credit Card Payment",
+            "Student Loan",
+            "Auto Loan",
+            "Mortgage Payment",
+            "Medical Debt",
+            "Personal Loan",
+            "Back Taxes",
+            "Consolidation Payment",
+            "Legal Fees",
+            "Interest Charges",
+            "Late Fees",
+            "Collection Payments",
+            "Refinancing Costs",
+            "Debt Settlement",
+            "Family Loan Repayment"
+        ]
+    },
+    "subscription": {
+        name: "Subscription Management",
+        description: "For tracking and budgeting subscription services",
+        categories: [
+            "Streaming Services",
+            "Software Subscriptions",
+            "Gaming Subscriptions",
+            "News/Magazines",
+            "Music Services",
+            "Fitness Memberships",
+            "Cloud Storage",
+            "Food/Meal Subscriptions",
+            "Beauty/Grooming Boxes",
+            "Educational Platforms",
+            "Premium Memberships",
+            "App Subscriptions",
+            "Content Platforms",
+            "Professional Services",
+            "Delivery Services"
+        ]
+    },
+    "charity": {
+        name: "Charity/Fundraising",
+        description: "For charitable giving, fundraising events, and donations",
+        categories: [
+            "Monetary Donations",
+            "Sponsored Events",
+            "Volunteer Expenses",
+            "Charity Event Tickets",
+            "Fundraising Supplies",
+            "In-kind Donations",
+            "Auction Items",
+            "Travel for Charitable Work",
+            "Matching Gifts",
+            "Campaign Materials",
+            "Administrative Costs",
+            "Promotional Items",
+            "Event Hosting",
+            "Recognition/Thank You",
+            "Educational Materials"
+        ]
+    },
+    "seasonal": {
+        name: "Seasonal Expenses",
+        description: "For back-to-school, summer activities, and seasonal needs",
+        categories: [
+            "School Supplies",
+            "Summer Camp",
+            "Seasonal Clothing",
+            "Holiday Decorations",
+            "Seasonal Activities",
+            "Yard/Garden Expenses",
+            "Sports Registration",
+            "Vacation Bible School",
+            "Pool Membership",
+            "Winter Preparation",
+            "Spring Cleaning",
+            "Fall Activities",
+            "Seasonal Sports",
+            "Holiday Travel",
+            "Seasonal Maintenance"
+        ]
+    },
+    "general": {
+        name: "General Budget",
+        description: "For multi-purpose or general budgeting needs",
+        categories: [
+            "Housing/Rent",
+            "Utilities",
+            "Groceries",
+            "Transportation",
+            "Healthcare",
+            "Insurance",
+            "Dining Out",
+            "Entertainment",
+            "Clothing",
+            "Personal Care",
+            "Education",
+            "Savings",
+            "Debt Payments",
+            "Gifts/Donations",
+            "Miscellaneous"
+        ]
+    }
+};
