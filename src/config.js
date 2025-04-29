@@ -7,7 +7,7 @@ export const DEFAULT_BUDGET_TYPE = 'paycheck';
 
 export const DB_CONFIG = {
     name: 'BudgetTrackerDB',
-    version: 10, // Increment version number for schema change
+    version: 12, // Increment version number for schema change
     stores: {
         customBudgets: 'customBudgets',
         paycheckBudgets: 'paycheckBudgets',
