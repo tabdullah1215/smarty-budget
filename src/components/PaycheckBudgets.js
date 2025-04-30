@@ -53,7 +53,14 @@ export const PaycheckBudgets = () => {
     });
 
     const sortedBudgets = useMemo(() =>
-            [...paycheckBudgets].sort((a, b) => new Date(b.date) - new Date(a.date)),
+            [...paycheckBudgets].sort((a, b) => {
+                const dateComparison = new Date(b.date) - new Date(a.date);
+                if (dateComparison === 0) {
+                    return new Date(b.createdAt) - new Date(a.createdAt);
+                }
+
+                return dateComparison;
+            }),
         [paycheckBudgets]
     );
 

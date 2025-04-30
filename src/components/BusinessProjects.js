@@ -60,7 +60,14 @@ export const BusinessProjects = () => {
     });
 
     const sortedBudgets = useMemo(() => {
-        return [...businessBudgets].sort((a, b) => new Date(b.date) - new Date(a.date));
+        return [...businessBudgets].sort((a, b) => {
+            const dateComparison = new Date(b.date) - new Date(a.date);
+            if (dateComparison === 0) {
+                return new Date(b.createdAt) - new Date(a.createdAt);
+            }
+
+            return dateComparison;
+        });
     }, [businessBudgets]);
 
     // Get the complete budget objects for selected budget IDs

@@ -52,7 +52,14 @@ export const CustomBudgets = () => {
     });
 
     const sortedBudgets = useMemo(() =>
-            [...customBudgets].sort((a, b) => new Date(b.date) - new Date(a.date)),
+            [...customBudgets].sort((a, b) => {
+                const dateComparison = new Date(b.date) - new Date(a.date);
+                if (dateComparison === 0) {
+                    return new Date(b.createdAt) - new Date(a.createdAt);
+                }
+
+                return dateComparison;
+            }),
         [customBudgets]
     );
 

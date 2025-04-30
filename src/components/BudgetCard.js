@@ -126,7 +126,7 @@ export const BudgetCard = ({
                     </div>
 
                     <div className="flex justify-between items-center mt-1">
-                        <p className="text-gray-600">Date: {new Date(budget.date).toLocaleDateString()}</p>
+                        <p className="text-gray-600">Date: {new Date(budget.date).toLocaleDateString(undefined, {timeZone: 'UTC'})}</p>
                         {!isBusinessWithNoLimit && (
                             <div className="w-32 relative">
                                 <div className="w-full bg-gray-200 rounded-full h-2">
