@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { FileText, Trash2, Loader2 } from 'lucide-react';
 import { animated, useSpring } from '@react-spring/web';
+import { CUSTOM_BUDGET_CATEGORIES } from '../data/customBudgetCategories';
 
 export const BudgetCard = ({
                                budget,
@@ -65,6 +66,15 @@ export const BudgetCard = ({
     // Combine custom style with fadeIn animation
     const combinedStyle = style ? { ...style, ...fadeInAnimation } : fadeInAnimation;
 
+    // Get custom budget category name if applicable
+    const getBudgetCategoryName = () => {
+        if (budgetType === 'custom' && budget.budgetCategory) {
+            const categoryData = CUSTOM_BUDGET_CATEGORIES[budget.budgetCategory];
+            return categoryData ? categoryData.name : null;
+        }
+        return null;
+    };
+
     return (
         <animated.div
             style={combinedStyle}
@@ -82,6 +92,14 @@ export const BudgetCard = ({
             <div className="flex justify-between items-start">
                 <div>
                     <h3 className="text-xl font-semibold text-gray-900">{budget.name}</h3>
+                    {/* Display budget category if available */}
+                    {getBudgetCategoryName() && (
+                        <div className="mt-1 mb-1">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                {getBudgetCategoryName()}
+                            </span>
+                        </div>
+                    )}
                     <div className="flex flex-row items-center space-x-3 mt-1">
                         {isBusinessWithNoLimit ? (
                             <>

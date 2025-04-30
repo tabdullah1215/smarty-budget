@@ -237,6 +237,7 @@ class IndexDBService {
                     ...item,
                     image: item.image || null
                 })),
+                budgetCategory: budget.budgetCategory || null,
                 updatedAt: new Date().toISOString()
             };
 
@@ -246,7 +247,6 @@ class IndexDBService {
             request.onerror = () => reject(request.error);
         });
     }
-
     async deleteCustomBudget(budgetId) {
         if (!this.db) await this.initDB();
 

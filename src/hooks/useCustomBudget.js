@@ -35,6 +35,7 @@ export const useCustomBudgets = () => {
             name: budgetData.name,
             date: budgetData.date,
             amount: Number(budgetData.amount),
+            budgetCategory: budgetData.budgetCategory || null, // Store the budgetCategory
             items: [],
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
@@ -59,7 +60,9 @@ export const useCustomBudgets = () => {
                 ...updatedBudget,
                 updatedAt: new Date().toISOString(),
                 userEmail,
-                items: updatedBudget.items || []
+                items: updatedBudget.items || [],
+                // Ensure budgetCategory is preserved during update
+                budgetCategory: updatedBudget.budgetCategory || null
             };
 
             await indexdbService.updateCustomBudget(budgetToUpdate);

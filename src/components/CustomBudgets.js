@@ -94,6 +94,11 @@ export const CustomBudgets = () => {
         }
     };
 
+    const handleFormClose = () => {
+        setShowNewBudgetForm(false);
+        setIsCreating(false); // Reset creating state when form closes
+    };
+
     const handleOpenBudget = async (budget) => {
         if (openingBudgetId) return;
 
@@ -144,6 +149,7 @@ export const CustomBudgets = () => {
         try {
             await createCustomBudget(budgetData);
             showToast('success', 'New custom budget created successfully');
+            handleFormClose();
         } catch (error) {
             console.error('Error creating budget:', error);
             showToast('error', 'Failed to create custom budget. Please try again.');

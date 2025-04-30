@@ -101,6 +101,11 @@ export const BusinessProjects = () => {
         }
     };
 
+    const handleFormClose = () => {
+        setShowNewBudgetForm(false);
+        setIsCreating(false); // Reset creating state when form closes
+    };
+
     const handleOpenBudget = async (budget) => {
         if (openingBudgetId) return;
 
@@ -152,6 +157,7 @@ export const BusinessProjects = () => {
             // The budgetType field is already set in the BusinessExpenseProjectForm
             await createBusinessBudget(budgetData);
             showToast('success', 'New business expense budget created successfully');
+            handleFormClose();
         } catch (error) {
             console.error('Error creating budget:', error);
             showToast('error', 'Failed to create business expense budget. Please try again.');

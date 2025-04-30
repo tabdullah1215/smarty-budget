@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useTransition, animated } from '@react-spring/web';
-import { X, Loader2, Calendar, DollarSign, Briefcase, Users, Text } from 'lucide-react';
+import { X, Loader2, Calendar, DollarSign, Briefcase, Users, Hash } from 'lucide-react';
 import { withMinimumDelay } from '../utils/withDelay';
 import { modalTransitions, backdropTransitions } from '../utils/transitions';
 import { disableScroll, enableScroll } from '../utils/scrollLock';
 import { Calculator } from 'lucide-react';
+import { CUSTOM_BUDGET_CATEGORIES } from '../data/customBudgetCategories';
 
 export const BudgetSetupForm = ({
                                     onSave,
@@ -24,10 +25,10 @@ export const BudgetSetupForm = ({
     const [client, setClient] = useState('');
 
     const [budgetName, setBudgetName] = useState('');
+    const [budgetCategory, setBudgetCategory] = useState('');
 
     const transitions = useTransition(show, modalTransitions);
     const backdropTransition = useTransition(show, backdropTransitions);
-
 
     const config = {
         paycheck: {
@@ -62,12 +63,31 @@ export const BudgetSetupForm = ({
             amountLabel: 'Budget Limit',
             amountRequired: true,
             amountHelpText: '',
-            namePlaceholder: 'Vacation, DYI Project, Wedding, etc...',
+            namePlaceholder: 'Vacation, DIY Project, Wedding, etc...',
         }
     };
 
-
     const currentConfig = config[budgetType] || config.paycheck;
+
+    // Format budget category entries for dropdown
+    const customBudgetCategoryOptions = Object.entries(CUSTOM_BUDGET_CATEGORIES).map(([key, category]) => ({
+        id: key,
+        name: category.name,
+        description: category.description
+    }));
+
+    // When budget category changes, update the budget name suggestion
+    useEffect(() => {
+        if (budgetType === 'custom' && budgetCategory) {
+            const selectedCategory = CUSTOM_BUDGET_CATEGORIES[budgetCategory];
+            if (selectedCategory) {
+                // Generate a default name if user hasn't typed anything yet
+                if (!budgetName) {
+                    setBudgetName(`${selectedCategory.name} Budget`);
+                }
+            }
+        }
+    }, [budgetCategory, budgetType, budgetName]);
 
     useEffect(() => {
         disableScroll();
@@ -103,6 +123,7 @@ export const BudgetSetupForm = ({
                     budgetData.name = budgetName;
                     budgetData.date = date;
                     budgetData.amount = Number(amount);
+                    budgetData.budgetCategory = budgetCategory; // Add the budgetCategory field
                     budgetData.items = [];
                 }
 
@@ -126,6 +147,26 @@ export const BudgetSetupForm = ({
         await withMinimumDelay(async () => {});
         setIsCancelling(false);
         onClose();
+    };
+
+    // For debugging - verify button classes being generated
+    const buttonClassName = `inline-flex items-center px-4 py-2 border-2 border-transparent
+        rounded-lg shadow-sm text-sm font-medium text-white
+        bg-${currentConfig.primaryColor}-${currentConfig.primaryShade} hover:bg-${currentConfig.primaryColor}-${currentConfig.hoverShade}
+        focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-${currentConfig.primaryColor}-500
+        transition-all duration-200
+        disabled:opacity-50 disabled:cursor-not-allowed
+        min-w-[100px] justify-center`;
+
+    // Define hardcoded button classes based on budgetType
+    const getButtonClass = () => {
+        if (budgetType === 'custom') {
+            return "inline-flex items-center px-4 py-2 border-2 border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed min-w-[100px] justify-center";
+        } else if (budgetType === 'business') {
+            return "inline-flex items-center px-4 py-2 border-2 border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-emerald-800 hover:bg-emerald-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed min-w-[100px] justify-center";
+        } else {
+            return "inline-flex items-center px-4 py-2 border-2 border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed min-w-[100px] justify-center";
+        }
     };
 
     return (
@@ -209,25 +250,56 @@ export const BudgetSetupForm = ({
                                         </>
                                     )}
                                     {budgetType === 'custom' && (
-                                        <div>
-                                            <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
-                                                <Calculator className="h-5 w-5 text-gray-400 mr-2" />
-                                                Budget Name *
-                                            </label>
-                                            <div className="relative">
-                                                <input
-                                                    type="text"
-                                                    value={budgetName}
-                                                    onChange={(e) => setBudgetName(e.target.value)}
-                                                    className={`block w-full rounded-lg border-2 border-gray-300 px-4 py-3
-                                                shadow-sm focus:border-${currentConfig.primaryColor}-500 focus:ring-4 focus:ring-${currentConfig.primaryColor}-200
-                                                focus:ring-opacity-50 transition-colors duration-200`}
-                                                    placeholder={currentConfig.namePlaceholder || "Enter budget name"}
-                                                    required
-                                                    disabled={isSaving}
-                                                />
+                                        <>
+                                            <div>
+                                                <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
+                                                    <Hash className="h-5 w-5 text-gray-400 mr-2" />
+                                                    Budget Category *
+                                                </label>
+                                                <div className="relative">
+                                                    <select
+                                                        value={budgetCategory}
+                                                        onChange={(e) => setBudgetCategory(e.target.value)}
+                                                        className={`block w-full rounded-lg border-2 border-gray-300 px-4 py-3
+                                                    shadow-sm focus:border-purple-500 focus:ring-4 focus:ring-purple-200
+                                                    focus:ring-opacity-50 transition-colors duration-200`}
+                                                        required
+                                                        disabled={isSaving}
+                                                    >
+                                                        <option value="">Select Budget Category</option>
+                                                        {customBudgetCategoryOptions.map(option => (
+                                                            <option key={option.id} value={option.id}>
+                                                                {option.name}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                                {budgetCategory && (
+                                                    <p className="mt-2 text-xs text-gray-500">
+                                                        {CUSTOM_BUDGET_CATEGORIES[budgetCategory]?.description}
+                                                    </p>
+                                                )}
                                             </div>
-                                        </div>
+                                            <div>
+                                                <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
+                                                    <Calculator className="h-5 w-5 text-gray-400 mr-2" />
+                                                    Budget Name *
+                                                </label>
+                                                <div className="relative">
+                                                    <input
+                                                        type="text"
+                                                        value={budgetName}
+                                                        onChange={(e) => setBudgetName(e.target.value)}
+                                                        className={`block w-full rounded-lg border-2 border-gray-300 px-4 py-3
+                                                shadow-sm focus:border-purple-500 focus:ring-4 focus:ring-purple-200
+                                                focus:ring-opacity-50 transition-colors duration-200`}
+                                                        placeholder={currentConfig.namePlaceholder || "Enter budget name"}
+                                                        required
+                                                        disabled={isSaving}
+                                                    />
+                                                </div>
+                                            </div>
+                                        </>
                                     )}
                                     <div>
                                         <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
@@ -309,13 +381,7 @@ export const BudgetSetupForm = ({
                                         <button
                                             type="submit"
                                             disabled={isSaving || isAdding}
-                                            className={`inline-flex items-center px-4 py-2 border-2 border-transparent
-                                        rounded-lg shadow-sm text-sm font-medium text-white
-                                        bg-${currentConfig.primaryColor}-${currentConfig.primaryShade} hover:bg-${currentConfig.primaryColor}-${currentConfig.hoverShade}
-                                        focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-${currentConfig.primaryColor}-500
-                                        transition-all duration-200
-                                        disabled:opacity-50 disabled:cursor-not-allowed
-                                        min-w-[100px] justify-center`}
+                                            className={getButtonClass()}
                                         >
                                             {isAdding || isSaving ? (
                                                 <>

@@ -491,6 +491,7 @@ export const CustomBudgetDetails = ({ budget, onClose, onUpdate }) => {
                     initialItem={editingItem}
                     isSaving={isSaving}
                     budgetType="custom"
+                    budgetCategory={budget.budgetCategory} // Pass the budgetCategory
                 />
             )}
 
