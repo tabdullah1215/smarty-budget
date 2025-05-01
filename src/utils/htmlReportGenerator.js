@@ -1,4 +1,19 @@
 import _ from 'lodash';
+import { CUSTOM_BUDGET_CATEGORIES } from '../data/customBudgetCategories';
+
+/**
+ * Helper function to get the user-friendly display name for a category key
+ * @param {string} categoryKey - The internal category key (e.g., 'special_event')
+ * @returns {string} - The user-friendly display name (e.g., 'Special Event')
+ */
+const getCategoryDisplayName = (categoryKey) => {
+    if (!categoryKey) return '';
+
+    // Look up the category in the CUSTOM_BUDGET_CATEGORIES object
+    const categoryData = CUSTOM_BUDGET_CATEGORIES[categoryKey];
+    // Return the name property if found, otherwise return the key with first letter capitalized
+    return categoryData?.name || categoryKey.charAt(0).toUpperCase() + categoryKey.slice(1);
+};
 
 /**
  * Generates HTML string for the report content based on budget data
@@ -10,8 +25,9 @@ export const generateReportHtml = (budgets, userInfo) => {
     // Process data
     const reportData = processReportData(budgets);
 
-    // Determine if first budget is a business budget
+    // Determine budget type based on properties
     const isBusinessBudget = budgets.length > 0 && 'projectName' in budgets[0];
+    const isCustomBudget = budgets.length > 0 && 'budgetCategory' in budgets[0];
 
     // Check if a budget is a business budget with no meaningful limit
     const hasBudgetLimit = (budget) => {
@@ -19,7 +35,7 @@ export const generateReportHtml = (budgets, userInfo) => {
         if (budget.projectName) {
             return budget.amount > 0;
         }
-        // Otherwise it's a paycheck budget which always has a limit
+        // Otherwise it's a paycheck budget or custom budget which always have a limit
         return true;
     };
 
@@ -365,6 +381,7 @@ export const generateReportHtml = (budgets, userInfo) => {
     const generatePaycheckDetailsHtml = () => {
         return reportData.paycheckDetails.map((budget, index) => {
             const budgetHasLimit = hasBudgetLimit(budgets[index]);
+            const budgetType = isBusinessBudget ? 'business' : isCustomBudget ? 'custom' : 'paycheck';
 
             return `
       <div class="paycheck-card">
@@ -372,12 +389,17 @@ export const generateReportHtml = (budgets, userInfo) => {
           <h3>${budget.name}</h3>
           <p style="color: #6b7280;">Date: ${formatDate(budget.date)}</p>
           ${budgets[index].projectName ? `<p style="color: #6b7280;">Client: ${budgets[index].client || 'None'}</p>` : ''}
+          ${budgets[index].budgetCategory ? `<p style="color: #6b7280;">Budget Category: ${getCategoryDisplayName(budgets[index].budgetCategory)}</p>` : ''}
         </div>
         
         <div class="summary-grid">
           <div class="summary-box">
-            <p class="summary-label">${isBusinessBudget ? 'Budget Limit' : 'Amount'}</p>
-            <p class="summary-value">${formatCurrency(budget.amount, isBusinessBudget ? 'business' : 'paycheck', budgetHasLimit)}</p>
+            <p class="summary-label">${
+                isBusinessBudget ? 'Budget Limit' :
+                    isCustomBudget ? 'Budget Amount' :
+                        'Amount'
+            }</p>
+            <p class="summary-value">${formatCurrency(budget.amount, budgetType, budgetHasLimit)}</p>
           </div>
           <div class="summary-box">
             <p class="summary-label">Total Spent</p>
@@ -520,12 +542,25 @@ export const generateReportHtml = (budgets, userInfo) => {
         const hasMeaningfulBudgetLimit = isBusinessBudget ?
             budgets.some(hasBudgetLimit) : true;
 
+        // Set the appropriate budget type text
+        const budgetTypeLabel = isBusinessBudget ? 'Total Budget' :
+            isCustomBudget ? 'Total Budget' :
+                'Total Income';
+
+        const savingsLabel = isBusinessBudget ? 'Net Balance' :
+            isCustomBudget ? 'Net Remaining' :
+                'Net Savings';
+
+        const rateLabel = isBusinessBudget ? 'Budget Utilization' :
+            isCustomBudget ? 'Budget Utilization' :
+                'Savings Rate';
+
         return `
       <div class="stats-grid">
         <div class="stat-box">
-          <p class="summary-label">${isBusinessBudget ? 'Total Budget' : 'Total Income'}</p>
+          <p class="summary-label">${budgetTypeLabel}</p>
           <p style="font-size: 20px; font-weight: bold;">
-            ${formatCurrency(reportData.overall.totalIncome, isBusinessBudget ? 'business' : 'paycheck', hasMeaningfulBudgetLimit)}
+            ${formatCurrency(reportData.overall.totalIncome, isBusinessBudget ? 'business' : isCustomBudget ? 'custom' : 'paycheck', hasMeaningfulBudgetLimit)}
           </p>
         </div>
         <div class="stat-box">
@@ -535,7 +570,7 @@ export const generateReportHtml = (budgets, userInfo) => {
           </p>
         </div>
         <div class="stat-box">
-          <p class="summary-label">${isBusinessBudget ? 'Net Balance' : 'Net Savings'}</p>
+          <p class="summary-label">${savingsLabel}</p>
           ${hasMeaningfulBudgetLimit ?
             `<p style="font-size: 20px; font-weight: bold;" class="${reportData.overall.netSavings >= 0 ? 'positive' : 'negative'}">
               ${formatCurrency(reportData.overall.netSavings)}
@@ -544,7 +579,7 @@ export const generateReportHtml = (budgets, userInfo) => {
         }
         </div>
         <div class="stat-box">
-          <p class="summary-label">${isBusinessBudget ? 'Budget Utilization' : 'Savings Rate'}</p>
+          <p class="summary-label">${rateLabel}</p>
           ${hasMeaningfulBudgetLimit ?
             `<p style="font-size: 20px; font-weight: bold;" class="${Number(reportData.overall.savingsRate) >= 0 ? 'positive' : 'negative'}">
               ${reportData.overall.savingsRate}%
@@ -628,13 +663,15 @@ export const generateReportHtml = (budgets, userInfo) => {
   `;
     };
 
-    // Get an appropriate title for the report
-    const reportTitle = isBusinessBudget ?
-        "Business Expense Analysis Report" :
-        "Paycheck Budget Analysis Report";
+    // Get an appropriate title for the report based on budget type
+    const reportTitle = isBusinessBudget ? "Business Expense Analysis Report" :
+        isCustomBudget ? "Custom Budget Analysis Report" :
+            "Paycheck Budget Analysis Report";
 
     // Get appropriate section titles
-    const detailsSectionTitle = isBusinessBudget ? "Project Details" : "Paycheck Details";
+    const detailsSectionTitle = isBusinessBudget ? "Project Details" :
+        isCustomBudget ? "Budget Details" :
+            "Paycheck Details";
 
     // Assemble the full HTML document
     const htmlContent = `
@@ -691,7 +728,11 @@ export const generateReportHtml = (budgets, userInfo) => {
         <!-- Report Footer -->
         <div class="footer">
           <p>Report generated on ${new Date().toLocaleString()}</p>
-          <p>Analysis based on ${reportData.paycheckDetails.length} ${isBusinessBudget ? 'projects' : 'paychecks'}</p>
+          <p>Analysis based on ${reportData.paycheckDetails.length} ${
+        isBusinessBudget ? 'projects' :
+            isCustomBudget ? 'budgets' :
+                'paychecks'
+    }</p>
         </div>
       </div>
     </body>
