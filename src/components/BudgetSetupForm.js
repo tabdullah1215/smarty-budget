@@ -76,19 +76,6 @@ export const BudgetSetupForm = ({
         description: category.description
     }));
 
-    // When budget category changes, update the budget name suggestion
-    useEffect(() => {
-        if (budgetType === 'custom' && budgetCategory) {
-            const selectedCategory = CUSTOM_BUDGET_CATEGORIES[budgetCategory];
-            if (selectedCategory) {
-                // Generate a default name if user hasn't typed anything yet
-                if (!budgetName) {
-                    setBudgetName(`${selectedCategory.name} Budget`);
-                }
-            }
-        }
-    }, [budgetCategory, budgetType, budgetName]);
-
     useEffect(() => {
         disableScroll();
         return () => {
