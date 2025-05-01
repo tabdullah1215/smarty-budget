@@ -7,7 +7,6 @@ import { modalTransitions, backdropTransitions } from '../utils/transitions';
 import AddCategoryModal from './AddCategoryModal';
 import { CUSTOM_BUDGET_CATEGORIES } from '../data/customBudgetCategories';
 
-// Budget type configurations
 const budgetTypeConfigs = {
     paycheck: {
         title: {
@@ -23,6 +22,9 @@ const budgetTypeConfigs = {
             description: 'FileTextIcon',
             date: 'CalendarIcon',
             amount: 'DollarSignIcon'
+        },
+        buttonStyles: {
+            addCategory: 'text-blue-600 hover:text-blue-700'
         }
     },
     business: {
@@ -39,6 +41,9 @@ const budgetTypeConfigs = {
             description: 'FileTextIcon',
             date: 'CalendarIcon',
             amount: 'DollarSignIcon'
+        },
+        buttonStyles: {
+            addCategory: 'text-emerald-800 hover:text-emerald-900'
         }
     },
     custom: {
@@ -55,10 +60,12 @@ const budgetTypeConfigs = {
             description: 'FileTextIcon',
             date: 'CalendarIcon',
             amount: 'DollarSignIcon'
+        },
+        buttonStyles: {
+            addCategory: 'text-purple-600 hover:text-purple-700'
         }
     }
 };
-
 export const BudgetItemForm = ({
                                    onSave,
                                    onClose,
@@ -87,37 +94,12 @@ export const BudgetItemForm = ({
     const backdropTransition = useTransition(show, backdropTransitions);
 
     const formTitle = initialItem ? config.title.edit : config.title.add;
-
-    // Load appropriate categories based on budget type
     useEffect(() => {
         const loadCategories = async () => {
             try {
-                const loadedCategories = await indexdbService.getCategories(budgetType);
-
-                // Store all loaded categories
+                const loadedCategories = await indexdbService.getCategories(budgetType, budgetCategory);
                 setCategories(loadedCategories);
-
-                // For custom budgets with a category type, filter the categories
-                if (budgetType === 'custom' && budgetCategory) {
-                    const customCategoryData = CUSTOM_BUDGET_CATEGORIES[budgetCategory];
-
-                    if (customCategoryData && customCategoryData.categories) {
-                        // Create category objects that match the format from indexdbService
-                        // The id doesn't matter here since we're using the name for display and selection
-                        const predefinedCategories = customCategoryData.categories.map((catName, index) => ({
-                            id: `custom-${index}`,
-                            name: catName
-                        }));
-
-                        setFilteredCategories(predefinedCategories);
-                    } else {
-                        // Fallback to all categories if the custom category data is missing
-                        setFilteredCategories(loadedCategories);
-                    }
-                } else {
-                    // For non-custom budgets, use all loaded categories
-                    setFilteredCategories(loadedCategories);
-                }
+                setFilteredCategories(loadedCategories);
             } catch (error) {
                 console.error(`Error loading ${budgetType} categories:`, error);
                 setError(`Failed to load categories: ${error.message}`);
@@ -128,7 +110,6 @@ export const BudgetItemForm = ({
 
         loadCategories();
     }, [budgetType, budgetCategory]);
-
     const handleCancel = async () => {
         setIsCancelling(true);
         await withMinimumDelay(async () => {});
@@ -169,7 +150,6 @@ export const BudgetItemForm = ({
         }
     };
 
-    // Show custom budget category name in form if applicable
     const getBudgetCategoryName = () => {
         if (budgetType === 'custom' && budgetCategory) {
             const categoryData = CUSTOM_BUDGET_CATEGORIES[budgetCategory];
@@ -178,7 +158,6 @@ export const BudgetItemForm = ({
         return null;
     };
 
-    // Customized button styling based on budget type
     const buttonClass = `inline-flex items-center px-4 py-2 border-2 border-transparent
     rounded-lg shadow-sm text-sm font-medium text-white
     bg-${config.accentColor}-${config.baseColor} hover:bg-${config.accentColor}-${config.hoverColor}
@@ -262,8 +241,6 @@ export const BudgetItemForm = ({
                                             <label className="block text-sm font-medium text-gray-700">
                                                 Category
                                             </label>
-                                            {/* Only show add category button if not using predefined categories */}
-                                            {!(budgetType === 'custom' && budgetCategory) && (
                                                 <button
                                                     type="button"
                                                     onClick={handleAddCategoryClick}
@@ -278,7 +255,6 @@ export const BudgetItemForm = ({
                                                         <PlusCircle className="h-6 w-6 stroke-[1.5]"/>
                                                     )}
                                                 </button>
-                                            )}
                                         </div>
                                         <select
                                             value={category}
@@ -403,21 +379,19 @@ export const BudgetItemForm = ({
                 <AddCategoryModal
                     onClose={() => setShowAddCategory(false)}
                     onCategoryAdded={(newCategory) => {
-                        // Add to both full categories and filtered categories
                         const updatedCategories = [...categories, newCategory].sort((a, b) =>
                             a.name.localeCompare(b.name)
                         );
                         setCategories(updatedCategories);
-
-                        // For custom budgets, we only add it if not using a predefined category
-                        if (!(budgetType === 'custom' && budgetCategory)) {
-                            setFilteredCategories(updatedCategories);
-                        }
+                        setFilteredCategories([...filteredCategories, newCategory].sort((a, b) =>
+                            a.name.localeCompare(b.name)
+                        ));
 
                         setShowAddCategory(false);
                         setCategory(newCategory.name);
                     }}
                     budgetType={budgetType}
+                    budgetCategory={budgetCategory}
                 />
             )}
         </div>

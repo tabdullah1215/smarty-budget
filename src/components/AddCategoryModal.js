@@ -9,7 +9,8 @@ import { useToast } from '../contexts/ToastContext';
 const AddCategoryModal = ({
                               onClose,
                               onCategoryAdded,
-                              budgetType = 'paycheck' // Default to paycheck for backward compatibility
+                              budgetType = 'paycheck',
+                              budgetCategory = null
                           }) => {
     const [categoryName, setCategoryName] = useState('');
     const [show, setShow] = useState(true);
@@ -19,11 +20,24 @@ const AddCategoryModal = ({
     const { showToast } = useToast();
 
     // Set accent color based on budget type
-    const accentColor = budgetType === 'business' ? 'emerald' : 'blue';
-    const baseColor = budgetType === 'business' ? '800' : '600';
-    const hoverColor = budgetType === 'business' ? '900' : '700';
+    const accentColor = budgetType === 'business'
+        ? 'emerald'
+        : budgetType === 'custom'
+            ? 'purple'
+            : 'blue';
 
-    // Enhanced transitions with longer durations
+    const baseColor = budgetType === 'business'
+        ? '800'
+        : budgetType === 'custom'
+            ? '600'
+            : '600';
+
+    const hoverColor = budgetType === 'business'
+        ? '900'
+        : budgetType === 'custom'
+            ? '700'
+            : '700';
+
     const enhancedModalTransitions = {
         ...modalTransitions,
         from: {
@@ -106,7 +120,8 @@ const AddCategoryModal = ({
             await withMinimumDelay(async () => {
                 const newCategory = {
                     id: Date.now(),
-                    name: categoryName.trim()
+                    name: categoryName.trim(),
+                    budgetCategory: budgetCategory
                 };
 
                 // Use dynamic method for fetching categories with budgetType parameter

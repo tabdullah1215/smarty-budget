@@ -1,5 +1,6 @@
-//indexdbService.js
+
 import { DB_CONFIG } from '../config';
+import {CUSTOM_BUDGET_CATEGORIES} from "../data/customBudgetCategories";
 
 class IndexDBService {
     constructor() {
@@ -259,8 +260,6 @@ class IndexDBService {
             request.onerror = () => reject(request.error);
         });
     }
-
-    // Paycheck budget methods
     async getPaycheckBudgetsByEmail(userEmail) {
         if (!this.db) await this.initDB();
 
@@ -388,7 +387,7 @@ class IndexDBService {
         });
     }
 
-    async getCategories(budgetType = 'paycheck') {
+    async getCategories(budgetType = 'paycheck', budgetCategory = null) {
         if (!this.db) await this.initDB();
 
         // Determine the appropriate store name based on budgetType
@@ -406,12 +405,40 @@ class IndexDBService {
             const store = transaction.objectStore(storeName);
             const request = store.getAll();
 
-            request.onsuccess = () => resolve(request.result.sort((a, b) => a.name.localeCompare(b.name)));
+            request.onsuccess = () => {
+                // Filter categories based on budgetCategory if specified
+                let categories = request.result.sort((a, b) => a.name.localeCompare(b.name));
+
+                if (budgetType === 'custom' && budgetCategory) {
+                    // Include both predefined categories and user-added categories for this budget category
+                    const userCategories = categories.filter(cat => cat.budgetCategory === budgetCategory);
+
+                    // Get predefined categories if they exist
+                    const customCategoryData = CUSTOM_BUDGET_CATEGORIES[budgetCategory];
+                    if (customCategoryData && customCategoryData.categories) {
+                        // Add user categories that aren't in the predefined list
+                        return resolve([
+                            ...customCategoryData.categories.map((name, index) => ({
+                                id: `predefined-${index}`,
+                                name
+                            })),
+                            ...userCategories.filter(cat =>
+                                !customCategoryData.categories.includes(cat.name)
+                            )
+                        ]);
+                    }
+
+                    // If no predefined categories, return just the user categories for this budgetCategory
+                    return resolve(userCategories);
+                }
+
+                resolve(categories);
+            };
             request.onerror = () => reject(request.error);
         });
     }
 
-    async addCategory(category, budgetType = 'paycheck') {
+    async addCategory(category, budgetType = 'paycheck', budgetCategory = null) {
         if (!this.db) await this.initDB();
 
         let storeName;
@@ -423,16 +450,20 @@ class IndexDBService {
             storeName = DB_CONFIG.stores.paycheckCategories;
         }
 
+        const categoryToAdd = { ...category };
+        if (budgetType === 'custom' && budgetCategory) {
+            categoryToAdd.budgetCategory = budgetCategory;
+        }
+
         return new Promise((resolve, reject) => {
             const transaction = this.db.transaction([storeName], 'readwrite');
             const store = transaction.objectStore(storeName);
-            const request = store.add(category);
+            const request = store.add(categoryToAdd);
 
             request.onsuccess = () => resolve(request.result);
             request.onerror = () => reject(request.error);
         });
     }
-
     async clearUserData(userEmail) {
         if (!this.db) await this.initDB();
 
