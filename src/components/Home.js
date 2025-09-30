@@ -142,7 +142,7 @@ export const Home = () => {
             <Header />
 
             {/* NEW: Enhanced header for multi-subapp users (only shown when relevant) */}
-            {userDisplayMode !== 'single' && getDisplayTitle() && (
+            {userDisplayMode !== 'single' && getDisplayTitle() && false && (
                 <div className="max-w-2xl mx-auto pt-32 px-4 sm:px-6 lg:px-8">
                     <div className="text-center mb-6">
                         <h1 className="text-2xl font-bold text-gray-800 mb-2">
@@ -159,7 +159,7 @@ export const Home = () => {
 
             {/* PRESERVED: Original container with conditional top padding adjustment */}
             <div className={`max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 ${
-                userDisplayMode === 'single'
+                userDisplayMode === 'single' || true
                     ? 'pt-44 md:pt-32 lg:pt-28' // PRESERVED: Original padding for single users
                     : 'pt-4' // Reduced padding for multi-subapp users (header already added)
             }`}>
