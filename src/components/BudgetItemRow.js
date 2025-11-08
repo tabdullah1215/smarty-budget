@@ -130,7 +130,7 @@ const BudgetItemRow = ({
                                 scale-100 transform transition-transform duration-300"
                             />
                         </div>
-                        <div className="flex-1 flex flex-col space-y-1">
+                        <div className="flex-1 min-w-0 flex flex-col space-y-1">
                             <div className="flex items-center">
                                 <span className="font-medium text-gray-900">{item.category}</span>
                                 <span className={`ml-2 text-orange-600 text-sm font-medium transition-opacity duration-200 
