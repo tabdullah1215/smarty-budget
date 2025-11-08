@@ -25,7 +25,7 @@ const PrintableContent = React.forwardRef(({budget}, ref) => {
                     <p>Budget Limit: ${budget.amount.toLocaleString()}</p>
                     <p>Created: {new Date(budget.createdAt).toLocaleDateString()}</p>
                 </div>
-                <table className="min-w-full divide-y divide-gray-200">
+                <table className="w-full divide-y divide-gray-200" style={{tableLayout: 'fixed'}}>
                     <thead>
                     <tr>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
