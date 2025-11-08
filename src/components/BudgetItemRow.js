@@ -116,8 +116,8 @@ const BudgetItemRow = ({
 
             {/* Mobile Row */}
             <tr className={`md:hidden ${!item.isActive ? 'bg-orange-50' : ''}`}>
-                <td className="px-2 sm:px-6 py-4">
-                    <div className="flex space-x-3">
+                <td className="px-2 sm:px-6 py-4" style={{ maxWidth: '0', width: '100%' }}>
+                    <div className="flex space-x-3 max-w-full overflow-hidden">
                         <div className="flex-shrink-0 pt-1">
                             <input
                                 type="checkbox"
@@ -144,7 +144,7 @@ const BudgetItemRow = ({
                         </div>
                     </div>
                 </td>
-                <td className="px-2 sm:px-6 py-4 pr-4 sm:pr-8">
+                <td className="px-2 sm:px-6 py-4 pr-4 sm:pr-8" style={{ width: '100px' }}>
                     <div className="flex flex-col items-center space-y-2 pr-2 sm:pr-4">
                         <div className="flex justify-center space-x-2">
                             <button
